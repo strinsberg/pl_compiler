@@ -7,10 +7,8 @@
 
 TEST(SymbolTableTests, test_hash_MOD) {
   SymbolTable symtab;
-  std::string R = "Ricky";
-  std::string r = "ricky";
-  int Ricky = symtab.hash(R, MOD);
-  int ricky = symtab.hash(r, MOD);
-  //EXPECT_EQ(145, Ricky);
-  //EXPECT_EQ(10 , ricky);
+  int Ricky = symtab.hash("Ricky");
+  int ricky = symtab.hash("ricky");
+  EXPECT_EQ(145, Ricky);
+  EXPECT_EQ(177, ricky);
 }

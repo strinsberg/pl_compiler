@@ -4,22 +4,31 @@
 #include <vector>
 #include <string>
 
+const int MOD = 307;          // Mod for hashing as well as the backing array size
+const int PRIME = 67;         // Mod for p in our rolling hash
+const int ID_MAX_CHARS = 10;  // The maximum number of chars to hash from a string
+
 
 class SymbolTable {
  public:
   SymbolTable();
 
-  bool search(std::string str);
-  int find(std::string str);
-  void insert(std::string str);
-  int hash(std::string& str, int p);
+  bool search(const std::string& str);
+  int find(const std::string& str);
+  void insert(const std::string& str);
+
+  /**
+    * Computes a rolling hash for a given string using the MOD constant.
+    * Only looks at a max of 10 characters from the string.
+    *
+    * @param str The string to hash.
+    * @return the integer hash of the string.
+    */ 
+  int hash(const std::string& str);
 
  private:
-  std::vector<int> table;  // Hash table backing array
-  int MOD = 307;      // Table size and hash function modulus = 307
-  int MODEQ = 1e9 + 9;    // Second hash function modulus for linear probing equality
-  const int PRIME = 67;  // Rolling hash prime
-
+  std::pair<std::string, int> table[MOD];  // Hash table backing array
+  int load;  // The number of elements in the table
 };
 
 #endif
