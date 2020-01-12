@@ -34,5 +34,5 @@ compiler
 testcomp
 
 # Vim/Emacs
-*.swp
+*swp
 *~
