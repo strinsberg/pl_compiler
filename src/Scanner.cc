@@ -81,6 +81,7 @@ bool Scanner::isSpecial(char inchar) {
 Token Scanner::recognizeName() {
   bool error = false;
   std::string lexeme = "";
+
   while(!isWhitespace(line[pos]) && pos < line.length()) {
     if(!std::isalpha(line[pos]) && !std::isdigit(line[pos]) && line[pos] != '_')  {
       error = true;
@@ -100,6 +101,8 @@ Token Scanner::recognizeName() {
     return Token(Symbol::ID, lexeme, tokenIndex);
   }
     //incorrect could be keyword or id
+    // this is needed when we find the lexeme and need to check the token
+    // to tell if it is an id or a keyword.
     return Token();
 }
 
@@ -107,6 +110,7 @@ Token Scanner::recognizeName() {
 Token Scanner::recognizeSpecial() {
   bool error = false;
   std::string lexeme = "";
+
   while(!isWhitespace(line[pos]) && pos < line.length()) {
     if(!isSpecial(line[pos])) {
       error = true;
@@ -114,9 +118,11 @@ Token Scanner::recognizeSpecial() {
     lexeme+=(line[pos]);
     pos++;
   }
+
   if(symmap.find(lexeme) == symmap.end()) {
     error = true;
   }
+
   if (error == true) {
     return Token(Symbol::ERROR, lexeme);
   } else {
@@ -127,6 +133,7 @@ Token Scanner::recognizeSpecial() {
 Token Scanner::recognizeNumeral() {
   bool error = false;
   std::string lexeme = "";
+
   while(!isWhitespace(line[pos]) && pos < line.length()) {
     if(!std::isdigit(line[pos])) {
       error = true;
@@ -134,6 +141,7 @@ Token Scanner::recognizeNumeral() {
     lexeme+=(line[pos]);
     pos++;
   }
+
   if (error == true) {
     return Token(Symbol::ERROR, lexeme);
   } else {

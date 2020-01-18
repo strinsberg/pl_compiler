@@ -3,6 +3,7 @@
 #include "Administration.h"
 #include <sstream>
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 
@@ -11,10 +12,10 @@ int main() {
 
   std::string temp;
   getline(std::cin, temp);
-  std::stringstream ss(temp);
+  std::ifstream fs(temp);
 
   SymbolTable sym;
-  Scanner scanner(ss, sym);
+  Scanner scanner(fs, sym);
   Administration admin(std::cout, scanner);
 
   admin.scan();
