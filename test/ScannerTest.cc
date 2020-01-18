@@ -4,11 +4,18 @@
 #include <fstream>
 #include <string>
 
-TEST(SymbolTableTests, test_hash_MOD) {
+TEST(ScannerTests, testIsWhitespace) {
   std::ifstream input;
   SymbolTable symtab;
   Scanner tmp  = Scanner(input, symtab);
   EXPECT_TRUE(tmp.isWhitespace(' '));
   EXPECT_FALSE(tmp.isWhitespace('f'));
+}
 
+TEST(ScannerTests, testIsSpecial) {
+  std::ifstream input;
+  SymbolTable symtab;
+  Scanner tmp  = Scanner(input, symtab);
+  EXPECT_TRUE(tmp.isSpecial(':'));
+  EXPECT_FALSE(tmp.isSpecial('_'));
 }
