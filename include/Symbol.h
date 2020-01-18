@@ -8,7 +8,7 @@ enum Symbol {
   BEGIN, END, CONST, ARRAY, INT, BOOL, PROC, SKIP, READ, WRITE, CALL, IF, DO,
   FI, OD, FALSE, TRUE,
 
-  ID, EOF
+  ID, ENDFILE
 };
 
 

@@ -2,14 +2,24 @@
 #define SCANNER_h
 
 #include "Token.h"
+#include "SymbolTable.h"
 
 class Scanner {
  public:
-  Scanner(std::string text);
+  Scanner(ifstream &instream, SymbolTable &symboltable);
+  ~Scanner();
   Token getToken();
 
  private:
-  size_t pos;  // Position in the input
+  std::string line;
+  ifstream &inputfile;
+  SymbolTable &symtable;
+  bool isWhitespace(char inchar);
+  bool isSpecial(char inchar);
+  Token recognizeName();
+  Token recognizeSpecial();
+  Token recognizeNumeral();
+  void recognizeComment();
 };
 
 #endif
