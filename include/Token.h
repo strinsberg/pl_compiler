@@ -9,16 +9,41 @@ class Token {
   Token();
   Token(Symbol sym, std::string lexeme = "", int val = -1);
 
+  /**
+    * Returns the symbol.
+    */ 
   Symbol getSymbol();
-  int getSVal();  // type attvalue
+  
+  /**
+    * Returns the lexeme.
+    */
+  std::string getLexeme();
+  
+  /**
+    * Returns the value.
+    */
+  int getVal();
 
+  /**
+    * Sets the symbol.
+    */
   void setSymbol(Symbol sym);
-  void setSVal(int val);
+
+  /**
+    * Sets the lexeme.
+    */
+  void setLexeme(std::string);
+
+  /**
+    * Sets the value.
+    */
+  void setVal(int val);
+
 
  private:
   Symbol sname;
   std::string lexeme;
-  int val;  // type attvalue
+  int val;
 
 };
 

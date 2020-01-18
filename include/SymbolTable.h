@@ -24,6 +24,7 @@ class SymbolTable {
     * Insert a new lexeme into the symbol table.
     * Creates a new ID token for the lexeme as once the reserve words are
     * loaded the only thing loaded should be IDs.
+    * Returns -1 if the table is full.
     */
   int insert(const std::string& str);
 
@@ -52,6 +53,13 @@ class SymbolTable {
  private:
   std::vector<Token> table;  // Hash table backing array
   int load;  // The number of elements in the table
+
+  /**
+    * Given a position linear probe until the token with the given lexeme
+    * is found or an empty token is found.
+    * Returns a pair with the position of the token and the lexeme.
+    */ 
+  std::pair<int, Token> probe(int idx, std::string lexeme);
 };
 
 #endif
