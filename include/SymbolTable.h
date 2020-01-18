@@ -1,6 +1,7 @@
 #ifndef SYMBOL_TABLE_H
 #define SYMBOL_TABLE_H
 
+#include "Token.h"
 #include <vector>
 #include <string>
 
@@ -13,21 +14,43 @@ class SymbolTable {
  public:
   SymbolTable();
 
-  bool search(const std::string& str);
-  int find(const std::string& str);
-  void insert(const std::string& str);
+  /**
+    * Searches for a lexeme in the symbol table and returns its position.
+    * Return -1 if not found.
+    */ 
+  int search(const std::string& str);
+
+  /**
+    * Insert a new lexeme into the symbol table.
+    * Creates a new ID token for the lexeme as once the reserve words are
+    * loaded the only thing loaded should be IDs.
+    */
+  int insert(const std::string& str);
 
   /**
     * Computes a rolling hash for a given string using the MOD constant.
     * Only looks at a max of 10 characters from the string.
-    *
-    * @param str The string to hash.
-    * @return the integer hash of the string.
+    * Returns the integer hash of the string.
     */ 
   int hash(const std::string& str);
 
+  /**
+    * Returns true if the table is full.
+    */
+  bool full();
+
+  /**
+    * Returns the number items in the table.
+    */ 
+  int getLoad();
+
+  /**
+    * Returns a string representation of the table.
+    */
+  std::string toString();
+
  private:
-  std::pair<std::string, int> table[MOD];  // Hash table backing array
+  std::vector<Token> table;  // Hash table backing array
   int load;  // The number of elements in the table
 };
 
