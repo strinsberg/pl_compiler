@@ -1,11 +1,11 @@
 #include "Administration.h"
 #include "Scanner.h"
 #include <fstream>
+#include <iostream>
 
 
-Administration::Administration(
-    std::ifstream& ifs, std::ofstream& ofs, Scanner& sc)
-    : fin(ifs), fout(ofs), scanner(sc) {}
+Administration::Administration(std::ofstream& ofs, Scanner& sc)
+    : fout(ofs), scanner(sc) {}
 
 
 void Administration::newLine() {

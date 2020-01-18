@@ -1,8 +1,9 @@
 #ifndef SCANNER_H
 #define SCANNER_h
 #include <fstream>
-#include "Token.h"
 #include "SymbolTable.h"
+#include "Token.h"
+
 
 class Scanner {
  public:

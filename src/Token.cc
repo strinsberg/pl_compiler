@@ -1,5 +1,6 @@
 #include "Token.h"
 #include "Symbol.h"
+#include <string>
 
 Token::Token() : sname(Symbol::EMPTY) {}
 
@@ -23,12 +24,12 @@ int Token::getVal() {
 }
 
 
-void Token::getSymbol(Symbol sym) {
+void Token::setSymbol(Symbol sym) {
   sname = sym;
 }
 
 
-void Token::setLexeme(str::string str) {
+void Token::setLexeme(std::string str) {
   lexeme = str;
 }
 
