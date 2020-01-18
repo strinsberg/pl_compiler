@@ -11,8 +11,6 @@ class Scanner {
   Scanner(std::ifstream &ifs, SymbolTable &symboltable);
   ~Scanner() {};
   Token getToken();
-  bool isWhitespace(char inchar);
-  bool isSpecial(char inchar);
 
  private:
   std::ifstream &fin;
@@ -21,6 +19,8 @@ class Scanner {
   char inChar;
   std::size_t pos;
   std::map<std::string, Symbol> symmap;
+  bool isWhitespace(char inchar);
+  bool isSpecial(char inchar);
   Token recognizeName();
   Token recognizeSpecial();
   Token recognizeNumeral();
