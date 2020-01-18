@@ -2,6 +2,7 @@
 #define TOKEN_H
 
 #include "Symbol.h"
+#include <iostream>
 #include <string>
 
 class Token {
@@ -39,6 +40,10 @@ class Token {
     */
   void setVal(int val);
 
+  /**
+    * returns a string representation of the Token.
+    */
+  void toString(std::ostream& out);
 
  private:
   Symbol sname;
