@@ -32,7 +32,7 @@ class Token {
   /**
     * Sets the lexeme.
     */
-  void setLexeme(std::string);
+  void setLexeme(std::string lexeme);
 
   /**
     * Sets the value.
