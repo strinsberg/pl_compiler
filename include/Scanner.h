@@ -3,6 +3,7 @@
 #include <fstream>
 #include "SymbolTable.h"
 #include "Token.h"
+#include <map>
 
 
 class Scanner {
@@ -19,6 +20,7 @@ class Scanner {
   std::string line;
   char inChar;
   std::size_t pos;
+  std::map<std::string, Symbol> symmap;
   Token recognizeName();
   Token recognizeSpecial();
   Token recognizeNumeral();
