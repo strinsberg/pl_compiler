@@ -2,8 +2,30 @@
 #include <string>
 #include <fstream>
 
-Scanner::Scanner(std::ifstream &ifs, SymbolTable &symboltable) : fin(ifs),
-                      symtable(symboltable), line(""), inChar(' '), pos(0) {}
+Scanner::Scanner(std::istream &ifs, SymbolTable &symboltable) : fin(ifs),
+                      symtable(symboltable), line(""), inChar(' '), pos(0) {
+  symmap["."] = Symbol::DOT;
+  symmap[","] = Symbol::COMMA;
+  symmap[";"] = Symbol::SEMI;
+  symmap["["] = Symbol::LHSQR;
+  symmap["]"] = Symbol::RHSQR;
+  symmap["&"] = Symbol::AMP;
+  symmap["|"] = Symbol::BAR;
+  symmap["~"] = Symbol::TILD;
+  symmap["<"] = Symbol::LESS;
+  symmap["="] = Symbol::EQUAL;
+  symmap[">"] = Symbol::GREAT;
+  symmap["+"] = Symbol::PLUS;
+  symmap["-"] = Symbol::MINUS;
+  symmap["*"] = Symbol::TIMES;
+  symmap["/"] = Symbol::FSLASH;
+  symmap["\\"] = Symbol::BSLASH;
+  symmap["("] = Symbol::LHRND;
+  symmap[")"] = Symbol::RHRND;
+  symmap[":="] = Symbol::INIT;
+  symmap["[]"] = Symbol::GUARD;
+  symmap["->"] = Symbol::ARROW;
+}
 
 Token Scanner::getToken() {
   while (line[pos] == ' ') {
@@ -52,11 +74,12 @@ Token Scanner::recognizeName() {
   bool error = false;
   std::string lexeme = "";
   while(!isWhitespace(line[pos])) {
-    if(isalpha(line[pos]) || line[pos] == '_')  {
+    if(std::isalpha(line[pos]) || line[pos] == '_')  {
         lexeme+=(line[pos]);
         pos++;
     } else {
       error = true;
+      pos++;
     }
   }
   if(error == true) {
@@ -65,17 +88,50 @@ Token Scanner::recognizeName() {
   int tokenIndex = symtable.search(lexeme);
   if (tokenIndex == -1) {
     tokenIndex = symtable.insert(lexeme);
-    return Token(Symbol::ID, lexeme, tokenIndex);
-  } else {
-    return Token(Symbol::ID, lexeme, tokenIndex);
   }
+    //incorrect could be keyword or id
+    return Token();
 }
 
 
 Token Scanner::recognizeSpecial() {
-  return Token();
+  bool error = false;
+  std::string lexeme = "";
+  while(!isWhitespace(line[pos])) {
+    if(isSpecial(line[pos])) {
+        lexeme+=(line[pos]);
+        pos++;
+    } else {
+      error = true;
+      pos++;
+    }
+  }
+  if(symmap.find(lexeme) == symmap.end()) {
+    error = true;
+  }
+  if (error == true) {
+    return Token(Symbol::ERROR, lexeme);
+  } else {
+    return Token(symmap[lexeme], lexeme);
+  }
 }
 
 Token Scanner::recognizeNumeral() {
-  return Token();
+  bool error = false;
+  std::string lexeme = "";
+  while(!isWhitespace(line[pos])) {
+    if(std::isdigit(line[pos])) {
+        lexeme+=(line[pos]);
+        pos++;
+    } else {
+      error = true;
+      pos++;
+    }
+  }
+  if (error == true) {
+    return Token(Symbol::ERROR, lexeme);
+  } else {
+    int num  = std::stoi(lexeme);
+    return Token(Symbol::NUM, lexeme, num);
+  }
 }
