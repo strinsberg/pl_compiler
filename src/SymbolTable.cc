@@ -50,7 +50,7 @@ int SymbolTable::hash(const std::string& str) {
 
 
 bool SymbolTable::full() {
-  return load >= MOD;
+  return load >= MOD - 1;
 }
 
 
