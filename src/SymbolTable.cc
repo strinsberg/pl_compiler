@@ -1,17 +1,16 @@
 #include "SymbolTable.h"
 #include <string>
 
-// Probably want to keep the key in a pair with its value so that we
-// can find the right key when linear probing. Or at least the first
-// 10 characters of the key as this is all we need for our hash.
-
 
 SymbolTable::SymbolTable() : table(MOD), load(0) {}
 
 
+// currently returns the actual table index
+// should it return the hash index???
 int SymbolTable::search(const std::string& str) {
   int pos = hash(str);
   std::pair<int, Token> item = probe(pos, str);
+
   if (item.second.getSymbol() == Symbol::EMPTY)
     return -1;
   else
@@ -19,15 +18,20 @@ int SymbolTable::search(const std::string& str) {
 }
 
 
+// currently saves the actual position of the token in the table
+// may want to make it save the hashed index
 int SymbolTable::insert(const std::string& str) {
-  // Add a new value. Might want to check to make sure we don't add twice.
-  // Perhaps throw an error if the table is full. But make sure that
-  // full is at least 1 less than MOD so that there is always an empty
-  // cell to ensure search works. say 1/4 MOD empty.
-  // add to load when you add something. For now I don't know if we
-  // have to delete things but this may be an issue
+  int pos = hash(str);
+  std::pair<int, Token> item = probe(pos, str);
+
+  if (full())
+    return -1;
+
+  if (item.second.getSymbol() == Symbol::EMPTY)
+    table[item.first] = Token(Symbol::ID, str, item.first);
+
   load++;
-  return -1;
+  return item.first;
 }
 
 
@@ -59,12 +63,13 @@ std::string SymbolTable::toString() {
   return "Symbol Table -> Not Implemented Yet!";
 }
 
+
 std::pair<int, Token> SymbolTable::probe(int pos, std::string lexeme) {
   Token current = table[pos];
   while (current.getSymbol() != Symbol::EMPTY) {
     if (current.getLexeme() == lexeme)
       return {pos, current};
-    pos++;  // Need to circular increment
+    pos = (pos + 1) % MOD;
     current = table[pos];
   }
   return {-1, current};

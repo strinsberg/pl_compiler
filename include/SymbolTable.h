@@ -24,6 +24,7 @@ class SymbolTable {
     * Insert a new lexeme into the symbol table.
     * Creates a new ID token for the lexeme as once the reserve words are
     * loaded the only thing loaded should be IDs.
+    * Returns -1 if the table is full.
     */
   int insert(const std::string& str);
 
