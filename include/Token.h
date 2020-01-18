@@ -2,10 +2,12 @@
 #define TOKEN_H
 
 #include "Symbol.h"
+#include <string>
 
 class Token {
  public:
-  Symbol(Symbol sym, int val);
+  Token();
+  Token(Symbol sym, std::string lexeme = "", int val = -1);
 
   Symbol getSymbol();
   int getSVal();  // type attvalue
@@ -15,7 +17,8 @@ class Token {
 
  private:
   Symbol sname;
-  int sval;  // type attvalue
+  std::string lexeme;
+  int val;  // type attvalue
 
 };
 
