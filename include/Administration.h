@@ -31,7 +31,7 @@ class Administration {
  private:
   std::ofstream& fout;    // File to print all tokens to
   Scanner& scanner;  // The scanner to use on the input
-  int lineNo;        // The current line number
+  int lineNum;        // The current line number
   bool correctLine;  // True if the line has no errors so far
   int errorCount;    // The total number of errors so far
 };

@@ -1,6 +1,7 @@
 #include "Token.h"
 #include "Symbol.h"
 #include <string>
+#include <iostream>
 
 Token::Token() : sname(Symbol::EMPTY) {}
 
@@ -36,4 +37,8 @@ void Token::setLexeme(std::string str) {
 
 void Token::setVal(int v) {
   val = v;
+}
+
+void Token::toString(std::ostream& out) {
+  out << "<" << sname << ", " << lexeme << ", " << val << ">";
 }
