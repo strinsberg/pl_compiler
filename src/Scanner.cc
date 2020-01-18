@@ -2,7 +2,7 @@
 #include <string>
 #include <fstream>
 
-Scanner::Scanner(std::ifstream &ifs, SymbolTable &symboltable) : fin(ifs),
+Scanner::Scanner(std::istream &ifs, SymbolTable &symboltable) : fin(ifs),
                       symtable(symboltable), line(""), inChar(' '), pos(0) {
   symmap["."] = Symbol::DOT;
   symmap[","] = Symbol::COMMA;

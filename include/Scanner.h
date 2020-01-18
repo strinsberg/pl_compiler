@@ -1,6 +1,6 @@
 #ifndef SCANNER_H
 #define SCANNER_h
-#include <fstream>
+#include <iostream>
 #include "SymbolTable.h"
 #include "Token.h"
 #include <map>
@@ -8,12 +8,12 @@
 
 class Scanner {
  public:
-  Scanner(std::ifstream &ifs, SymbolTable &symboltable);
+  Scanner(std::istream &ifs, SymbolTable &symboltable);
   ~Scanner() {};
   Token getToken();
 
  private:
-  std::ifstream &fin;
+  std::istream &fin;
   SymbolTable &symtable;
   std::string line;
   char inChar;

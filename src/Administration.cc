@@ -4,13 +4,13 @@
 #include <iostream>
 
 
-Administration::Administration(std::ofstream& ofs, Scanner& sc)
+Administration::Administration(std::ostream& ofs, Scanner& sc)
     : fout(ofs), scanner(sc), lineNum(0), correctLine(true), errorCount(0)  {}
 
 
 void Administration::newLine() {
   lineNum++;
-  correctLine = true;  
+  correctLine = true;
 }
 
 
