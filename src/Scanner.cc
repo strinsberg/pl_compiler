@@ -28,11 +28,17 @@ Scanner::Scanner(std::istream &ifs, SymbolTable &symboltable) : fin(ifs),
 }
 
 Token Scanner::getToken() {
+  if (line == "") {
+    getline(fin, line); 
+  }
+
   while (line[pos] == ' ') {
     pos++;
   }
+
   char s = line[pos];
-  if(s != '$') {
+
+  if(pos < line.length() && s != '$') {
     if(isSpecial(s)) {
         return recognizeSpecial();
     } else if(std::isdigit(s)) {
@@ -40,10 +46,12 @@ Token Scanner::getToken() {
     } else {
         return recognizeName();
     }
+
   } else {
     std::string tmpline;
     if (!std::getline(fin, tmpline)) {
       return Token(Symbol::ENDFILE);
+
     } else {
         pos = 0;
         line = tmpline;
@@ -73,21 +81,23 @@ bool Scanner::isSpecial(char inchar) {
 Token Scanner::recognizeName() {
   bool error = false;
   std::string lexeme = "";
-  while(!isWhitespace(line[pos])) {
-    if(std::isalpha(line[pos]) || line[pos] == '_')  {
-        lexeme+=(line[pos]);
-        pos++;
-    } else {
+  while(!isWhitespace(line[pos]) && pos < line.length()) {
+    if(!std::isalpha(line[pos]) && !std::isdigit(line[pos]) && line[pos] != '_')  {
       error = true;
-      pos++;
     }
+    lexeme+=(line[pos]);
+    pos++;
   }
+
+
   if(error == true) {
     return Token(Symbol::ERROR, lexeme);
   }
+
   int tokenIndex = symtable.search(lexeme);
   if (tokenIndex == -1) {
     tokenIndex = symtable.insert(lexeme);
+    return Token(Symbol::ID, lexeme, tokenIndex);
   }
     //incorrect could be keyword or id
     return Token();
@@ -97,14 +107,12 @@ Token Scanner::recognizeName() {
 Token Scanner::recognizeSpecial() {
   bool error = false;
   std::string lexeme = "";
-  while(!isWhitespace(line[pos])) {
-    if(isSpecial(line[pos])) {
-        lexeme+=(line[pos]);
-        pos++;
-    } else {
+  while(!isWhitespace(line[pos]) && pos < line.length()) {
+    if(!isSpecial(line[pos])) {
       error = true;
-      pos++;
     }
+    lexeme+=(line[pos]);
+    pos++;
   }
   if(symmap.find(lexeme) == symmap.end()) {
     error = true;
@@ -119,14 +127,12 @@ Token Scanner::recognizeSpecial() {
 Token Scanner::recognizeNumeral() {
   bool error = false;
   std::string lexeme = "";
-  while(!isWhitespace(line[pos])) {
-    if(std::isdigit(line[pos])) {
-        lexeme+=(line[pos]);
-        pos++;
-    } else {
+  while(!isWhitespace(line[pos]) && pos < line.length()) {
+    if(!std::isdigit(line[pos])) {
       error = true;
-      pos++;
     }
+    lexeme+=(line[pos]);
+    pos++;
   }
   if (error == true) {
     return Token(Symbol::ERROR, lexeme);

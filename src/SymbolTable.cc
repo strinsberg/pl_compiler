@@ -72,5 +72,5 @@ std::pair<int, Token> SymbolTable::probe(int pos, std::string lexeme) {
     pos = (pos + 1) % MOD;
     current = table[pos];
   }
-  return {-1, current};
+  return {pos, current};
 }
