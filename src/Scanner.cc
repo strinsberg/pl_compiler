@@ -65,16 +65,30 @@ Token Scanner::recognizeName() {
   int tokenIndex = symtable.search(lexeme);
   if (tokenIndex == -1) {
     tokenIndex = symtable.insert(lexeme);
-    return Token(Symbol::ID, lexeme, tokenIndex);
-  } else {
-    return Token(Symbol::ID, lexeme, tokenIndex);
   }
+    //incorrect could be keyword or id
+    return Token();
 }
 
 
 Token Scanner::recognizeSpecial() {
+  bool erorr = false;
+  std::string lexeme = "";
+  while(!isWhitespace(line[pos])) {
+    if(isSpecial(line[pos]) {
+        lexeme+=(line[pos]);
+        pos++;
+    } else {
+      error = true;
+    }
+  }
   return Token();
-}
+  }
+  if(error == true) {
+    return Token(Symbol::ERROR, lexeme);
+  }
+  //incorrect could be keyword or id
+  return Token();
 
 Token Scanner::recognizeNumeral() {
   return Token();
