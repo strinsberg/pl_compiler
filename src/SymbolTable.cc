@@ -13,7 +13,7 @@ Token SymbolTable::search(const std::string& str) {
 // may want to make it save the hashed index
 Token SymbolTable::insert(const std::string& str) {
   if (full())
-    return Token(Symbol::ERROR, str);
+    return Token(Symbol::FULL_TAB, str);
 
   int pos = hash(str);
   std::pair<int, Token> item = probe(pos, str);
