@@ -1,10 +1,12 @@
-steve ricky 12345
+steve ricky
 
--10 +23 - +
+12345, -10 +23 - +
 
 $ this is a comment
 
-error*** 123error *0 <= >= ! ; ,;, steve; grad,
+error*** 123error *0 <= >= ! ; ,
 
-steve ricky
+;, steve; grad,
+
 if fi do od
+-
