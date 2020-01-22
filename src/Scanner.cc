@@ -61,7 +61,6 @@ Token Scanner::getToken() {
 
 }
 
-
 bool Scanner::isWhitespace(char inchar) {
   if (inchar == ' ') {
     return true;
@@ -106,6 +105,10 @@ Token Scanner::recognizeSpecial() {
   bool error = false;
   std::string lexeme = "";
 
+  char chr = line[pos];
+  if ((chr == '+' || chr == '-') && std::isdigit(line[pos+1]))
+    return recognizeNumeral();
+
   while(!isWhitespace(line[pos]) && pos < line.length()) {
     if(!isSpecial(line[pos])) {
       error = true;
@@ -130,7 +133,7 @@ Token Scanner::recognizeNumeral() {
   std::string lexeme = "";
 
   while(!isWhitespace(line[pos]) && pos < line.length()) {
-    if(!std::isdigit(line[pos])) {
+    if(line[pos] != '-' && line[pos] != '+' && !std::isdigit(line[pos])) {
       error = true;
     }
     lexeme+=(line[pos]);

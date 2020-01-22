@@ -8,11 +8,7 @@
 using namespace std;
 
 int main() {
-  cout << "Enter a line of lexemes" << std::endl;
-
-  std::string temp;
-  getline(std::cin, temp);
-  std::ifstream fs(temp);
+  std::ifstream fs("test/scannerTest.pl");
 
   SymbolTable sym;
   Scanner scanner(fs, sym);
