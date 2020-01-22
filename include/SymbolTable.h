@@ -16,17 +16,17 @@ class SymbolTable {
 
   /**
     * Searches for a lexeme in the symbol table and returns its position.
-    * Return -1 if not found.
+    * Returns the EMPTY token if the table is full.
     */ 
-  int search(const std::string& str);
+  Token search(const std::string& str);
 
   /**
     * Insert a new lexeme into the symbol table.
     * Creates a new ID token for the lexeme as once the reserve words are
     * loaded the only thing loaded should be IDs.
-    * Returns -1 if the table is full.
+    * Returns the ERROR token if the table is full.
     */
-  int insert(const std::string& str);
+  Token insert(const std::string& str);
 
   /**
     * Computes a rolling hash for a given string using the MOD constant.

@@ -4,34 +4,25 @@
 
 SymbolTable::SymbolTable() : table(MOD), load(0) {}
 
-
-// currently returns the actual table index
-// should it return the hash index???
-int SymbolTable::search(const std::string& str) {
+Token SymbolTable::search(const std::string& str) {
   int pos = hash(str);
-  std::pair<int, Token> item = probe(pos, str);
-
-  if (item.second.getSymbol() == Symbol::EMPTY)
-    return -1;
-  else
-    return item.first;
+  return probe(pos, str).second;
 }
-
 
 // currently saves the actual position of the token in the table
 // may want to make it save the hashed index
-int SymbolTable::insert(const std::string& str) {
+Token SymbolTable::insert(const std::string& str) {
+  if (full())
+    return Token(Symbol::ERROR, str);
+
   int pos = hash(str);
   std::pair<int, Token> item = probe(pos, str);
-
-  if (full())
-    return -1;
 
   if (item.second.getSymbol() == Symbol::EMPTY)
     table[item.first] = Token(Symbol::ID, str, item.first);
 
   load++;
-  return item.first;
+  return table[item.first];
 }
 
 

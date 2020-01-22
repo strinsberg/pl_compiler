@@ -90,20 +90,15 @@ Token Scanner::recognizeName() {
     pos++;
   }
 
-
   if(error == true) {
     return Token(Symbol::ERROR, lexeme);
   }
 
-  int tokenIndex = symtable.search(lexeme);
-  if (tokenIndex == -1) {
-    tokenIndex = symtable.insert(lexeme);
-    return Token(Symbol::ID, lexeme, tokenIndex);
-  }
-    //incorrect could be keyword or id
-    // this is needed when we find the lexeme and need to check the token
-    // to tell if it is an id or a keyword.
-    return Token();
+  Token token = symtable.search(lexeme);
+  if (token.getSymbol() == Symbol::EMPTY)
+    return symtable.insert(lexeme);
+  else
+    return token;
 }
 
 
