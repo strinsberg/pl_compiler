@@ -1,11 +1,20 @@
 #include "SymbolTable.h"
+#include "Scanner.h"
+#include "Administration.h"
+#include <sstream>
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 
 int main() {
-  SymbolTable st;
-  cout << st.hash("Ricky") << endl;
-  cout << st.hash("ricky") << endl;
+  std::ifstream fs("test/scannerTest.pl");
 
+  SymbolTable sym;
+  Scanner scanner(fs, sym);
+  Administration admin(std::cout, scanner);
+
+  admin.scan();
+
+  return 0;
 }
