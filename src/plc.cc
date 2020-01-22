@@ -4,10 +4,21 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
+#include <getopt>
 
 using namespace std;
 
-int main() {
+int main(int argc, char** argc) {
+  int opt;
+
+  while((opt = getopt(argc, argv, "")) != 1) {
+    switch (opt) {
+      default:
+        break;
+    }
+  }
+
+
   std::ifstream fs("test/scannerTest.pl");
 
   SymbolTable sym;
