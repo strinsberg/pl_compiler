@@ -1,4 +1,6 @@
-steve ricky
+steve ri*cky
+
+:=* *->
 
 12345, -10 +23 - +
 

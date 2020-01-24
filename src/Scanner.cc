@@ -77,26 +77,21 @@ bool Scanner::isSpecial(char inchar) {
   return false;
 }
 
-bool Scanner::isSeparator(char inchar) {
-  return isWhitespace(inchar) || inchar == ';' || inchar == ',';
-}
-
 Token Scanner::recognizeName() {
   Symbol error = Symbol::EMPTY;
   std::string lexeme = "";
 
-  while(!isSeparator(line[pos]) && pos < line.length()) {
-    if(!std::isalpha(line[pos]) && !std::isdigit(line[pos]) && line[pos] != '_')  {
-      if(!isSpecial(line[pos])) {
-        error = Symbol::CHAR_ERR;
-      } else {
-        error = Symbol::NAME_ERR;
+  if(!std::isalpha(line[pos]) && !std::isdigit(line[pos]) && line[pos] != '_') {
+      lexeme+=(line[pos++]);
+      error = Symbol::CHAR_ERR;
+  } else {
+    while(!isWhitespace(line[pos]) &&!isSpecial(line[pos]) && pos < line.length()) {
+      if(!std::isalpha(line[pos]) && !std::isdigit(line[pos]) && line[pos] != '_') {
+          break;
+        }
+        lexeme+=(line[pos++]);
       }
-    }
-    lexeme+=(line[pos]);
-    pos++;
   }
-
   if(error != Symbol::EMPTY) {
     return Token(error, lexeme);
   }
@@ -120,14 +115,13 @@ Token Scanner::recognizeSpecial() {
   while(!isWhitespace(line[pos]) && pos < line.length()) {
     if(!isSpecial(line[pos])) {
       error = Symbol::CHAR_ERR;
-    }
-    lexeme+=(line[pos]);
-    if (isSeparator(line[pos++]))
       break;
-  }
-
-  if(symmap.find(lexeme) == symmap.end()) {
-    error = Symbol::SYM_ERR;
+    }
+    lexeme+=(line[pos++]);
+    std::string checkmap = lexeme + line[pos];
+    if(symmap.find(checkmap) == symmap.end()) {
+      break;
+    }
   }
 
   if (error != Symbol::EMPTY) {
@@ -139,21 +133,15 @@ Token Scanner::recognizeSpecial() {
 
 Token Scanner::recognizeNumeral() {
   //overflow error check
-  Symbol error = Symbol::EMPTY;
   std::string lexeme = "";
 
-  while(!isSeparator(line[pos]) && pos < line.length()) {
+  while(!isWhitespace(line[pos]) && pos < line.length()) {
     if(line[pos] != '-' && line[pos] != '+' && !std::isdigit(line[pos])) {
-      error = Symbol::NUM_ERR;
+      break;
     }
     lexeme+=(line[pos]);
     pos++;
   }
-
-  if (error != Symbol::EMPTY) {
-    return Token(error, lexeme);
-  } else {
-    int num  = std::stoi(lexeme);
-    return Token(Symbol::NUM, lexeme, num);
-  }
+  int num  = std::stoi(lexeme);
+  return Token(Symbol::NUM, lexeme, num);
 }

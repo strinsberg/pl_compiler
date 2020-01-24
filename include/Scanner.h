@@ -21,7 +21,6 @@ class Scanner {
   std::map<std::string, Symbol> symmap;
   bool isWhitespace(char inchar);
   bool isSpecial(char inchar);
-  bool isSeparator(char inchar);
   Token recognizeName();
   Token recognizeSpecial();
   Token recognizeNumeral();
