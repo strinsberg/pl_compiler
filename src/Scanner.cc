@@ -25,6 +25,10 @@ Scanner::Scanner(std::istream &ifs, SymbolTable &symboltable) : fin(ifs),
   symmap[":="] = Symbol::INIT;
   symmap["[]"] = Symbol::GUARD;
   symmap["->"] = Symbol::ARROW;
+  symmap["integer"] = Symbol::INT;
+  symmap["Boolean"] = Symbol::BOOL;
+  symmap["true"] = Symbol::TRUE;
+  symmap["false"] = Symbol::FALSE;
 }
 
 Token Scanner::getToken() {
@@ -92,6 +96,12 @@ Token Scanner::recognizeName() {
         lexeme+=(line[pos++]);
       }
   }
+
+  auto it = symmap.find(lexeme);
+  if(it != symmap.end()) {
+      return Token(it->second, lexeme);
+  }
+
   if(error != Symbol::EMPTY) {
     return Token(error, lexeme);
   }

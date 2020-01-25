@@ -8,7 +8,7 @@
 using namespace std;
 
 int main() {
-  std::ifstream fs("test/symTableTest.pl");
+  std::ifstream fs("test/scannerOfficialTest.pl");
 
   SymbolTable sym;
   Scanner scanner(fs, sym);
