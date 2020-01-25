@@ -41,6 +41,10 @@ int Administration::scan() {
     if(current.getSymbol() == Symbol::NEWLINE) {
       newLine();
     }
+    if (errorCount >= MAX_ERRORS) {
+      error("Max Error limit reached! Quitting compiler!");
+      break;
+    }
     current.toString(fout);
     fout << std::endl;
   }
