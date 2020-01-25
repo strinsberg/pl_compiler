@@ -53,6 +53,10 @@ class SymbolTable {
  private:
   std::vector<Token> table;  // Hash table backing array
   int load;  // The number of elements in the table
+  const std::vector<std::string> keywords{
+    "begin", "end", "const", "array", "proc", "skip", "read", "write",
+    "call", "if", "fi", "do", "od"
+  };
 
   /**
     * Given a position linear probe until the token with the given lexeme
@@ -60,6 +64,11 @@ class SymbolTable {
     * Returns a pair with the position of the token and the lexeme.
     */ 
   std::pair<int, Token> probe(int idx, std::string lexeme);
+
+  /**
+    * Loads all reserved keywords into the symbol table.
+    */
+  void loadKeywords(); 
 };
 
 #endif

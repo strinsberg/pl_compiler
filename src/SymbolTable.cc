@@ -2,7 +2,9 @@
 #include <string>
 
 
-SymbolTable::SymbolTable() : table(MOD), load(0) {}
+SymbolTable::SymbolTable() : table(MOD), load(0) {
+  loadKeywords();
+}
 
 Token SymbolTable::search(const std::string& str) {
   int pos = hash(str);
@@ -65,3 +67,11 @@ std::pair<int, Token> SymbolTable::probe(int pos, std::string lexeme) {
   }
   return {pos, current};
 }
+
+void SymbolTable::loadKeywords() {
+  for (auto& keyword : keywords) {
+    int hs = hash(keyword);
+    auto place = probe(hs, keyword);
+    table[place.first] = Token(Symbol::KEY, keyword);
+  }
+} 
