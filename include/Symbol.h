@@ -3,7 +3,9 @@
 
 #include <map>
 
-
+  /**
+    * Enum containing all possible Symbols.
+    */
 enum Symbol {
   DOT = 256, COMMA, SEMI, LHSQR, RHSQR, AMP, BAR, TILD, LESS, EQUAL, GREAT, PLUS,
   MINUS, TIMES, FSLASH, BSLASH, LHRND, RHRND, INIT, GUARD, ARROW, DOLLAR,
@@ -12,10 +14,12 @@ enum Symbol {
 
   ID, KEY, ENDFILE, EMPTY, NEWLINE, NUM,
 
-  NAME_ERR, NUM_ERR, CHAR_ERR, FULL_TAB 
+  NAME_ERR, NUM_ERR, CHAR_ERR, FULL_TAB
 };
 
-
+  /**
+    * Map mapping all the symbols to string versions of themselves for printing.
+    */
 const std::map<Symbol, std::string> SymbolToString {
   {DOT, "Dot"},
   {COMMA, "Commma"},

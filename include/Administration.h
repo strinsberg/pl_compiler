@@ -11,6 +11,11 @@ const int MAX_ERRORS = 10;
 
 class Administration {
  public:
+   /**
+     * Creates a new Administration object.
+     * @param fout The output file stream.
+     * @param sc The scanner beign used by administration.
+     */
   Administration(std::ostream& fout, Scanner& sc);
 
   /**
@@ -20,22 +25,42 @@ class Administration {
 
   /**
     * Display text for an error.
+    * @param text The error message.
     */
   void error(std::string text);
 
   /**
     * Scan the whole file and output all tokens to fout.
-    * Returns the number of tokens.??
+    * Returns the number of tokens.
     */
   int scan();
 
  private:
-  std::ostream& fout;    // File to print all tokens to
-  Scanner& scanner;  // The scanner to use on the input
-  int lineNum;        // The current line number
-  bool correctLine;  // True if the line has no errors so far
-  int errorCount;    // The total number of errors so far
-  void checkError(Token ntoken); //checks if current token is an error token
+   /**
+     * File to print all tokens to.
+     */
+  std::ostream& fout;
+  /**
+    * The scanner to use on the input.
+    */
+  Scanner& scanner;
+  /**
+    * The current line number.
+    */
+  int lineNum;
+  /**
+    * True if the line has no errors so far.
+    */
+  bool correctLine;
+  /**
+    * The total number of errors so far.
+    */
+  int errorCount;
+  /**
+    * Checks if current token is an error token.
+    * @param ntoken The current token.
+    */
+  void checkError(Token ntoken);
 };
 
 #endif
