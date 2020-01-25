@@ -43,7 +43,7 @@ class Token {
   /**
     * returns a string representation of the Token.
     */
-  void toString(std::ostream& out);
+  void toString(std::ostream& out) const;
 
  private:
   Symbol sname;

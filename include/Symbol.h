@@ -10,7 +10,7 @@ enum Symbol {
 
   INT, BOOL, FALSE, TRUE,
 
-  ID, ENDFILE, EMPTY, NEWLINE, NUM,
+  ID, KEY, ENDFILE, EMPTY, NEWLINE, NUM,
 
   NAME_ERR, NUM_ERR, CHAR_ERR, FULL_TAB 
 };
@@ -44,6 +44,7 @@ const std::map<Symbol, std::string> SymbolToString {
   {TRUE, "True"},
   {FALSE, "False"},
   {ID, "ID"},
+  {KEY, "Keyword"},
   {ENDFILE, "EOF"},
   {EMPTY, "Empty"},
   {NEWLINE, "Newline"},
