@@ -36,6 +36,7 @@ int Administration::scan() {
   while (current.getSymbol() != Symbol::ENDFILE) {
     current = scanner.getToken();
     checkError(current);
+
     if (errorCount >= MAX_ERRORS) {
       error("Max Error limit reached! Quitting compiler!");
       break;
@@ -45,6 +46,7 @@ int Administration::scan() {
     }
     current.toString(fout);
     fout << " ";
+
     if(current.getSymbol() == Symbol::NEWLINE || current.getSymbol() == Symbol::ENDFILE) {
       newLine();
     }
