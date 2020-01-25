@@ -24,10 +24,6 @@ void Administration::checkError(Token ntoken){
     error("Invalid Char ( " + ntoken.getLexeme() + " )");
     correctLine = false;
     errorCount++;
-  } else if(ntoken.getSymbol() == Symbol::FULL_TAB && correctLine == true) {
-    error("Symbol Table is Full");
-    correctLine = false;
-    errorCount++;
   }
 }
 
@@ -43,6 +39,9 @@ int Administration::scan() {
     }
     if (errorCount >= MAX_ERRORS) {
       error("Max Error limit reached! Quitting compiler!");
+      break;
+    } else if (current.getSymbol() == Symbol::FULL_TAB) {
+      error("Symbol Table is Full! Quitting compiler!");
       break;
     }
     current.toString(fout);

@@ -69,7 +69,7 @@ bool Scanner::isWhitespace(char inchar) {
 }
 
 bool Scanner::isSpecial(char inchar) {
-  std::string specials = ".,;[]&|~<=>+-*/\():$";
+  std::string specials = ".,;[]&|~<=>+-*/\\():$";
   std::size_t found = specials.find(inchar);
   if(found != std::string::npos) {
     return true;
@@ -123,7 +123,9 @@ Token Scanner::recognizeSpecial() {
       break;
     }
   }
-
+  if(symmap.find(lexeme) == symmap.end()) {
+    error = Symbol::CHAR_ERR;
+  }
   if (error != Symbol::EMPTY) {
     return Token(error, lexeme);
   } else {
