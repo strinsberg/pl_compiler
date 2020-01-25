@@ -25,6 +25,10 @@ void Administration::checkError(Token ntoken){
     error("Invalid Char ( " + ntoken.getLexeme() + " )");
     correctLine = false;
     errorCount++;
+  } else if(ntoken.getSymbol() == Symbol::NUM_ERR && correctLine == true) {
+    error("Number out of range of valid integer ( " + ntoken.getLexeme() + " )");
+    correctLine = false;
+    errorCount++;
   }
 }
 
@@ -47,7 +51,7 @@ int Administration::scan() {
     current.toString(fout);
     fout << " ";
 
-    if(current.getSymbol() == Symbol::NEWLINE || current.getSymbol() == Symbol::ENDFILE) {
+    if(current.getSymbol() == Symbol::NEWLINE) {
       newLine();
     }
   }

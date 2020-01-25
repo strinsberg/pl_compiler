@@ -73,5 +73,6 @@ void SymbolTable::loadKeywords() {
     int hs = hash(keyword);
     auto place = probe(hs, keyword);
     table[place.first] = Token(Symbol::KEY, keyword);
+    load++;
   }
-} 
+}

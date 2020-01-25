@@ -1,4 +1,5 @@
 #include "Scanner.h"
+#include <stdexcept>
 #include <string>
 #include <fstream>
 
@@ -25,10 +26,6 @@ Scanner::Scanner(std::istream &ifs, SymbolTable &symboltable) : fin(ifs),
   symmap[":="] = Symbol::INIT;
   symmap["[]"] = Symbol::GUARD;
   symmap["->"] = Symbol::ARROW;
-  symmap["integer"] = Symbol::INT;
-  symmap["Boolean"] = Symbol::BOOL;
-  symmap["true"] = Symbol::TRUE;
-  symmap["false"] = Symbol::FALSE;
 }
 
 Token Scanner::getToken() {
@@ -133,9 +130,11 @@ Token Scanner::recognizeSpecial() {
       break;
     }
   }
+
   if(symmap.find(lexeme) == symmap.end()) {
     error = Symbol::CHAR_ERR;
   }
+
   if (error != Symbol::EMPTY) {
     return Token(error, lexeme);
   } else {
@@ -144,7 +143,6 @@ Token Scanner::recognizeSpecial() {
 }
 
 Token Scanner::recognizeNumeral() {
-  //overflow error check
   std::string lexeme = "";
 
   while(!isWhitespace(line[pos]) && pos < line.length()) {
@@ -154,6 +152,12 @@ Token Scanner::recognizeNumeral() {
     lexeme+=(line[pos]);
     pos++;
   }
-  int num  = std::stoi(lexeme);
+  int num = 0;
+  try {
+    num  = std::stoi(lexeme);
+  } catch (std::out_of_range& e) {
+    return Token(NUM_ERR, lexeme);
+  }
+
   return Token(Symbol::NUM, lexeme, num);
 }

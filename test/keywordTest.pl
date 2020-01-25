@@ -11,6 +11,10 @@ if
 fi
 do
 od
+Boolean
+integer
+true
+false
 written
 odd
 skippy
