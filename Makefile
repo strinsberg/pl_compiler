@@ -21,7 +21,7 @@ all: $(PROGRAM_TEST) memcheck static
 
 .PHONY: clean
 clean:
-	rm -rf *~ *.o $(PROGRAM_TEST) $(PROGRAM)
+	rm -rf *~ *.o $(PROGRAM_TEST) $(PROGRAM) pl.out 
 
 $(PROGRAM_TEST): $(TEST) $(SRC)
 	$(CXX) $(CXXFLAGS) -o $(PROGRAM_TEST) -I $(INCLUDE) \
@@ -39,3 +39,7 @@ memcheck: $(PROGRAM_TEST)
 
 static: $(SRC) $(TEST)
 	$(STATIC_ANALYSIS) --verbose --enable=all $(SRC) $(TEST) $(INCLUDE) --suppress=missingInclude
+
+.PHONY: docs
+docs: $(INCLUDE)
+	doxygen docs/code/doxyfile
