@@ -21,7 +21,7 @@ all: $(PROGRAM_TEST) memcheck static
 
 .PHONY: clean
 clean:
-	rm -rf *~ *.o $(PROGRAM_TEST) $(PROGRAM) pl.out 
+	rm -rf *~ *.o $(PROGRAM_TEST) $(PROGRAM) pl.out docs/code/html docs/code/latex docs/code/*.log
 
 $(PROGRAM_TEST): $(TEST) $(SRC)
 	$(CXX) $(CXXFLAGS) -o $(PROGRAM_TEST) -I $(INCLUDE) \
