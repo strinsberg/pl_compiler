@@ -40,7 +40,7 @@ class Scanner {
   */
   std::size_t pos;
   /**
-  * The symbol Table for the scanner to store tokens
+  * The map containing the symbols
   */
   std::map<std::string, Symbol> symmap;
   /**

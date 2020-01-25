@@ -12,6 +12,7 @@ Administration::Administration(std::ostream& ofs, Scanner& sc)
 void Administration::newLine() {
   lineNum++;
   correctLine = true;
+  fout << std::endl << std::endl << lineNum << ":  ";
 }
 
 
@@ -30,13 +31,11 @@ void Administration::checkError(Token ntoken){
 int Administration::scan() {
   Token current;
   int numTokens = 0;
+  fout << lineNum << ":  ";
 
   while (current.getSymbol() != Symbol::ENDFILE) {
     current = scanner.getToken();
     checkError(current);
-    if(current.getSymbol() == Symbol::NEWLINE) {
-      newLine();
-    }
     if (errorCount >= MAX_ERRORS) {
       error("Max Error limit reached! Quitting compiler!");
       break;
@@ -45,7 +44,10 @@ int Administration::scan() {
       break;
     }
     current.toString(fout);
-    fout << std::endl;
+    fout << " ";
+    if(current.getSymbol() == Symbol::NEWLINE || current.getSymbol() == Symbol::ENDFILE) {
+      newLine();
+    }
   }
 
   return numTokens;
