@@ -39,6 +39,6 @@ void Token::setVal(int v) {
   val = v;
 }
 
-void Token::toString(std::ostream& out) {
-  out << "<" << sname << ", " << lexeme << ", " << val << ">";
+void Token::toString(std::ostream& out) const {
+  out << "<" << SymbolToString.at(sname) << ", " << lexeme << ", " << val << ">";
 }

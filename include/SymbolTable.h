@@ -17,7 +17,7 @@ class SymbolTable {
   /**
     * Searches for a lexeme in the symbol table and returns its position.
     * Returns the EMPTY token if the table is full.
-    */ 
+    */
   Token search(const std::string& str);
 
   /**
@@ -32,7 +32,7 @@ class SymbolTable {
     * Computes a rolling hash for a given string using the MOD constant.
     * Only looks at a max of 10 characters from the string.
     * Returns the integer hash of the string.
-    */ 
+    */
   int hash(const std::string& str);
 
   /**
@@ -42,7 +42,7 @@ class SymbolTable {
 
   /**
     * Returns the number items in the table.
-    */ 
+    */
   int getLoad();
 
   /**
@@ -53,13 +53,22 @@ class SymbolTable {
  private:
   std::vector<Token> table;  // Hash table backing array
   int load;  // The number of elements in the table
+  const std::vector<std::string> keywords{
+    "begin", "end", "const", "array", "proc", "skip", "read", "write",
+    "call", "if", "fi", "do", "od", "integer", "Boolean", "true", "false"
+  };
 
   /**
     * Given a position linear probe until the token with the given lexeme
     * is found or an empty token is found.
     * Returns a pair with the position of the token and the lexeme.
-    */ 
+    */
   std::pair<int, Token> probe(int idx, std::string lexeme);
+
+  /**
+    * Loads all reserved keywords into the symbol table.
+    */
+  void loadKeywords();
 };
 
 #endif

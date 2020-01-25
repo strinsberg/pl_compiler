@@ -1,9 +1,10 @@
 #include "Scanner.h"
+#include <stdexcept>
 #include <string>
 #include <fstream>
 
 Scanner::Scanner(std::istream &ifs, SymbolTable &symboltable) : fin(ifs),
-                      symtable(symboltable), line(""), inChar(' '), pos(0) {
+                      symtable(symboltable), line(""), pos(0) {
   symmap["."] = Symbol::DOT;
   symmap[","] = Symbol::COMMA;
   symmap[";"] = Symbol::SEMI;
@@ -29,7 +30,7 @@ Scanner::Scanner(std::istream &ifs, SymbolTable &symboltable) : fin(ifs),
 
 Token Scanner::getToken() {
   if (line == "") {
-    getline(fin, line); 
+    getline(fin, line);
     line.push_back('\t');
   }
 
@@ -69,7 +70,7 @@ bool Scanner::isWhitespace(char inchar) {
 }
 
 bool Scanner::isSpecial(char inchar) {
-  std::string specials = ".,;[]&|~<=>+-*/\():$";
+  std::string specials = ".,;[]&|~<=>+-*/\\():$";
   std::size_t found = specials.find(inchar);
   if(found != std::string::npos) {
     return true;
@@ -77,24 +78,29 @@ bool Scanner::isSpecial(char inchar) {
   return false;
 }
 
-bool Scanner::isSeparator(char inchar) {
-  return isWhitespace(inchar) || inchar == ';' || inchar == ',';
-}
-
 Token Scanner::recognizeName() {
-  bool error = false;
+  Symbol error = Symbol::EMPTY;
   std::string lexeme = "";
 
-  while(!isSeparator(line[pos]) && pos < line.length()) {
-    if(!std::isalpha(line[pos]) && !std::isdigit(line[pos]) && line[pos] != '_')  {
-      error = true;
-    }
-    lexeme+=(line[pos]);
-    pos++;
+  if(!std::isalpha(line[pos]) && !std::isdigit(line[pos]) && line[pos] != '_') {
+      lexeme+=(line[pos++]);
+      error = Symbol::CHAR_ERR;
+  } else {
+    while(!isWhitespace(line[pos]) &&!isSpecial(line[pos]) && pos < line.length()) {
+      if(!std::isalpha(line[pos]) && !std::isdigit(line[pos]) && line[pos] != '_') {
+          break;
+        }
+        lexeme+=(line[pos++]);
+      }
   }
 
-  if(error == true) {
-    return Token(Symbol::ERROR, lexeme);
+  auto it = symmap.find(lexeme);
+  if(it != symmap.end()) {
+      return Token(it->second, lexeme);
+  }
+
+  if(error != Symbol::EMPTY) {
+    return Token(error, lexeme);
   }
 
   Token token = symtable.search(lexeme);
@@ -106,7 +112,7 @@ Token Scanner::recognizeName() {
 
 
 Token Scanner::recognizeSpecial() {
-  bool error = false;
+  Symbol error = Symbol::EMPTY;
   std::string lexeme = "";
 
   char chr = line[pos];
@@ -115,40 +121,43 @@ Token Scanner::recognizeSpecial() {
 
   while(!isWhitespace(line[pos]) && pos < line.length()) {
     if(!isSpecial(line[pos])) {
-      error = true;
-    }
-    lexeme+=(line[pos]);
-    if (isSeparator(line[pos++]))
+      error = Symbol::CHAR_ERR;
       break;
+    }
+    lexeme+=(line[pos++]);
+    std::string checkmap = lexeme + line[pos];
+    if(symmap.find(checkmap) == symmap.end()) {
+      break;
+    }
   }
 
   if(symmap.find(lexeme) == symmap.end()) {
-    error = true;
+    error = Symbol::CHAR_ERR;
   }
 
-  if (error == true) {
-    return Token(Symbol::ERROR, lexeme);
+  if (error != Symbol::EMPTY) {
+    return Token(error, lexeme);
   } else {
     return Token(symmap[lexeme], lexeme);
   }
 }
 
 Token Scanner::recognizeNumeral() {
-  bool error = false;
   std::string lexeme = "";
 
-  while(!isSeparator(line[pos]) && pos < line.length()) {
+  while(!isWhitespace(line[pos]) && pos < line.length()) {
     if(line[pos] != '-' && line[pos] != '+' && !std::isdigit(line[pos])) {
-      error = true;
+      break;
     }
     lexeme+=(line[pos]);
     pos++;
   }
-
-  if (error == true) {
-    return Token(Symbol::ERROR, lexeme);
-  } else {
-    int num  = std::stoi(lexeme);
-    return Token(Symbol::NUM, lexeme, num);
+  int num = 0;
+  try {
+    num  = std::stoi(lexeme);
+  } catch (std::out_of_range& e) {
+    return Token(NUM_ERR, lexeme);
   }
+
+  return Token(Symbol::NUM, lexeme, num);
 }

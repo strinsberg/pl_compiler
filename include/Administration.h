@@ -2,6 +2,7 @@
 #define ADMIN_H
 
 #include <iostream>
+#include "Token.h"
 
 class Scanner;
 
@@ -34,6 +35,7 @@ class Administration {
   int lineNum;        // The current line number
   bool correctLine;  // True if the line has no errors so far
   int errorCount;    // The total number of errors so far
+  void checkError(Token ntoken); //checks if current token is an error token
 };
 
 #endif
