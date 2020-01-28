@@ -1,0 +1,72 @@
+\documentclass{article}
+\usepackage{fullpage}
+
+
+\begin{document}
+
+
+\title{CPSC 4660 PL Scanner}
+\author{Steven Deutekom\\
+        Ricky Bueckert\\
+        University of Lethbridge}
+\date{\today}
+
+\maketitle
+
+
+\section{Contributions}
+The entire class contributed equally on this project. We discussed the design
+and then split up the classes. Once we started the implementation there was a
+lot of communication to decide on how each peice of the Scanner should work.
+There was also a lot of collaboration deciding on what to put in our test files
+and debugging when the tests exposed flaws.
+
+\section{Files Included}
+\subsection{Header Files}
+\begin{itemize}
+  \item Symbol.h
+  \item SymbolTable.h
+  \item Token.h
+  \item Scanner.h
+  \item Administration.h
+\end{itemize}
+
+\subsection{Source Files}
+\begin{itemize}
+  \item plc.cc
+  \item SymbolTable.cc
+  \item Token.cc
+  \item Scanner.cc
+  \item Administration.cc
+\end{itemize}
+
+\subsection{Test Files}
+\begin{itemize}
+  \item fullTabTest.pl -- Tests making the symbol table full
+  \item keywordTest.pl -- Tests each of the valid keywords
+  \item maxNumTest.pl -- Tests numbers and makes sure integer overflow is detected
+  \item errorTest.pl -- Tests other errors and Test that after 10 errors we quit execution
+  \item scannerOfficialTest.pl -- Test a PL program from the Brinch Hanson texbook
+\end{itemize}
+
+\section{Compiling and Running}
+
+\begin{enumerate}
+  \item Navigate into the project folder and type the following:
+
+\verb|       \$ make compiler|
+
+  \item This will create a binary called \textbf{compiler} that cna be run with the following command:
+
+\verb|      \$ compiler <testfile-path> -o <output-file>|
+
+  \item If you omit the \verb|<output-file>| option the tokens will be output to a file called \verb|pl.out|
+\end{enumerate}
+
+\section{Bugs}
+None. That we know about.
+
+\section{Time Spent}
+30 total hours spent on this project if you count all group member contributions.
+
+\end{document}
