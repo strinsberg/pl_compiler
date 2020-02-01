@@ -35,10 +35,9 @@ class Administration {
     */
   int scan();
 
- private:
-   /**
-     * File to print all tokens to.
-     */
+  /**
+   * File to print all tokens to.
+   */
   std::ostream& fout;
   /**
     * The scanner to use on the input.
