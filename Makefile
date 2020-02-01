@@ -1,19 +1,15 @@
 CXX = g++
 CXXFLAGS = -std=c++11 -g -Wall
 
-LINKFLAGS = -lgtest
-
 SRC = src
-TEST = test
 INCLUDE = include
 
 STATIC_ANALYSIS = cppcheck
 
 PROGRAM = compiler
-PROGRAM_TEST = testcomp
 
 .PHONY: all
-all: $(PROGRAM_TEST) memcheck static
+all: $(PROGRAM) memcheck static
 
 # default rule for compiling .cc to .o
 %.o: %.cpp
@@ -21,25 +17,24 @@ all: $(PROGRAM_TEST) memcheck static
 
 .PHONY: clean
 clean:
-	rm -rf *~ *.o $(PROGRAM_TEST) $(PROGRAM) pl.out docs/code/html docs/code/latex docs/code/*.log docs/*.aux docs/*.log
-
-$(PROGRAM_TEST): $(TEST) $(SRC)
-	$(CXX) $(CXXFLAGS) -o $(PROGRAM_TEST) -I $(INCLUDE) \
-	$(TEST)/*.cc $(SRC)/[^p]*.cc $(LINKFLAGS)
+	rm -rf *~ *.o $(PROGRAM) pl.out \
+	docs/html docs/latex docs/*.aux docs/*.log
 
 $(PROGRAM): $(SRC)
 	$(CXX) $(CXXFLAGS) -o $(PROGRAM) -I $(INCLUDE) \
 	$(SRC)/*.cc
 
-tests: $(PROGRAM_TEST)
-	$(PROGRAM_TEST)
+memcheck: $(PROGRAM)
+	valgrind --tool=memcheck --leak-check=yes $(PROGRAM) test/scannerOfficialTest.pl
 
-memcheck: $(PROGRAM_TEST)
-	valgrind --tool=memcheck --leak-check=yes $(PROGRAM_TEST)
-
-static: $(SRC) $(TEST)
+static: $(SRC)
 	$(STATIC_ANALYSIS) --verbose --enable=all $(SRC) $(TEST) $(INCLUDE) --suppress=missingInclude
 
 .PHONY: docs
 docs: $(INCLUDE)
-	doxygen docs/code/doxyfile
+	doxygen docs/doxyfile
+	cd docs/latex; make
+	cd docs; pdflatex README.tex; pdflatex TechnicalManual.tex
+	mv docs/latex/refman.pdf ReferenceDoc.pdf
+	mv docs/README.pdf README.pdf
+	mv docs/TechnicalManual.pdf TechnicalManual.pdf
