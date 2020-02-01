@@ -12,8 +12,10 @@ DEF         := CONST_DEF |
 
 CONST_DEF   := const CONST_NAME = CONST
 
-VAR_DEF     := TYPE_SYM VAR_LIST |
-              TYPE_SYM array VAR_LIST '[' CONST ']'
+VAR_DEF     := TYPE_SYM VPRIME
+
+VPRIME      := VAR_LIST |
+              array VAR_LIST '[' CONST ']'
 
 TYPE_SYM    := integer |
               Boolean
@@ -36,7 +38,7 @@ EMPTY_STMT  := skip
 
 READ_STMT   := read VACS_LIST
 
-VACS_LIST   := VAR_ACS { , VAR_ACS }
+VACS_LIST   := VACS { , VACS }
 
 WRITE_STMT  := write EXPR_LIST
 
@@ -70,7 +72,7 @@ TERM        := FACTOR { MULT_OP FACTOR }
 
 MULT_OP     := * | / | \
 
-FACTOR      := CONST |
+FACTOR      := NUM | BOOL_SYM |
               VACS |
               ( EXPR ) |
               ~ FACTOR
