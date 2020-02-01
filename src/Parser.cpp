@@ -19,11 +19,16 @@ void Parser::match(Symbol sym) {
 }
 
 void Parser::program() {
-
+  cout << "program" << endl;
+  block();
+  match(Symbol::DOT);
 }
 
 void Parser::block() {
-
+  cout << "block" << endl;
+  match(Symbol::BEGIN);
+  exprList();
+  match(Symbol::END);
 }
 
 void Parser::exprList() {
@@ -31,7 +36,15 @@ void Parser::exprList() {
 }
 
 void Parser::simpleExpr() {
-
+  cout << "simpleExpr" << endl;
+  if (look.getSymbol() == Symbol::MINUS)
+    match(Symbol::MINUS);
+  term();
+  while (look.getSymbol() == Symbol::PLUS
+      or look.getSymbol() == Symbol::MINUS) {
+    addOp();
+    term();
+  }
 }
 
 void Parser::term() {
@@ -43,14 +56,28 @@ void Parser::factor() {
 }
 
 void Parser::addOp() {
-
+  cout << "addOp" << endl;
+  if (look.getSymbol() == Symbol::PLUS)
+    match(Symbol::PLUS);
+  else
+    match(Symbol::MINUS);
 }
 
 void Parser::multOp() {
-
+  cout << "multOp" << endl;
+  if (look.getSymbol() == Symbol::TIMES)
+    match(Symbol::TIMES);
+  else if (look.getSymbol() == Symbol::FSLASH
+    match(Symbol::FSLASH);
+  else
+    match(Symbol::BSLASH);
 }
 
 void Parser::boolSym() {
-
+  cout << "boolSym" << endl;
+  if (look.getSymbol() == Symbol::TRUE)
+    match(Symbol::TRUE);
+  else
+    match(Symbol::FALSE);
 }
 
