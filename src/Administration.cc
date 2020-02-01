@@ -20,6 +20,10 @@ void Administration::error(std::string text) {
   std::cerr << "Error: Line: " << lineNum << " -> " << text << std::endl;
 }
 
+void Administration::syntaxError(Symbol expected, Symbol actual) {
+  error("Syntax error");
+}
+
 void Administration::checkError(Token ntoken){
   if(ntoken.getSymbol() == Symbol::CHAR_ERR && correctLine == true) {
     error("Invalid Char ( " + ntoken.getLexeme() + " )");

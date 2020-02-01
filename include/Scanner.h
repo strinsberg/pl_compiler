@@ -1,5 +1,6 @@
 #ifndef SCANNER_H
 #define SCANNER_h
+
 #include <iostream>
 #include "SymbolTable.h"
 #include "Token.h"

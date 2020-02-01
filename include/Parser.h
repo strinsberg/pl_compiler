@@ -35,7 +35,7 @@ class Parser {
   /**
    * Match a Token and move to the next one.
    */
-  void match(Token& t);
+  void match(Symbol symbol);
 };
 
 #endif

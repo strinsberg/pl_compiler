@@ -24,6 +24,13 @@ class Administration {
   void newLine();
 
   /**
+   * Deals with a syntax error.
+   * @parm expected The token type we expected to see.
+   * @param actual The token type we got.
+   */
+  void syntaxError(Symbol expected, Symbol actual);
+
+  /**
     * Display text for an error.
     * @param text The error message.
     */
