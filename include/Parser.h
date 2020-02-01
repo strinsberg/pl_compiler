@@ -36,6 +36,16 @@ class Parser {
    * Match a Token and move to the next one.
    */
   void match(Symbol symbol);
+
+  void program();
+  void block();
+  void exprList();
+  void simpleExpr();
+  void term();
+  void factor();
+  void addOp();
+  void multOp();
+  void boolSym();
 };
 
 #endif

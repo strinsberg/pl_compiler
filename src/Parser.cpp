@@ -1,4 +1,6 @@
 #include "Parser.h"
+#include "Administration.h"
+#include "Symbol.h"
 
 Parser::Parser(Administration& a) : admin(a) {}
 
@@ -15,3 +17,40 @@ void Parser::match(Symbol sym) {
     admin.syntaxError(sym, look.getSymbol());
   }
 }
+
+void Parser::program() {
+
+}
+
+void Parser::block() {
+
+}
+
+void Parser::exprList() {
+
+}
+
+void Parser::simpleExpr() {
+
+}
+
+void Parser::term() {
+
+}
+
+void Parser::factor() {
+
+}
+
+void Parser::addOp() {
+
+}
+
+void Parser::multOp() {
+
+}
+
+void Parser::boolSym() {
+
+}
+
