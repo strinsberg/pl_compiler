@@ -1,0 +1,105 @@
+===== Grammar =====
+
+PROGRAM     := BLOCK .
+
+BLOCK       := begin DEF_PART STMT_PART end
+
+DEF_PART    := { DEF ; }
+
+DEF         := CONST_DEF |
+              VAR_DEF |
+              PROC_DEF
+
+CONST_DEF   := const CONST_NAME = CONST
+
+VAR_DEF     := TYPE_SYM VAR_LIST |
+              TYPE_SYM array VAR_LIST '[' CONST ']'
+
+TYPE_SYM    := integer |
+              Boolean
+
+VAR_LIST    := VAR_NAME { , VAR_NAME }
+
+PROC_DEF    := proc PROC_NAME BLOCK
+
+STMT_PART   := { STMT ; }
+
+STMT        := EMPTY_STMT |
+              READ_STMT |
+              WRITE_STMT |
+              ASSGN_STMT |
+              PROC_STMT |
+              IF_STMT |
+              DO_STMT |
+
+EMPTY_STMT  := skip
+
+READ_STMT   := read VACS_LIST
+
+VACS_LIST   := VAR_ACS { , VAR_ACS }
+
+WRITE_STMT  := write EXPR_LIST
+
+EXPR_LIST   := EXPR { , EXPR }
+
+ASGN_STMT   := VACS_LIST ':=' EXPR_LIST
+
+PROC_STMT   := call PROC_NAME
+
+IF_STMT     := if GRCOM_LIST fi
+
+DO_STMT     := do GRCOM_LIST od
+
+GRCOM_LIST  := GRCOM { '[]' GRCOM }
+
+GRCOM       := EXPR -> STMT_PART
+
+EXPR        := PRIM_EXPR { PRIM_OP PRIM_EXPR }
+
+PRIM_OP     := & | '|'
+
+PRIM_EXPR   := SIMP_EXPR [ REL_OP SIMP_EXPR ]
+
+REL_OP      := < | = | >
+
+SIMP_EXPR   := [ - ] TERM { ADD_OP TERM }
+
+ADD_OP      := + | -
+
+TERM        := FACTOR { MULT_OP FACTOR }
+
+MULT_OP     := * | / | \
+
+FACTOR      := CONST |
+              VACS |
+              ( EXPR ) |
+              ~ FACTOR
+
+VACS        := VAR_NAME [ IDX_SEL ]
+
+IDX_SEL     := '[' EXPR ']'
+
+CONST       := NUM | BOOL_SYM | CONST_NAME
+
+NUM         := DIGIT { DIGIT }
+
+BOOL_SYM    := false | true
+
+NAME        := LETTER { LETTER | DIGIT | _ }   // KEY or ID
+
+LETTER      := a - z | A - Z
+
+DIGIT       := 0 - 9
+
+
+
+===== First Sets =====
+
+
+
+===== Follow Sets =====
+
+
+
+
+
