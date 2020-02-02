@@ -7,15 +7,23 @@
 
 
 Administration::Administration(std::ostream& ofs, Scanner& sc)
-    : fout(ofs), scanner(sc), lineNum(1), correctLine(true), errorCount(0)  {}
+    : fout(ofs), scanner(sc), lineNum(1), correctLine(true), errorCount(0)  {
+  fout << "1:  ";
+}
 
 
 Token Administration::getToken() {
-  Token t = scanner.getToken();
-  while (t.getSymbol() == Symbol::NEWLINE) {
+  Token t;
+
+  while (1) {
     t = scanner.getToken();
+    fout << t.toString() << " ";
+
+    if (t.getSymbol() != Symbol::NEWLINE)
+      break;
     newLine();
   }
+
   checkError(t);
   return t;
 }

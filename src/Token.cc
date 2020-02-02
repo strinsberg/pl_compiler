@@ -40,6 +40,7 @@ void Token::setVal(int v) {
   val = v;
 }
 
+
 std::string Token::toString() {
   std::stringstream ss;
   ss << "<" << SymbolToString.at(sname);
