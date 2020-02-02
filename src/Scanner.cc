@@ -145,8 +145,11 @@ Token Scanner::recognizeSpecial() {
 Token Scanner::recognizeNumeral() {
   std::string lexeme = "";
 
+  if (line[pos] == '+' or line[pos] == '-')
+    lexeme += line[pos++];  
+
   while(!isWhitespace(line[pos]) && pos < line.length()) {
-    if(line[pos] != '-' && line[pos] != '+' && !std::isdigit(line[pos])) {
+    if(!std::isdigit(line[pos])) {
       break;
     }
     lexeme+=(line[pos]);

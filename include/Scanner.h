@@ -1,10 +1,10 @@
 #ifndef SCANNER_H
-#define SCANNER_h
+#define SCANNER_H
 
-#include <iostream>
 #include "SymbolTable.h"
 #include "Token.h"
 #include <map>
+#include <iostream>
 
 
 class Scanner {

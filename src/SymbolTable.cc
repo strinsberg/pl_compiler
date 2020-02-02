@@ -75,4 +75,13 @@ void SymbolTable::loadKeywords() {
     table[place.first] = Token(Symbol::KEY, keyword);
     load++;
   }
+  int hs = hash("begin");
+  auto place = probe(hs, "begin");
+  table[place.first] = Token(Symbol::BEGIN, "begin");
+  load++;
+
+  hs = hash("end");
+  place = probe(hs, "end");
+  table[place.first] = Token(Symbol::END, "end");
+  load++;
 }

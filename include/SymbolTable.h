@@ -54,7 +54,7 @@ class SymbolTable {
   std::vector<Token> table;  // Hash table backing array
   int load;  // The number of elements in the table
   const std::vector<std::string> keywords{
-    "begin", "end", "const", "array", "proc", "skip", "read", "write",
+    "const", "array", "proc", "skip", "read", "write",
     "call", "if", "fi", "do", "od", "integer", "Boolean", "true", "false"
   };
 

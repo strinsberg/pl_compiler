@@ -1,6 +1,7 @@
 #include "Administration.h"
 #include "Scanner.h"
 #include "Symbol.h"
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 
@@ -8,6 +9,15 @@
 Administration::Administration(std::ostream& ofs, Scanner& sc)
     : fout(ofs), scanner(sc), lineNum(1), correctLine(true), errorCount(0)  {}
 
+Token Administration::getToken() {
+  Token t = scanner.getToken();
+  while (t.getSymbol() == Symbol::NEWLINE) {
+    t = scanner.getToken();
+    newLine();
+  }
+  checkError(t);
+  return t;
+}
 
 void Administration::newLine() {
   lineNum++;
@@ -21,7 +31,14 @@ void Administration::error(std::string text) {
 }
 
 void Administration::syntaxError(Symbol expected, Symbol actual) {
+  errorCount++;
+  correctLine = false;
   error("Syntax error");
+  std::cerr << SymbolToString.at(expected) << " " << SymbolToString.at(actual) << std::endl;
+  if (errorCount > MAX_ERRORS) {
+    std::cerr << "Max Errors Reached!!!!" << std::endl;
+    exit(-4000);
+  }
 }
 
 void Administration::checkError(Token ntoken){
@@ -30,7 +47,7 @@ void Administration::checkError(Token ntoken){
     correctLine = false;
     errorCount++;
   } else if(ntoken.getSymbol() == Symbol::NUM_ERR && correctLine == true) {
-    error("Number out of range of valid integer ( " + ntoken.getLexeme() + " )");
+    error("Number not a valid integer ( " + ntoken.getLexeme() + " )");
     correctLine = false;
     errorCount++;
   }

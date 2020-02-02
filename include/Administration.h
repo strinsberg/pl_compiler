@@ -3,8 +3,8 @@
 
 #include <iostream>
 #include "Token.h"
+#include "Scanner.h"
 
-class Scanner;
 
 const int MAX_ERRORS = 10;
 
@@ -18,6 +18,8 @@ class Administration {
      */
   Administration(std::ostream& fout, Scanner& sc);
 
+  Token getToken();
+
   /**
     * Adds line number and resets correctLine.
     */
@@ -27,6 +29,7 @@ class Administration {
    * Deals with a syntax error.
    * @parm expected The token type we expected to see.
    * @param actual The token type we got.
+   * @return false when the max number of errors is reached.
    */
   void syntaxError(Symbol expected, Symbol actual);
 

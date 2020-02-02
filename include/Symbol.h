@@ -10,7 +10,7 @@ enum Symbol {
   DOT = 256, COMMA, SEMI, LHSQR, RHSQR, AMP, BAR, TILD, LESS, EQUAL, GREAT, PLUS,
   MINUS, TIMES, FSLASH, BSLASH, LHRND, RHRND, INIT, GUARD, ARROW, DOLLAR,
 
-  INT, BOOL, FALSE, TRUE,
+  INT, BOOL, FALSE, TRUE, BEGIN, END,
 
   ID, KEY, ENDFILE, EMPTY, NEWLINE, NUM,
 
@@ -56,7 +56,9 @@ const std::map<Symbol, std::string> SymbolToString {
   {NAME_ERR, "NameErr"},
   {NUM_ERR, "NumErr"},
   {CHAR_ERR, "CharErr"},
-  {FULL_TAB, "SymTabFull"}
+  {FULL_TAB, "SymTabFull"},
+  {BEGIN, "Begin"},
+  {END, "End"}
 };
 
 #endif

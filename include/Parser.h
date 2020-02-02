@@ -13,7 +13,7 @@ class Parser {
      * @param admin An administration object for handling errors and holding
      * our scanner etc. for now.
      */
-  Parser(Administration admin);
+  Parser(Administration& admin);
 
   /**
     * Parses a PL program.

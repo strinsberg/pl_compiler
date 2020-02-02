@@ -1,6 +1,7 @@
 #include "SymbolTable.h"
 #include "Scanner.h"
 #include "Administration.h"
+#include "Parser.h"
 #include <sstream>
 #include <iostream>
 #include <fstream>
@@ -43,8 +44,9 @@ int main(int argc, char** argv) {
   SymbolTable sym;
   Scanner scanner(fs, sym);
   Administration admin(ofs, scanner);
+  Parser parser(admin);
 
-  admin.scan();
+  parser.parse();
 
   return 0;
 }
