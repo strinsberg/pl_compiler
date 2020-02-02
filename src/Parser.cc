@@ -13,13 +13,16 @@ void Parser::parse() {
 
 
 void Parser::match(Symbol sym) {
+  // To Debug
   std::cout << "Matched: ";
-  look.toString(std::cout);  // For debug
+  look.toString(std::cout);
   std::cout << std::endl << std::endl;
 
   if (sym == look.getSymbol()) {
     look = admin.getToken();
   } else {
+    // Need to put some error recovery routines here so that tokens
+    // can continue being processed and checked
     admin.syntaxError(sym, look);
   }
 }

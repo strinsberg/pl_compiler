@@ -11,8 +11,7 @@ Token SymbolTable::search(const std::string& str) {
   return probe(pos, str).second;
 }
 
-// currently saves the actual position of the token in the table
-// may want to make it save the hashed index
+
 Token SymbolTable::insert(const std::string& str) {
   if (full())
     return Token(Symbol::FULL_TAB, str);
@@ -59,29 +58,44 @@ std::string SymbolTable::toString() {
 
 std::pair<int, Token> SymbolTable::probe(int pos, std::string lexeme) {
   Token current = table[pos];
+
   while (current.getSymbol() != Symbol::EMPTY) {
     if (current.getLexeme() == lexeme)
       return {pos, current};
+
     pos = (pos + 1) % MOD;
     current = table[pos];
   }
+
   return {pos, current};
 }
 
-void SymbolTable::loadKeywords() {
-  for (auto& keyword : keywords) {
-    int hs = hash(keyword);
-    auto place = probe(hs, keyword);
-    table[place.first] = Token(Symbol::KEY, keyword);
-    load++;
-  }
-  int hs = hash("begin");
-  auto place = probe(hs, "begin");
-  table[place.first] = Token(Symbol::BEGIN, "begin");
-  load++;
 
-  hs = hash("end");
-  place = probe(hs, "end");
-  table[place.first] = Token(Symbol::END, "end");
+void SymbolTable::loadKey(Symbol sym, const std::string& lexeme) {
+  int hs = hash(lexeme);
+  auto place = probe(hs, lexeme);
+
+  table[place.first] = Token(sym, lexeme);
   load++;
+}
+
+
+void SymbolTable::loadKeywords() {
+  loadKey(Symbol::BEGIN, "begin");
+  loadKey(Symbol::END, "end");
+  loadKey(Symbol::CONST, "const");
+  loadKey(Symbol::ARRAY, "array");
+  loadKey(Symbol::PROC, "proc");
+  loadKey(Symbol::SKIP, "skip");
+  loadKey(Symbol::READ, "read");
+  loadKey(Symbol::WRITE, "write");
+  loadKey(Symbol::CALL, "call");
+  loadKey(Symbol::IF, "if");
+  loadKey(Symbol::FI, "fi");
+  loadKey(Symbol::DO, "do");
+  loadKey(Symbol::OD, "od");
+  loadKey(Symbol::INT, "integer");
+  loadKey(Symbol::BOOL, "Boolean");
+  loadKey(Symbol::TRUE, "true");
+  loadKey(Symbol::FALSE, "false");
 }
