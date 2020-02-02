@@ -7,8 +7,8 @@
  * Enum containing all possible Symbols.
  */
 enum Symbol {
-  DOT = 256, COMMA, SEMI, LHSQR, RHSQR, AMP, BAR, TILD, LESS, EQUAL, GREAT, PLUS,
-  MINUS, TIMES, FSLASH, BSLASH, LHRND, RHRND, INIT, GUARD, ARROW, DOLLAR,
+  DOT = 256, COMMA, SEMI, LHSQR, RHSQR, AMP, BAR, TILD, LESS, EQUAL, GREAT,
+  PLUS, MINUS, TIMES, FSLASH, BSLASH, LHRND, RHRND, INIT, GUARD, ARROW, DOLLAR,
 
   INT, BOOL, FALSE, TRUE, BEGIN, END, CONST, ARRAY, PROC, SKIP, READ, WRITE,
   CALL, IF, FI, DO, OD,
@@ -52,7 +52,7 @@ const std::map<Symbol, std::string> SymbolToString {
   {ID, "ID"},
   {KEY, "keyword"},
   {ENDFILE, "EOF"},
-  {EMPTY, "skip"},
+  {EMPTY, "EMPTY"},
   {NEWLINE, "NEWLINE"},
   {NUM, "NUMBER"},
   {NAME_ERR, "NameErr"},

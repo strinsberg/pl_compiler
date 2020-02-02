@@ -15,13 +15,15 @@ class SymbolTable {
   SymbolTable();
 
   /**
-   * Searches for a lexeme in the symbol table and returns its position.
-   * Returns the EMPTY token if the table is full.
+   * Searches for a lexeme in the symbol table and returns its token.
+   * @param str The lexeme to search for.
+   * @return the token matching the lexeme or the EMPTY token if the table
+   * is full.
    */
   Token search(const std::string& str);
 
   /**
-   * Insert a new lexeme into the symbol table.
+   * Inserts a new lexeme into the symbol table.
    * Creates a new ID token for the lexeme as once the reserve words are
    * loaded the only thing loaded should be IDs.
    * @param str Insert a string into the hash table.
