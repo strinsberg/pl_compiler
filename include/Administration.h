@@ -26,12 +26,14 @@ class Administration {
   void newLine();
 
   /**
-   * Deals with a syntax error.
-   * @parm expected The token type we expected to see.
-   * @param actual The token type we got.
+   * Deal with a syntax error.
+   * Updates error states correctly and prints an error showing information
+   * about the expected and actual tokens or symbols.
+   * @parm expected The Symbol type we expected to see.
+   * @param actual The lexeme we got.
    * @return false when the max number of errors is reached.
    */
-  void syntaxError(Symbol expected, Symbol actual);
+  void syntaxError(Symbol expected, Token& actual);
 
   /**
     * Display text for an error.
@@ -39,32 +41,32 @@ class Administration {
     */
   void error(std::string text);
 
-  /**
-    * Scan the whole file and output all tokens to fout.
-    * Returns the number of tokens.
-    */
-  int scan();
-
+ private:
   /**
    * File to print all tokens to.
    */
   std::ostream& fout;
+
   /**
     * The scanner to use on the input.
     */
   Scanner& scanner;
+
   /**
     * The current line number.
     */
   int lineNum;
+
   /**
     * True if the line has no errors so far.
     */
   bool correctLine;
+
   /**
     * The total number of errors so far.
     */
   int errorCount;
+
   /**
     * Checks if current token is an error token.
     * @param ntoken The current token.

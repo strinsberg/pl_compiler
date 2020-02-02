@@ -2,54 +2,64 @@
 #include "Administration.h"
 #include "Symbol.h"
 
-using std::cout;
-using std::endl;
 
 Parser::Parser(Administration& a) : admin(a) {}
+
 
 void Parser::parse() {
   look = admin.getToken();
   program();
 }
 
+
 void Parser::match(Symbol sym) {
+  std::cout << "Matched: ";
   look.toString(std::cout);  // For debug
-  cout << endl;
+  std::cout << std::endl << std::endl;
+
   if (sym == look.getSymbol()) {
     look = admin.getToken();
-
   } else {
-    admin.syntaxError(sym, look.getSymbol());
+    admin.syntaxError(sym, look);
   }
 }
 
+
 void Parser::program() {
-  cout << "program" << endl;
+  std::cout << "program" << std::endl;
   block();
   match(Symbol::DOT);
 }
 
+
 void Parser::block() {
-  cout << "block" << endl;
+  std::cout << "block" << std::endl;
+
   match(Symbol::BEGIN);
   exprList();
   match(Symbol::END);
 }
 
+
 void Parser::exprList() {
-  std::cout << "Expression List" << endl;
+  std::cout << "Expression List" << std::endl;
+
   simpleExpr();
+
   while(look.getSymbol() == Symbol::COMMA) {
     match(Symbol::COMMA);
     simpleExpr();
   }
 }
 
+
 void Parser::simpleExpr() {
-  cout << "simpleExpr" << endl;
+  std::cout << "simpleExpr" << std::endl;
   if (look.getSymbol() == Symbol::MINUS)
     match(Symbol::MINUS);
+
   term();
+
   while (look.getSymbol() == Symbol::PLUS
       or look.getSymbol() == Symbol::MINUS) {
     addOp();
@@ -57,9 +67,12 @@ void Parser::simpleExpr() {
   }
 }
 
+
 void Parser::term() {
-  std::cout << "Term" << endl;
+  std::cout << "Term" << std::endl;
+
   factor();
+
   while(look.getSymbol() == Symbol::TIMES
       or look.getSymbol() == Symbol::FSLASH
       or look.getSymbol() == Symbol::BSLASH) {
@@ -68,12 +81,14 @@ void Parser::term() {
   }
 }
 
+
 void Parser::factor() {
-  std::cout << "Factor" << endl;
+  std::cout << "Factor" << std::endl;
+
   if(look.getSymbol() == Symbol::NUM) {
     match(Symbol::NUM);
   } else if (look.getSymbol() == Symbol::TRUE
-      or look.getSymbol() == Symbol::FALSE){
+      or look.getSymbol() == Symbol::FALSE) {
     boolSym();
   } else {
     match(Symbol::LHRND);
@@ -82,16 +97,20 @@ void Parser::factor() {
   }
 }
 
+
 void Parser::addOp() {
-  cout << "addOp" << endl;
+  std::cout << "addOp" << std::endl;
+
   if (look.getSymbol() == Symbol::PLUS)
     match(Symbol::PLUS);
   else
     match(Symbol::MINUS);
 }
 
+
 void Parser::multOp() {
-  cout << "multOp" << endl;
+  std::cout << "multOp" << std::endl;
+
   if (look.getSymbol() == Symbol::TIMES)
     match(Symbol::TIMES);
   else if (look.getSymbol() == Symbol::FSLASH)
@@ -100,8 +119,10 @@ void Parser::multOp() {
     match(Symbol::BSLASH);
 }
 
+
 void Parser::boolSym() {
-  cout << "boolSym" << endl;
+  std::cout << "boolSym" << std::endl;
+
   if (look.getSymbol() == Symbol::TRUE)
     match(Symbol::TRUE);
   else

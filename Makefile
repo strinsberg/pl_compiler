@@ -25,7 +25,7 @@ $(PROGRAM): $(SRC)
 	$(SRC)/*.cc
 
 memcheck: $(PROGRAM)
-	valgrind --tool=memcheck --leak-check=yes $(PROGRAM) test/scannerOfficialTest.pl
+	valgrind --tool=memcheck --leak-check=yes $(PROGRAM) test/simpleExps.pl
 
 static: $(SRC)
 	$(STATIC_ANALYSIS) --verbose --enable=all $(SRC) $(TEST) $(INCLUDE) --suppress=missingInclude
