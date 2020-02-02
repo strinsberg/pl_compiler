@@ -9,9 +9,11 @@
 
 using namespace std;
 
+
 int main(int argc, char** argv) {
   int opt;
 
+  // Deal with command line arguments
   std::string outfile;
   while((opt = getopt(argc, argv, "o:")) != -1) {
     switch (opt) {
@@ -24,11 +26,13 @@ int main(int argc, char** argv) {
     }
   }
 
+  // Check if there was an argument given for the file to compile
   if (optind >= argc) {
     cerr << "No filename given" << endl;
     return 2;
   }
 
+  // Open up the file to read from
   std::string filename(argv[optind]);
   std::ifstream fs(filename);
 
@@ -37,15 +41,18 @@ int main(int argc, char** argv) {
     return 3;
   }
 
+  // Open up the file to write to
   if (outfile == "")
     outfile = "pl.out";
   std::ofstream ofs(outfile);
 
+  // Create necessary components
   SymbolTable sym;
   Scanner scanner(fs, sym);
   Administration admin(ofs, scanner);
   Parser parser(admin);
 
+  // Run the compiler
   parser.parse();
 
   return 0;

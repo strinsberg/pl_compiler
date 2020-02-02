@@ -44,7 +44,7 @@ void Token::setVal(int v) {
 std::string Token::toString() {
   std::stringstream ss;
   ss << "<" << SymbolToString.at(sname);
-  
+
   if (sname == Symbol::ID)  
     ss << "  " << lexeme;
 
