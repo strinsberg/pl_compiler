@@ -11,45 +11,55 @@ class Token {
   Token(Symbol sym, std::string lexeme = "", int val = -1);
 
   /**
-    * Returns the symbol.
-    */ 
+   * Returns the symbol.
+   */ 
   Symbol getSymbol();
   
   /**
-    * Returns the lexeme.
-    */
+   * Returns the lexeme.
+   */
   std::string getLexeme();
   
   /**
-    * Returns the value.
-    */
+   * Returns the value.
+   */
   int getVal();
 
   /**
-    * Sets the symbol.
-    */
+   * Sets the symbol.
+   */
   void setSymbol(Symbol sym);
 
   /**
-    * Sets the lexeme.
-    */
+   * Sets the lexeme.
+   */
   void setLexeme(std::string lexeme);
 
   /**
-    * Sets the value.
-    */
+   * Sets the value.
+   */
   void setVal(int val);
 
   /**
-    * returns a string representation of the Token.
-    */
-  void toString(std::ostream& out) const;
+   * returns a string representation of the Token.
+   */
+  std::string toString();
 
  private:
+  /**
+   * The token's symbol.
+   */
   Symbol sname;
-  std::string lexeme;
-  int val;
 
+  /**
+   * The tokens lexeme.
+   */
+  std::string lexeme;
+
+  /**
+   * The numeric value of the token or it's position in the symbol table.
+   */
+  int val;
 };
 
 #endif

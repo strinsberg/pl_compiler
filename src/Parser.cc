@@ -14,9 +14,7 @@ void Parser::parse() {
 
 void Parser::match(Symbol sym) {
   // To Debug
-  std::cout << "Matched: ";
-  look.toString(std::cout);
-  std::cout << std::endl << std::endl;
+  std::cout << "Matched: " << look.toString() << std::endl << std::endl;
 
   if (sym == look.getSymbol()) {
     look = admin.getToken();
