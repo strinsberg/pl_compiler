@@ -16,11 +16,11 @@ void Parser::match(Symbol sym) {
   // To Debug
   std::cout << "Matched: " << look.toString() << std::endl << std::endl;
 
+  // If the symbol matche look ahead token then move to the next one
+  // otherwise call a syntax error.
   if (sym == look.getSymbol()) {
     look = admin.getToken();
   } else {
-    // Need to put some error recovery routines here so that tokens
-    // can continue being processed and checked
     admin.syntaxError(sym, look);
   }
 }
@@ -42,6 +42,7 @@ void Parser::block() {
 }
 
 
+// Will need to be adjusted when we add proper grammar
 void Parser::exprList() {
   std::cout << "Expression List" << std::endl;
 

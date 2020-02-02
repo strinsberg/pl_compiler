@@ -16,12 +16,15 @@ Token SymbolTable::insert(const std::string& str) {
   if (full())
     return Token(Symbol::FULL_TAB, str);
 
+  // Hash the string and find the right position in the table
   int pos = hash(str);
   std::pair<int, Token> item = probe(pos, str);
 
+  // If the string is not already in the table add it
   if (item.second.getSymbol() == Symbol::EMPTY)
     table[item.first] = Token(Symbol::ID, str, item.first);
 
+  // Increase load and return token
   load++;
   return table[item.first];
 }
@@ -31,6 +34,7 @@ int SymbolTable::hash(const std::string& str) {
   int hash_val = 0;
   int pow = 1;
 
+  // Calculate the rolling has for the first 10 chars of the string
   for (int i = 0; i < ID_MAX_CHARS && i < (int)str.length(); i++) {
     char c = str[i];
     hash_val = (hash_val + c * pow) % MOD;
@@ -59,6 +63,8 @@ std::string SymbolTable::toString() {
 std::pair<int, Token> SymbolTable::probe(int pos, std::string lexeme) {
   Token current = table[pos];
 
+  // linear probe for the lexeme or an empty token return a pair with
+  // the position and the token found
   while (current.getSymbol() != Symbol::EMPTY) {
     if (current.getLexeme() == lexeme)
       return {pos, current};

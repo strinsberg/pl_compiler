@@ -15,6 +15,7 @@ Administration::Administration(std::ostream& ofs, Scanner& sc)
 Token Administration::getToken() {
   Token t;
 
+  // Get the next token, but process newlines here
   while (1) {
     t = scanner.getToken();
     fout << t.toString() << " ";
@@ -24,6 +25,7 @@ Token Administration::getToken() {
     newLine();
   }
 
+  // Deal with error tokens here
   checkError(t);
   return t;
 }
@@ -44,6 +46,7 @@ void Administration::error(std::string text) {
     exit(-1);
   }
 
+  // If we have not yet had an error on this line print out error text
   if (correctLine != false) {
     std::cerr << "Error: Line: " << lineNum << " -> " << text << std::endl;
     correctLine = false;
