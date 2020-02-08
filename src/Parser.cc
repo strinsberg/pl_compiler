@@ -37,6 +37,7 @@ void Parser::block() {
   std::cout << "block" << std::endl;
 
   match(Symbol::BEGIN);
+  defPart();
   stmtPart();
   match(Symbol::END);
 }
