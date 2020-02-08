@@ -42,6 +42,103 @@ void Parser::block() {
 }
 
 
+void Parser::defPart() {
+  std::cout << "defPart" << std::endl;
+
+  while (defFirst()) {
+    def();
+    match(Symbol::SEMI);
+  }
+}
+
+bool Parser::defFirst() {
+  Symbol next =  look.getSymbol();
+
+  return (next == Symbol::CONST
+        or next == Symbol::INT
+          or next == BOOL
+            or next == Symbol::PROC);
+}
+
+
+void Parser::def() {
+  std::cout << "def" << std::endl;
+
+  Symbol next = look.getSymbol();
+  if (next == Symbol::CONST) {
+    constDef();
+  } else if (next == Symbol::INT or next == Symbol::BOOL) {
+    varDef();
+  } else {
+    procDef();
+  }
+}
+
+
+void Parser::constDef() {
+   std::cout << "constDef" << std::endl;
+
+   match(Symbol::CONST);
+   match(Symbol::ID);
+   match(Symbol::EQUAL);
+   constant();
+}
+
+
+void Parser::varDef() {
+  std::cout << "varDef" << std::endl;
+
+  typeSym();
+  vPrime();
+}
+
+
+void Parser::typeSym() {
+  std::cout << "typeSym" << std::endl;
+
+  Symbol next = look.getSymbol();
+  if(next == Symbol::INT) {
+    match(Symbol::INT);
+  } else {
+    match(Symbol::BOOL);
+  }
+}
+
+
+void Parser::vPrime() {
+  std::cout << "vPrime" << std::endl;
+
+  if (look.getSymbol() == Symbol::ID) {
+    varList();
+  } else {
+      match(Symbol::ARRAY);
+      varList();
+      match(Symbol::LHSQR);
+      constant();
+      match(Symbol::RHSQR);
+  }
+}
+
+void Parser::varList() {
+  std::cout << "varList" << std::endl;
+
+  match(Symbol::ID);
+  while(look.getSymbol() == Symbol::COMMA) {
+      match(Symbol::COMMA);
+      match(Symbol::ID);
+  }
+}
+
+
+void Parser::procDef(){
+  std::cout << "procDef" << std::endl;
+
+  match(Symbol::PROC);
+  match(Symbol::ID);
+  block();
+}
+
+
 // Will need to be adjusted when we add proper grammar
 void Parser::exprList() {
   std::cout << "Expression List" << std::endl;

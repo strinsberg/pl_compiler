@@ -47,6 +47,16 @@ class Parser {
    */
   void block();
 
+  void defPart();
+  bool defFirst();
+  void def();
+  void constDef();
+  void varDef();
+  void typeSym();
+  void vPrime();
+  void varList();
+  void procDef();
+
   /**
    * Parses a expression list from the stream of tokens.
    */
