@@ -47,6 +47,16 @@ class Parser {
    */
   void block();
 
+  void defPart();
+  bool defFirst();
+  void def();
+  void constDef();
+  void varDef();
+  void typeSym();
+  void vPrime();
+  void varList();
+  void procDef();
+
   /**
    * Parses the statement part of the program.
    */
