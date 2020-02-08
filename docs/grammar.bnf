@@ -87,7 +87,7 @@ NUM         := DIGIT { DIGIT }
 
 BOOL_SYM    := false | true
 
-NAME        := LETTER { LETTER | DIGIT | _ }   // KEY or ID
+NAME        := LETTER { LETTER | DIGIT | _ }   // ID
 
 LETTER      := a - z | A - Z
 

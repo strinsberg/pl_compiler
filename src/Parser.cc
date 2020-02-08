@@ -54,6 +54,9 @@ void Parser::exprList() {
   }
 }
 
+void Parser::expr() {
+
+}
 
 void Parser::simpleExpr() {
   std::cout << "simpleExpr" << std::endl;
@@ -92,10 +95,15 @@ void Parser::factor() {
   } else if (look.getSymbol() == Symbol::TRUE
       or look.getSymbol() == Symbol::FALSE) {
     boolSym();
-  } else {
+  } else if (look.getSymbol() == Symbol::LHRND) {
     match(Symbol::LHRND);
-    simpleExpr();
+    expr();
     match(Symbol::RHRND);
+  } else if (look.getSymbol() == Symbol::TILD) {
+    match(Symbol::TILD);
+    factor();
+  } else {
+    varAccess();
   }
 }
 
@@ -119,6 +127,37 @@ void Parser::multOp() {
     match(Symbol::FSLASH);
   else
     match(Symbol::BSLASH);
+}
+
+
+void Parser::varAccess() {
+  std::cout << "varAccess" << std::endl;
+
+  match(Symbol::ID);
+  if (look.getSymbol() == Symbol::LHSQR)
+    idxSelect();
+}
+
+
+void Parser::idxSelect() {
+  std::cout << "idxSelect" << std::endl;
+
+  match(Symbol::LHSQR);
+  expr();
+  match(Symbol::RHSQR);
+}
+
+
+void Parser::constant() {
+  std::cout << "constant" << std::endl;
+
+  if (look.getSymbol() == Symbol::NUM)
+    match(Symbol::NUM);
+  else if (look.getSymbol() == Symbol::TRUE
+        or look.getSymbol() == Symbol::FALSE)
+    boolSym();
+  else
+    match(Symbol::ID);
 }
 
 

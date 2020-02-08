@@ -51,6 +51,7 @@ class Parser {
    * Parses a expression list from the stream of tokens.
    */
   void exprList();
+  void expr();
 
   /**
    * Parses a simple expression from the stream of tokens.
@@ -77,6 +78,21 @@ class Parser {
    * stream of tokens.
    */
   void multOp();
+
+  /**
+   * Parses variable access.
+   */
+  void varAccess();
+
+  /**
+   * Parses an index selector. ie) A[i].
+   */
+  void idxSelect();
+
+  /**
+   * Parses a const non-terminal
+   */
+  void constant();
 
   /**
    * Parses a true or false from the stream of tokens.
