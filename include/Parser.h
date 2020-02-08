@@ -51,7 +51,6 @@ class Parser {
    * Parses a expression list from the stream of tokens.
    */
   void exprList();
-  void expr();
 
   /**
    * Parses a expression from the stream of tokens.

@@ -105,9 +105,6 @@ void Parser::relOp() {
   }
 }
 
-void Parser::expr() {
-
-}
 
 void Parser::simpleExpr() {
   std::cout << "simpleExpr" << std::endl;
