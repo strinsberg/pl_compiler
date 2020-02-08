@@ -122,11 +122,6 @@ Token Scanner::recognizeName() {
 Token Scanner::recognizeSpecial() {
   std::string lexeme = "";
 
-  // If the symbol we have means a number should follow scan for the number
-  if ((line[pos] == '+' || line[pos] == '-') && std::isdigit(line.at(pos+1)))
-    return recognizeNumeral();
-
-  
   // If we can make a lexeme of size 2 do it 
   lexeme+=(line[pos++]);
   if (pos < line.size()) {
@@ -150,10 +145,6 @@ Token Scanner::recognizeSpecial() {
 
 Token Scanner::recognizeNumeral() {
   std::string lexeme = "";
-
-  // If the first char is a plus or minus advance to the next char
-  if (line[pos] == '+' or line[pos] == '-')
-    lexeme += line[pos++];  
 
   // While the next char is a digit add it to the lexeme
   while(!isWhitespace(line[pos]) && pos < line.length()) {
