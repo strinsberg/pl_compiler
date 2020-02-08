@@ -132,8 +132,10 @@ Token Scanner::recognizeSpecial() {
   if (pos < line.size()) {
     std::string checkmap = lexeme + line[pos];
    
-    if(symmap.find(checkmap) != symmap.end())
+    if(symmap.find(checkmap) != symmap.end()) {
+      pos++;
       return Token(symmap[checkmap], checkmap);
+    }
   }
 
   // If character is not a symbol return a char_err token

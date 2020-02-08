@@ -37,8 +37,77 @@ void Parser::block() {
   std::cout << "block" << std::endl;
 
   match(Symbol::BEGIN);
-  exprList();
+  stmtPart();
   match(Symbol::END);
+}
+
+void Parser::stmtPart() {
+  std::cout << "stmtPart" << std::endl;
+
+  while (stmtFirst()) {
+    stmt();
+    match(Symbol::SEMI);
+  }
+}
+
+bool Parser::stmtFirst() {
+  Symbol next = look.getSymbol();
+  return (next == Symbol::READ or next == Symbol::SKIP or next == Symbol::WRITE
+      or next == Symbol::ID or next == Symbol::CALL or next == Symbol::IF
+      or next == Symbol::DO); 
+}
+
+void Parser::stmt() {
+  std::cout << "stmt" << std::endl;
+
+  Symbol next = look.getSymbol();
+  if (next == Symbol::SKIP)
+    emptyStmt();
+  else if (next == Symbol::READ)
+    readStmt();
+  else if (next == Symbol::WRITE)
+    writeStmt();
+  else if (next == Symbol::ID)
+    assignStmt();
+  else if (next == Symbol::CALL)
+    procStmt();
+  else if (next == Symbol::IF)
+    ifStmt();
+  else
+    doStmt();
+  
+  // Probably having an error here if nothing is matched would be good
+  // otherwise the error when none are correct will expect a do stmt
+}
+
+void Parser::emptyStmt() {
+  std::cout << "emptyStmt" << std::endl;
+
+  match(Symbol::SKIP);
+}
+
+void Parser::readStmt() {
+  std::cout << "readStmt" << std::endl;
+
+  match(Symbol::READ);
+  vacsList();
+}
+
+void Parser::vacsList() {
+  std::cout << "vacsList" << std::endl;
+
+  varAccess();
+  while (look.getSymbol() == Symbol::COMMA) {
+    match(Symbol::COMMA);
+    varAccess();
+  }
+}
+
+void Parser::writeStmt() {
+  std::cout << "writeStmt" << std::endl;
+
+  match(Symbol::WRITE);
+  exprList();
 }
 
 
@@ -52,6 +121,55 @@ void Parser::exprList() {
     match(Symbol::COMMA);
     expr();
   }
+}
+
+void Parser::assignStmt() {
+  std::cout << "assignStmt" << std::endl;
+
+  vacsList();
+  match(Symbol::INIT);
+  exprList();
+}
+
+void Parser::procStmt() {
+  std::cout << "procStmt" << std::endl;
+
+  match(Symbol::CALL);
+  match(Symbol::ID);
+}
+
+void Parser::ifStmt() {
+  std::cout << "ifStmt" << std::endl;
+
+  match(Symbol::IF);
+  guardedList();
+  match(Symbol::FI);
+}
+
+void Parser::doStmt() {
+  std::cout << "doStmt" << std::endl;
+
+  match(Symbol::DO);
+  guardedList();
+  match(Symbol::OD);
+}
+
+void Parser::guardedList() {
+  std::cout << "guardedList" << std::endl;
+
+  guardedComm();
+  while (look.getSymbol() == Symbol::GUARD) {
+    match(Symbol::GUARD);
+    guardedComm();
+  }
+}
+
+void Parser::guardedComm() {
+  std::cout << "guardedComm" << std::endl;
+
+  expr();
+  match(Symbol::ARROW);
+  stmtPart();
 }
 
 

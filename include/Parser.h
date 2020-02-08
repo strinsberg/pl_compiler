@@ -47,10 +47,25 @@ class Parser {
    */
   void block();
 
+  void stmtPart();
+  bool stmtFirst();
+  void stmt();
+  void emptyStmt();
+  void readStmt();
+  void vacsList();
+  void writeStmt();
+
   /**
    * Parses a expression list from the stream of tokens.
    */
   void exprList();
+
+  void assignStmt();
+  void procStmt();
+  void ifStmt();
+  void doStmt();
+  void guardedList();
+  void guardedComm();
 
   /**
    * Parses a expression from the stream of tokens.
