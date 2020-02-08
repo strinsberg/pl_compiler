@@ -24,6 +24,7 @@ VAR_LIST    := VAR_NAME { , VAR_NAME }
 
 PROC_DEF    := proc PROC_NAME BLOCK
 
+=== Done here down
 STMT_PART   := { STMT ; }
 
 STMT        := EMPTY_STMT |
@@ -56,7 +57,6 @@ GRCOM_LIST  := GRCOM { '[]' GRCOM }
 
 GRCOM       := EXPR -> STMT_PART
 
-=== Done here down
 EXPR        := PRIM_EXPR { PRIM_OP PRIM_EXPR }
 
 PRIM_OP     := & | '|'
