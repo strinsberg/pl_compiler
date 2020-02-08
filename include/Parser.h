@@ -53,6 +53,25 @@ class Parser {
   void exprList();
 
   /**
+   * Parses a expression from the stream of tokens.
+   */
+  void expr();
+  /**
+   * Parses a primary operator from the stream of tokens.
+   */
+  void primeOp();
+
+  /**
+   * Parses a primary expression from the stream of tokens.
+   */
+  void primeExpr();
+
+   /**
+    * Parses a realtional operator from the stream of tokens.
+    */
+  void relOp();
+
+  /**
    * Parses a simple expression from the stream of tokens.
    */
   void simpleExpr();

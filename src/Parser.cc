@@ -46,11 +46,62 @@ void Parser::block() {
 void Parser::exprList() {
   std::cout << "Expression List" << std::endl;
 
-  simpleExpr();
+  expr();
 
   while(look.getSymbol() == Symbol::COMMA) {
     match(Symbol::COMMA);
-    simpleExpr();
+    expr();
+  }
+}
+
+
+void Parser::expr() {
+  std::cout << "expr" << std::endl;
+
+  primeExpr();
+
+  while (look.getSymbol() == Symbol::AMP or
+      look.getSymbol() == Symbol::BAR) {
+    primeOp();
+    primeExpr();
+  }
+}
+
+
+void Parser::primeOp() {
+  std::cout << "prime-op" << std::endl;
+
+  if(look.getSymbol() == Symbol::AMP) {
+    match(Symbol::AMP);
+  } else {
+    match(Symbol::BAR);
+  }
+}
+
+
+void Parser::primeExpr() {
+  std::cout << "prime-Expr" << std::endl;
+
+  simpleExpr();
+
+  if(look.getSymbol() == Symbol::LESS or
+      look.getSymbol() == Symbol::EQUAL or
+      look.getSymbol() == Symbol::GREAT) {
+        relOp();
+        simpleExpr();
+      }
+}
+
+
+void Parser::relOp() {
+  std::cout << "rel-Op" << std::endl;
+
+  if(look.getSymbol() == Symbol::LESS) {
+    match(Symbol::LESS);
+  } else if (look.getSymbol() == Symbol::EQUAL) {
+    match(Symbol::EQUAL);
+  } else {
+    match(Symbol::GREAT);
   }
 }
 
