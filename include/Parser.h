@@ -47,12 +47,39 @@ class Parser {
    */
   void block();
 
+  /**
+   * Parses the statement part of the program.
+   */
   void stmtPart();
+
+  /**
+   * Checks to see if the next token is in the first set of stmt.
+   */
   bool stmtFirst();
+
+  /**
+   * Parses a statement.
+   */
   void stmt();
+
+  /**
+   * Parses an empty statement.
+   */
   void emptyStmt();
+
+  /**
+   * Parses a read statement.
+   */
   void readStmt();
+
+  /**
+   * Parses a variable access list.
+   */
   void vacsList();
+
+  /**
+   * Parses a write stamtement.
+   */
   void writeStmt();
 
   /**
@@ -60,11 +87,34 @@ class Parser {
    */
   void exprList();
 
+  /**
+   * Parses an assignment statement.
+   */
   void assignStmt();
+
+  /**
+   * Parses a procedure call.
+   */
   void procStmt();
+
+  /**
+   * Parses an if statement.
+   */
   void ifStmt();
+
+  /**
+   * Parses a do statement.
+   */
   void doStmt();
+
+  /**
+   * Parses a list of guarded commands.
+   */
   void guardedList();
+
+  /**
+   * Parses a guarded command.
+   */
   void guardedComm();
 
   /**

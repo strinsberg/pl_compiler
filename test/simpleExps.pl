@@ -1,5 +1,5 @@
 begin
-  false,                           $ Tests single expression
+  write false,                           $ Tests single expression
   true & (20 + 1 = 30),
   false | (false & true) | false,
   5 - 35 < 200,
@@ -12,5 +12,5 @@ begin
   -5,
   A[4] = 10,
   a < 34,
-  true & ~true
+  true & ~true;
 end.
