@@ -56,6 +56,7 @@ GRCOM_LIST  := GRCOM { '[]' GRCOM }
 
 GRCOM       := EXPR -> STMT_PART
 
+=== Done here down
 EXPR        := PRIM_EXPR { PRIM_OP PRIM_EXPR }
 
 PRIM_OP     := & | '|'
