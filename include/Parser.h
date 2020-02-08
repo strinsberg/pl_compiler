@@ -47,14 +47,49 @@ class Parser {
    */
   void block();
 
+  /**
+   * Parses a definition part from the stream of tokens.
+   */
   void defPart();
+
+  /**
+   * Checks for the accepted symbols for definition.
+   */
   bool defFirst();
+
+  /**
+   * Parses a definition from the stream of tokens.
+   */
   void def();
+
+  /**
+   * Parses a constant definitions from the stream of tokens.
+   */
   void constDef();
+
+  /**
+   * Parses a varaible definition from the stream of tokens.
+   */
   void varDef();
+
+  /**
+   * Parses a definition type from the stream of tokens.
+   */
   void typeSym();
+
+  /**
+   * Parses a varaible vs array from the stream of tokens.
+   */
   void vPrime();
+
+  /**
+   * Parses a varaible list from the stream of tokens.
+   */
   void varList();
+
+  /**
+   * Parses a procedure definition from the stream of tokens.
+   */
   void procDef();
 
   /**
