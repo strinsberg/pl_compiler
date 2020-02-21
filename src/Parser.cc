@@ -17,13 +17,26 @@ void Parser::match(Symbol sym, std::set<Symbol> stop) {
   // To Debug
   std::cout << "Matched: " << look.toString() << std::endl << std::endl;
 
-  // If the symbol matche look ahead token then move to the next one
+  // If the symbol matched look ahead token then move to the next one
   // otherwise call a syntax error.
   if (sym == look.getSymbol()) {
     look = admin.getToken();
   } else {
-    admin.syntaxError(sym, look);
+    syntaxError(stop);
   }
+  //syntaxCheck(stop);
+}
+
+
+void Parser::syntaxError(std::set<Symbol> stop) {
+  admin.error("Syntax Error");  // need more info using look.getSymbol()
+  while (! stop.count(look.getSymbol()))
+    look = admin.getToken();
+}
+
+void Parser::syntaxCheck(std::set<Symbol> stop) {
+  if (! stop.count(look.getSymbol()))
+    syntaxError(stop);
 }
 
 

@@ -39,6 +39,9 @@ class Parser {
    */
   void match(Symbol symbol, std::set<Symbol> stop);
 
+  void syntaxError(std::set<Symbol> stop);
+  void syntaxCheck(std::set<Symbol> stop);
+
   /**
    * Parses a program from the stream of tokens.
    */
