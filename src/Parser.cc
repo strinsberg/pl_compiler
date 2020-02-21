@@ -2,6 +2,7 @@
 #include "Parser.h"
 #include "Administration.h"
 #include "Symbol.h"
+#include "Grammar.h"
 
 
 Parser::Parser(Administration& a) : admin(a) {}
@@ -14,17 +15,16 @@ void Parser::parse() {
 
 
 void Parser::match(Symbol sym, std::set<Symbol> stop) {
-  // To Debug
-  std::cout << "Matched: " << look.toString() << std::endl << std::endl;
 
   // If the symbol matched look ahead token then move to the next one
   // otherwise call a syntax error.
   if (sym == look.getSymbol()) {
+    std::cout << "Matched: " << look.toString() << std::endl << std::endl;
     look = admin.getToken();
   } else {
     syntaxError(stop);
   }
-  //syntaxCheck(stop);
+  syntaxCheck(stop);
 }
 
 
@@ -40,9 +40,11 @@ void Parser::syntaxCheck(std::set<Symbol> stop) {
 }
 
 
+// Recursive rule functions ///////////////////////////////////////////
+
 void Parser::program(std::set<Symbol> stop) {
   std::cout << "program" << std::endl;
-  block(stop);
+  block(munion({stop, {Symbol::DOT}}));
   match(Symbol::DOT, stop);
 }
 
@@ -50,17 +52,17 @@ void Parser::program(std::set<Symbol> stop) {
 void Parser::block(std::set<Symbol> stop) {
   std::cout << "block" << std::endl;
 
-  match(Symbol::BEGIN, stop);
-  defPart(stop);
-  stmtPart(stop);
+  match(Symbol::BEGIN, munion({stop, First.at(NT::DEF_PART), First.at(NT::STMT_PART), {Symbol::END}}));
+  defPart(munion({stop, First.at(NT::STMT_PART), {Symbol::END}}));
+  stmtPart(munion({stop, {Symbol::END}}));
   match(Symbol::END, stop);
 }
 
 void Parser::stmtPart(std::set<Symbol> stop) {
   std::cout << "stmtPart" << std::endl;
 
-  while (stmtFirst()) {
-    stmt(stop);
+  while (First.at(NT::STMT).count(look.getSymbol())) {
+    stmt(munion({stop, {Symbol::SEMI}}));
     match(Symbol::SEMI, stop);
   }
 }
@@ -129,8 +131,8 @@ void Parser::writeStmt(std::set<Symbol> stop) {
 void Parser::defPart(std::set<Symbol> stop) {
   std::cout << "defPart" << std::endl;
 
-  while (defFirst()) {
-    def(stop);
+  while (First.at(NT::DEF).count(look.getSymbol())) {
+    def(munion({stop, {Symbol::SEMI}}));
     match(Symbol::SEMI, stop);
   }
 }
@@ -151,11 +153,11 @@ void Parser::def(std::set<Symbol> stop) {
   Symbol next = look.getSymbol();
   if (next == Symbol::CONST) {
     constDef(stop);
-  } else if (next == Symbol::INT or next == Symbol::BOOL) {
+  } else if (First.at(NT::VAR_DEF).count(next)) {
     varDef(stop);
-  } else {
+  } else if (First.at(NT::PROC_DEF).count(next)) {
     procDef(stop);
-  }
+  } // else error checks
 }
 
 
@@ -172,7 +174,7 @@ void Parser::constDef(std::set<Symbol> stop) {
 void Parser::varDef(std::set<Symbol> stop) {
   std::cout << "varDef" << std::endl;
 
-  typeSym(stop);
+  typeSym(munion({stop, First.at(NT::VPRIME)}));
   vPrime(stop);
 }
 
@@ -195,10 +197,10 @@ void Parser::vPrime(std::set<Symbol> stop) {
   if (look.getSymbol() == Symbol::ID) {
     varList(stop);
   } else {
-      match(Symbol::ARRAY, stop);
-      varList(stop);
-      match(Symbol::LHSQR, stop);
-      constant(stop);
+      match(Symbol::ARRAY, munion({stop, First.at(NT::VAR_LIST), {Symbol::LHSQR}, First.at(NT::CONST_NT), {Symbol::RHSQR}}));
+      varList(munion({stop, {Symbol::LHSQR}, First.at(NT::CONST_NT), {Symbol::RHSQR}}));
+      match(Symbol::LHSQR, munion({stop, First.at(NT::CONST_NT), {Symbol::RHSQR}}));
+      constant(munion({stop, {Symbol::RHSQR}}));
       match(Symbol::RHSQR, stop);
   }
 }

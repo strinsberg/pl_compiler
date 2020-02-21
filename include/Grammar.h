@@ -8,22 +8,22 @@
 /**
  * Enum to represent all non terminals that are possible in our language.
  */
-enum NonTerminal {
-  BOOL_SYM=512, NUM, CONST, IDX_SEL, VACS, FACTOR, MULT_OP, TERM,
+enum NT {
+  NAME = 512, BOOL_SYM, NUM_NT, CONST_NT, IDX_SEL, VACS, FACTOR, MULT_OP, TERM,
   ADD_OP, SIMP_EXP, REL_OP, PRIM_EXP, PRIM_OP, EXP, GRCOM, GRCOM_LIST,
-  DO_STMT, IF_STMT, PROC_STMT, VACS_LIST, ASC_STMT, EXP_LIST, WRITE,
-  READ, EMPTY, STMT, STMT_PART, PROC_DEF, VAR_LIST, TYPE_SYM, CONST_DEF,
+  DO_STMT, IF_STMT, PROC_STMT, VACS_LIST, ASC_STMT, EXP_LIST, WRITE_STMT,
+  READ_STMT, EMPTY_STMT, STMT, STMT_PART, PROC_DEF, VAR_LIST, TYPE_SYM, CONST_DEF,
   DEF, VAR_DEF, DEF_PART, BLOCK, PROGRAM, VPRIME
 };
 
 /**
  * Map from non terminals to thier first sets of symbols.
  */
-const map<NonTerminal, set<Symbol>> First{
+const std::map<NT, std::set<Symbol>> First{
   {NAME, {Symbol::ID}},
   {BOOL_SYM, {Symbol::FALSE, Symbol::TRUE}},
-  {NUM, {Symbol::NUM}},
-  {CONST, {Symbol::NUM, Symbol::FALSE, Symbol::TRUE, Symbol::ID}},
+  {NUM_NT, {Symbol::NUM}},
+  {CONST_NT, {Symbol::NUM, Symbol::FALSE, Symbol::TRUE, Symbol::ID}},
   {IDX_SEL, {Symbol::LHSQR}},
   {VACS, {Symbol::ID}},
   {FACTOR, {Symbol::ID, Symbol::FALSE, Symbol::TRUE, Symbol::NUM, Symbol::LHRND, Symbol::TILD}},
@@ -43,9 +43,9 @@ const map<NonTerminal, set<Symbol>> First{
   {VACS_LIST, {Symbol::ID}},
   {ASC_STMT, {Symbol::ID}},
   {EXP_LIST, {Symbol::NUM, Symbol::ID, Symbol::TRUE, Symbol::FALSE, Symbol::EQUAL, Symbol::LHRND, Symbol::TILD}},
-  {WRITE, {Symbol::WRITE}},
-  {READ, {Symbol::READ}},
-  {EMPTY, {Symbol::SKIP}},
+  {WRITE_STMT, {Symbol::WRITE}},
+  {READ_STMT, {Symbol::READ}},
+  {EMPTY_STMT, {Symbol::SKIP}},
   {STMT, {Symbol::SKIP, Symbol::READ, Symbol::WRITE, Symbol::CALL, Symbol::IF, Symbol::DO, Symbol::ID}},
   {STMT_PART, {Symbol::EPSILON, Symbol::SKIP, Symbol::READ, Symbol::WRITE, Symbol::CALL, Symbol::IF, Symbol::DO, Symbol::ID}},
   {PROC_DEF, {Symbol::PROC}},
@@ -59,6 +59,15 @@ const map<NonTerminal, set<Symbol>> First{
   {PROGRAM, {Symbol::BEGIN}},
   {VPRIME, {Symbol::ID, Symbol::ARRAY}},
 }; 
+
+std::set<Symbol> munion(std::vector<std::set<Symbol>> stopSets) {
+  std::set<Symbol> newSet;
+  for (auto& S : stopSets) {
+    for (auto sym : S)
+      newSet.insert(sym);
+  }
+  return newSet;
+}
 
 #endif
 
