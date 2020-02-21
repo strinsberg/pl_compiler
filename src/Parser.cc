@@ -63,7 +63,7 @@ void Parser::stmtPart(std::set<Symbol> stop) {
 
   while (First.at(NT::STMT).count(look.getSymbol())) {
     stmt(munion({stop, {Symbol::SEMI}}));
-    match(Symbol::SEMI, stop);
+    match(Symbol::SEMI, munion({stop, First.at(NT::STMT)}));
   }
 }
 
@@ -115,10 +115,10 @@ void Parser::readStmt(std::set<Symbol> stop) {
 void Parser::vacsList(std::set<Symbol> stop) {
   std::cout << "vacsList" << std::endl;
 
-  varAccess(munion({stop, First.at(NT::VACS_LIST)}));
+  varAccess(munion({stop, {Symbol::COMMA}}));
   while (look.getSymbol() == Symbol::COMMA) {
     match(Symbol::COMMA, munion({stop, First.at(NT::VACS_LIST)}));
-    varAccess(munion({stop, First.at(NT::VACS_LIST)}));
+    varAccess(munion({stop, {Symbol::COMMA}}));
   }
 }
 
@@ -135,7 +135,7 @@ void Parser::defPart(std::set<Symbol> stop) {
 
   while (First.at(NT::DEF).count(look.getSymbol())) {
     def(munion({stop, {Symbol::SEMI}}));
-    match(Symbol::SEMI, stop);
+    match(Symbol::SEMI, munion({stop, First.at(NT::DEF)}));
   }
 }
 
@@ -387,11 +387,11 @@ void Parser::factor(std::set<Symbol> stop) {
       or look.getSymbol() == Symbol::FALSE) {
     boolSym(stop);
   } else if (look.getSymbol() == Symbol::LHRND) {
-    match(Symbol::LHRND, stop);
-    expr(stop);
+    match(Symbol::LHRND, munion({stop, First.at(NT::EXP), {Symbol::RHRND}}));
+    expr(munion({stop, {Symbol::RHRND}}));
     match(Symbol::RHRND, stop);
   } else if (look.getSymbol() == Symbol::TILD) {
-    match(Symbol::TILD, stop);
+    match(Symbol::TILD, munion({stop, First.at(NT::FACTOR)}));
     factor(stop);
   } else if (First.at(NT::VACS).count(look.getSymbol())) {
     varAccess(stop);
