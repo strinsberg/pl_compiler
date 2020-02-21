@@ -231,19 +231,19 @@ void Parser::procDef(std::set<Symbol> stop){
 void Parser::exprList(std::set<Symbol> stop) {
   std::cout << "Expression List" << std::endl;
 
-  expr(munion({stop, First.at(NT::EXP_LIST)}));
+  expr(munion({stop, First.at(NT::EXP), {Symbol::COMMA}}));
 
   while(look.getSymbol() == Symbol::COMMA) {
-    match(Symbol::COMMA, munion({stop, First.at(NT::EXP_LIST)}));
-    expr(munion({stop, First.at(NT::EXP_LIST)}));
+    match(Symbol::COMMA, munion({stop, First.at(NT::EXP)}));
+    expr(munion({stop, First.at(NT::EXP), {Symbol::COMMA}}));
   }
 }
 
 void Parser::assignStmt(std::set<Symbol> stop) {
   std::cout << "assignStmt" << std::endl;
 
-  vacsList(stop);
-  match(Symbol::INIT, stop);
+  vacsList(munion({stop, First.at(NT::EXP_LIST), {Symbol::INIT}}));
+  match(Symbol::INIT, munion({stop, First.at(NT::EXP_LIST)}));
   exprList(stop);
 }
 
@@ -273,18 +273,18 @@ void Parser::doStmt(std::set<Symbol> stop) {
 void Parser::guardedList(std::set<Symbol> stop) {
   std::cout << "guardedList" << std::endl;
 
-  guardedComm(stop);
+  guardedComm(munion({stop, {Symbol::GUARD}, First.at(NT::GRCOM)}));
   while (look.getSymbol() == Symbol::GUARD) {
-    match(Symbol::GUARD, stop);
-    guardedComm(stop);
+    match(Symbol::GUARD, munion({stop, {Symbol::GUARD}, First.at(NT::GRCOM)}));
+    guardedComm(munion({stop, {Symbol::GUARD}, First.at(NT::GRCOM)}));
   }
 }
 
 void Parser::guardedComm(std::set<Symbol> stop) {
   std::cout << "guardedComm" << std::endl;
 
-  expr(stop);
-  match(Symbol::ARROW, stop);
+  expr(munion({stop, {Symbol::ARROW}, First.at(NT::STMT_PART)}));
+  match(Symbol::ARROW, munion({stop, First.at(NT::STMT_PART)}));
   stmtPart(stop);
 }
 
@@ -337,7 +337,7 @@ void Parser::relOp(std::set<Symbol> stop) {
     match(Symbol::LESS, stop);
   } else if (look.getSymbol() == Symbol::EQUAL) {
     match(Symbol::EQUAL, stop);
-  } else if (look.getSymbol() == Symbol::GREAT){
+  } else if (look.getSymbol() == Symbol::GREAT) {
     match(Symbol::GREAT, stop);
   } else {
     syntaxError(stop);
@@ -365,13 +365,11 @@ void Parser::simpleExpr(std::set<Symbol> stop) {
 void Parser::term(std::set<Symbol> stop) {
   std::cout << "Term" << std::endl;
 
-  factor(stop);
+  factor(munion({stop, First.at(NT::MULT_OP), First.at(NT::FACTOR)}));
 
-  while(look.getSymbol() == Symbol::TIMES
-      or look.getSymbol() == Symbol::FSLASH
-      or look.getSymbol() == Symbol::BSLASH) {
-    multOp(stop);
-    factor(stop);
+  while (First.at(NT::MULT_OP).count(look.getSymbol())) {
+    multOp(munion({stop, First.at(NT::MULT_OP), First.at(NT::FACTOR)}));
+    factor(munion({stop, First.at(NT::MULT_OP), First.at(NT::FACTOR)}));
   }
 }
 
@@ -379,6 +377,7 @@ void Parser::term(std::set<Symbol> stop) {
 void Parser::factor(std::set<Symbol> stop) {
   std::cout << "Factor" << std::endl;
 
+  bool err = false;
   if(look.getSymbol() == Symbol::NUM) {
     match(Symbol::NUM, stop);
   } else if (look.getSymbol() == Symbol::TRUE
@@ -391,9 +390,20 @@ void Parser::factor(std::set<Symbol> stop) {
   } else if (look.getSymbol() == Symbol::TILD) {
     match(Symbol::TILD, stop);
     factor(stop);
-  } else {
+  } else if (First.at(NT::VACS).count(look.getSymbol())) {
     varAccess(stop);
+  } else {
+    err = true;
   }
+
+  std::set<Symbol> allFirst = munion({{Symbol::NUM}, First.at(NT::BOOL_SYM),
+      {Symbol::LHRND}, {Symbol::TILD}, First.at(NT::VACS)});
+
+  // Check if it is possible to have epsilon
+  if (!allFirst.count(Symbol::EPSILON) and err)
+    syntaxError(stop);
+  else
+    syntaxCheck(stop);
 }
 
 
@@ -402,8 +412,11 @@ void Parser::addOp(std::set<Symbol> stop) {
 
   if (look.getSymbol() == Symbol::PLUS)
     match(Symbol::PLUS, stop);
-  else
+  else if (look.getSymbol() == Symbol::MINUS)
     match(Symbol::MINUS, stop);
+  else
+    syntaxError(stop);  // epsilon is not possible
+  syntaxCheck(stop);
 }
 
 
@@ -414,15 +427,19 @@ void Parser::multOp(std::set<Symbol> stop) {
     match(Symbol::TIMES, stop);
   else if (look.getSymbol() == Symbol::FSLASH)
     match(Symbol::FSLASH, stop);
-  else
+  else if (look.getSymbol() == Symbol::BSLASH)
     match(Symbol::BSLASH, stop);
+  else
+    syntaxError(stop);  // epsilon is not possible
+  syntaxCheck(stop);
 }
 
 
 void Parser::varAccess(std::set<Symbol> stop) {
   std::cout << "varAccess" << std::endl;
 
-  match(Symbol::ID, stop);
+  match(Symbol::ID, munion({stop, First.at(NT::IDX_SEL)}));
+  // syntax check on next symbol is run in match
   if (look.getSymbol() == Symbol::LHSQR)
     idxSelect(stop);
 }
@@ -431,8 +448,8 @@ void Parser::varAccess(std::set<Symbol> stop) {
 void Parser::idxSelect(std::set<Symbol> stop) {
   std::cout << "idxSelect" << std::endl;
 
-  match(Symbol::LHSQR, stop);
-  expr(stop);
+  match(Symbol::LHSQR, munion({stop, First.at(NT::EXP), {Symbol::RHSQR}}));
+  expr(munion({stop, {Symbol::RHSQR}}));
   match(Symbol::RHSQR, stop);
 }
 
@@ -442,19 +459,27 @@ void Parser::constant(std::set<Symbol> stop) {
 
   if (look.getSymbol() == Symbol::NUM)
     match(Symbol::NUM, stop);
-  else if (look.getSymbol() == Symbol::TRUE
-        or look.getSymbol() == Symbol::FALSE)
+  else if (First.at(NT::BOOL_SYM).count(look.getSymbol()))
     boolSym(stop);
-  else
+  else if (look.getSymbol() == Symbol::ID)
     match(Symbol::ID, stop);
+  else {
+    syntaxError(stop);  // epsilon is guaranteed not in any of these
+  }
+  syntaxCheck(stop);
 }
 
 
 void Parser::boolSym(std::set<Symbol> stop) {
   std::cout << "boolSym" << std::endl;
 
-  if (look.getSymbol() == Symbol::TRUE)
+  if (look.getSymbol() == Symbol::TRUE) {
     match(Symbol::TRUE, stop);
-  else
+  } else if (look.getSymbol() == Symbol::FALSE) {
     match(Symbol::FALSE, stop);
+  } else {
+    // epsilon is clearly not in the first of true and false
+    syntaxError(stop);
+  }
+  syntaxCheck(stop);
 }
