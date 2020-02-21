@@ -71,12 +71,12 @@ bool Parser::stmtFirst() {
   Symbol next = look.getSymbol();
   return (next == Symbol::READ or next == Symbol::SKIP or next == Symbol::WRITE
       or next == Symbol::ID or next == Symbol::CALL or next == Symbol::IF
-      or next == Symbol::DO); 
+      or next == Symbol::DO);
 }
 
 void Parser::stmt(std::set<Symbol> stop) {
   std::cout << "stmt" << std::endl;
-
+  bool err = false;
   Symbol next = look.getSymbol();
   if (next == Symbol::SKIP)
     emptyStmt(stop);
@@ -90,9 +90,16 @@ void Parser::stmt(std::set<Symbol> stop) {
     procStmt(stop);
   else if (next == Symbol::IF)
     ifStmt(stop);
-  else
+  else if (next == Symbol::DO)
     doStmt(stop);
-  
+  else
+    err = true;
+  std::set<Symbol> allFirst = munion({First.at(NT::EMPTY_STMT), First.at(NT::READ_STMT), First.at(NT::WRITE_STMT), First.at(NT::ASC_STMT), First.at(NT::PROC_STMT), First.at(NT::IF_STMT), First.at(NT::DO_STMT)});
+  if(!allFirst.count(Symbol::EPSILON) && err)
+    syntaxError(stop);
+  else
+    syntaxCheck(stop);
+
   // Probably having an error here if nothing is matched would be good
   // otherwise the error when none are correct will expect a do stmt
 }
@@ -106,24 +113,25 @@ void Parser::emptyStmt(std::set<Symbol> stop) {
 void Parser::readStmt(std::set<Symbol> stop) {
   std::cout << "readStmt" << std::endl;
 
-  match(Symbol::READ, stop);
+  match(Symbol::READ, munion({stop, First.at(NT::VACS_LIST)}));
   vacsList(stop);
 }
+
 
 void Parser::vacsList(std::set<Symbol> stop) {
   std::cout << "vacsList" << std::endl;
 
-  varAccess(stop);
+  varAccess(munion({stop, First.at(NT::VACS_LIST)}));
   while (look.getSymbol() == Symbol::COMMA) {
-    match(Symbol::COMMA, stop);
-    varAccess(stop);
+    match(Symbol::COMMA, munion({stop, First.at(NT::VACS_LIST)}));
+    varAccess(munion({stop, First.at(NT::VACS_LIST)}));
   }
 }
 
 void Parser::writeStmt(std::set<Symbol> stop) {
   std::cout << "writeStmt" << std::endl;
 
-  match(Symbol::WRITE, stop);
+  match(Symbol::WRITE, munion({stop, First.at(NT::EXP_LIST)}));
   exprList(stop);
 }
 
@@ -137,19 +145,11 @@ void Parser::defPart(std::set<Symbol> stop) {
   }
 }
 
-bool Parser::defFirst() {
-  Symbol next =  look.getSymbol();
-
-  return (next == Symbol::CONST
-        or next == Symbol::INT
-          or next == BOOL
-            or next == Symbol::PROC);
-}
-
 
 void Parser::def(std::set<Symbol> stop) {
   std::cout << "def" << std::endl;
 
+  bool err = false;
   Symbol next = look.getSymbol();
   if (next == Symbol::CONST) {
     constDef(stop);
@@ -157,7 +157,15 @@ void Parser::def(std::set<Symbol> stop) {
     varDef(stop);
   } else if (First.at(NT::PROC_DEF).count(next)) {
     procDef(stop);
-  } // else error checks
+  }
+  else
+    err = true;
+  std::set<Symbol> allFirst = munion({First.at(NT::CONST_DEF), First.at(NT::VAR_DEF), First.at(NT::PROC_DEF)});
+  if(!allFirst.count(Symbol::EPSILON) && err)
+    syntaxError(stop);
+  else
+    syntaxCheck(stop);
+
 }
 
 
@@ -229,11 +237,11 @@ void Parser::procDef(std::set<Symbol> stop){
 void Parser::exprList(std::set<Symbol> stop) {
   std::cout << "Expression List" << std::endl;
 
-  expr(stop);
+  expr(munion({stop, First.at(NT::EXP_LIST)}));
 
   while(look.getSymbol() == Symbol::COMMA) {
-    match(Symbol::COMMA, stop);
-    expr(stop);
+    match(Symbol::COMMA, munion({stop, First.at(NT::EXP_LIST)}));
+    expr(munion({stop, First.at(NT::EXP_LIST)}));
   }
 }
 
@@ -290,12 +298,12 @@ void Parser::guardedComm(std::set<Symbol> stop) {
 void Parser::expr(std::set<Symbol> stop) {
   std::cout << "expr" << std::endl;
 
-  primeExpr(stop);
+  primeExpr(munion({stop, First.at(NT::PRIM_OP), First.at(NT::PRIM_EXP)}));
 
   while (look.getSymbol() == Symbol::AMP or
       look.getSymbol() == Symbol::BAR) {
-    primeOp(stop);
-    primeExpr(stop);
+    primeOp(munion({stop, First.at(NT::PRIM_OP), First.at(NT::PRIM_EXP)}));
+    primeExpr(munion({stop, First.at(NT::PRIM_OP), First.at(NT::PRIM_EXP)}));
   }
 }
 
@@ -314,13 +322,13 @@ void Parser::primeOp(std::set<Symbol> stop) {
 void Parser::primeExpr(std::set<Symbol> stop) {
   std::cout << "prime-Expr" << std::endl;
 
-  simpleExpr(stop);
+  simpleExpr(munion({stop, First.at(NT::REL_OP), First.at(NT::SIMP_EXP)}));
 
   if(look.getSymbol() == Symbol::LESS or
       look.getSymbol() == Symbol::EQUAL or
       look.getSymbol() == Symbol::GREAT) {
-        relOp(stop);
-        simpleExpr(stop);
+        relOp(munion({stop, First.at(NT::REL_OP), First.at(NT::SIMP_EXP)}));
+        simpleExpr(munion({stop, First.at(NT::REL_OP), First.at(NT::SIMP_EXP)}));
       }
 }
 
@@ -340,15 +348,16 @@ void Parser::relOp(std::set<Symbol> stop) {
 
 void Parser::simpleExpr(std::set<Symbol> stop) {
   std::cout << "simpleExpr" << std::endl;
+  //possible syntax check
   if (look.getSymbol() == Symbol::MINUS)
-    match(Symbol::MINUS, stop);
+    match(Symbol::MINUS, munion({stop, First.at(NT::TERM)}));
 
-  term(stop);
+  term(munion({stop, First.at(NT::ADD_OP), First.at(NT::TERM)}));
 
   while (look.getSymbol() == Symbol::PLUS
       or look.getSymbol() == Symbol::MINUS) {
-    addOp(stop);
-    term(stop);
+    addOp(munion({stop, First.at(NT::ADD_OP), First.at(NT::TERM)}));
+    term(munion({stop, First.at(NT::ADD_OP), First.at(NT::TERM)}));
   }
 }
 

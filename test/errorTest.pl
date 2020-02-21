@@ -1,3 +1,4 @@
 begin
-  integer
+  integer i;
+  i := 2;
 end.
