@@ -67,12 +67,6 @@ void Parser::stmtPart(std::set<Symbol> stop) {
   }
 }
 
-bool Parser::stmtFirst() {
-  Symbol next = look.getSymbol();
-  return (next == Symbol::READ or next == Symbol::SKIP or next == Symbol::WRITE
-      or next == Symbol::ID or next == Symbol::CALL or next == Symbol::IF
-      or next == Symbol::DO);
-}
 
 void Parser::stmt(std::set<Symbol> stop) {
   std::cout << "stmt" << std::endl;
