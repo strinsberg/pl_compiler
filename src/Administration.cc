@@ -6,8 +6,9 @@
 #include <iostream>
 
 
-Administration::Administration(std::ostream& ofs, Scanner& sc)
-    : fout(ofs), scanner(sc), lineNum(1), correctLine(true), errorCount(0)  {
+Administration::Administration(std::ostream& ofs, Scanner& sc, bool deb)
+    : fout(ofs), scanner(sc), lineNum(1), correctLine(true), errorCount(0),
+      debug(deb) {
   fout << "1:  ";
 }
 
@@ -54,9 +55,9 @@ void Administration::error(std::string text) {
 }
 
 
-void Administration::syntaxError(Symbol expected, Token& actual) {
-  error("Syntax Error near: '" + actual.getLexeme()
-    + "' Expected Token Type: " + SymbolToString.at(expected));
+void Administration::debugInfo(std::string text) {
+  if (debug)
+    std::cout << text << std::endl;
 }
 
 
