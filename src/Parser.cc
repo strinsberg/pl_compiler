@@ -224,8 +224,8 @@ void Parser::varList(std::set<Symbol> stop) {
 void Parser::procDef(std::set<Symbol> stop){
   std::cout << "procDef" << std::endl;
 
-  match(Symbol::PROC, stop);
-  match(Symbol::ID, stop);
+  match(Symbol::PROC, munion({stop, {Symbol::ID}, First.at(NT::BLOCK)}));
+  match(Symbol::ID, munion({stop, First.at(NT::BLOCK)}));
   block(stop);
 }
 
@@ -253,23 +253,23 @@ void Parser::assignStmt(std::set<Symbol> stop) {
 void Parser::procStmt(std::set<Symbol> stop) {
   std::cout << "procStmt" << std::endl;
 
-  match(Symbol::CALL, stop);
+  match(Symbol::CALL, munion({stop, {Symbol::ID}}));
   match(Symbol::ID, stop);
 }
 
 void Parser::ifStmt(std::set<Symbol> stop) {
   std::cout << "ifStmt" << std::endl;
 
-  match(Symbol::IF, stop);
-  guardedList(stop);
+  match(Symbol::IF, munion({stop, First.at(NT::GRCOM_LIST), {Symbol::FI}}));
+  guardedList(munion({stop, {Symbol::FI}}));
   match(Symbol::FI, stop);
 }
 
 void Parser::doStmt(std::set<Symbol> stop) {
   std::cout << "doStmt" << std::endl;
 
-  match(Symbol::DO, stop);
-  guardedList(stop);
+  match(Symbol::DO, munion({stop, First.at(NT::GRCOM_LIST), {Symbol::OD}}));
+  guardedList(munion({stop, {Symbol::OD}}));
   match(Symbol::OD, stop);
 }
 
