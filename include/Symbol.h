@@ -13,14 +13,14 @@ enum Symbol {
   INT, BOOL, FALSE, TRUE, BEGIN, END, CONST, ARRAY, PROC, SKIP, READ, WRITE,
   CALL, IF, FI, DO, OD,
 
-  ID, KEY, ENDFILE, EMPTY, NEWLINE, NUM,
+  ID, KEY, ENDFILE, EMPTY, EPSILON, NEWLINE, NUM,
 
   NAME_ERR, NUM_ERR, CHAR_ERR, FULL_TAB
 };
 
 
 /**
- * Map mapping all the symbols to string versions of themselves for printing.
+ * Map from all symbols to string versions of themselves for printing.
  */
 const std::map<Symbol, std::string> SymbolToString {
   {DOT, "'.'"},

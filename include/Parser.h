@@ -2,6 +2,8 @@
 #define PARSER_H
 
 #include <iostream>
+#include <set>
+#include "Symbol.h"
 #include "Token.h"
 #include "Administration.h"
 
@@ -35,22 +37,22 @@ class Parser {
   /**
    * Match a Token and move to the next one.
    */
-  void match(Symbol symbol);
+  void match(Symbol symbol, std::set<Symbol> stop);
 
   /**
    * Parses a program from the stream of tokens.
    */
-  void program();
+  void program(std::set<Symbol> stop);
 
   /**
    * Parses a block from the stream of tokens.
    */
-  void block();
+  void block(std::set<Symbol> stop);
 
   /**
    * Parses a definition part from the stream of tokens.
    */
-  void defPart();
+  void defPart(std::set<Symbol> stop);
 
   /**
    * Checks for the accepted symbols for definition.
@@ -60,172 +62,172 @@ class Parser {
   /**
    * Parses a definition from the stream of tokens.
    */
-  void def();
+  void def(std::set<Symbol> stop);
 
   /**
    * Parses a constant definitions from the stream of tokens.
    */
-  void constDef();
+  void constDef(std::set<Symbol> stop);
 
   /**
    * Parses a varaible definition from the stream of tokens.
    */
-  void varDef();
+  void varDef(std::set<Symbol> stop);
 
   /**
    * Parses a definition type from the stream of tokens.
    */
-  void typeSym();
+  void typeSym(std::set<Symbol> stop);
 
   /**
    * Parses a varaible vs array from the stream of tokens.
    */
-  void vPrime();
+  void vPrime(std::set<Symbol> stop);
 
   /**
    * Parses a varaible list from the stream of tokens.
    */
-  void varList();
+  void varList(std::set<Symbol> stop);
 
   /**
    * Parses a procedure definition from the stream of tokens.
    */
-  void procDef();
+  void procDef(std::set<Symbol> stop);
 
   /**
    * Parses the statement part of the program.
    */
-  void stmtPart();
+  void stmtPart(std::set<Symbol> stop);
 
   /**
-   * Checks to see if the next token is in the first set of stmt.
+   * Checks to see if the next token is in the first std::set of stmt.
    */
   bool stmtFirst();
 
   /**
    * Parses a statement.
    */
-  void stmt();
+  void stmt(std::set<Symbol> stop);
 
   /**
    * Parses an empty statement.
    */
-  void emptyStmt();
+  void emptyStmt(std::set<Symbol> stop);
 
   /**
    * Parses a read statement.
    */
-  void readStmt();
+  void readStmt(std::set<Symbol> stop);
 
   /**
    * Parses a variable access list.
    */
-  void vacsList();
+  void vacsList(std::set<Symbol> stop);
 
   /**
    * Parses a write stamtement.
    */
-  void writeStmt();
+  void writeStmt(std::set<Symbol> stop);
 
   /**
    * Parses a expression list from the stream of tokens.
    */
-  void exprList();
+  void exprList(std::set<Symbol> stop);
 
   /**
    * Parses an assignment statement.
    */
-  void assignStmt();
+  void assignStmt(std::set<Symbol> stop);
 
   /**
    * Parses a procedure call.
    */
-  void procStmt();
+  void procStmt(std::set<Symbol> stop);
 
   /**
    * Parses an if statement.
    */
-  void ifStmt();
+  void ifStmt(std::set<Symbol> stop);
 
   /**
    * Parses a do statement.
    */
-  void doStmt();
+  void doStmt(std::set<Symbol> stop);
 
   /**
    * Parses a list of guarded commands.
    */
-  void guardedList();
+  void guardedList(std::set<Symbol> stop);
 
   /**
    * Parses a guarded command.
    */
-  void guardedComm();
+  void guardedComm(std::set<Symbol> stop);
 
   /**
    * Parses a expression from the stream of tokens.
    */
-  void expr();
+  void expr(std::set<Symbol> stop);
   /**
    * Parses a primary operator from the stream of tokens.
    */
-  void primeOp();
+  void primeOp(std::set<Symbol> stop);
 
   /**
    * Parses a primary expression from the stream of tokens.
    */
-  void primeExpr();
+  void primeExpr(std::set<Symbol> stop);
 
    /**
     * Parses a realtional operator from the stream of tokens.
     */
-  void relOp();
+  void relOp(std::set<Symbol> stop);
 
   /**
    * Parses a simple expression from the stream of tokens.
    */
-  void simpleExpr();
+  void simpleExpr(std::set<Symbol> stop);
 
   /**
    * Parses a term from the stream of tokens.
    */
-  void term();
+  void term(std::set<Symbol> stop);
 
   /**
    * Parses a factor from the stream of tokens.
    */
-  void factor();
+  void factor(std::set<Symbol> stop);
 
   /**
    * Parses a plus or minus operator from the stream of tokens.
    */
-  void addOp();
+  void addOp(std::set<Symbol> stop);
 
   /**
    * Parses a multiplication or division or modulus operator from the
    * stream of tokens.
    */
-  void multOp();
+  void multOp(std::set<Symbol> stop);
 
   /**
    * Parses variable access.
    */
-  void varAccess();
+  void varAccess(std::set<Symbol> stop);
 
   /**
    * Parses an index selector. ie) A[i].
    */
-  void idxSelect();
+  void idxSelect(std::set<Symbol> stop);
 
   /**
    * Parses a const non-terminal
    */
-  void constant();
+  void constant(std::set<Symbol> stop);
 
   /**
    * Parses a true or false from the stream of tokens.
    */
-  void boolSym();
+  void boolSym(std::set<Symbol> stop);
 };
 
 #endif

@@ -5,6 +5,9 @@
 #include <map>
 #include <set>
 
+/**
+ * Enum to represent all non terminals that are possible in our language.
+ */
 enum NonTerminal {
   BOOL_SYM=512, NUM, CONST, IDX_SEL, VACS, FACTOR, MULT_OP, TERM,
   ADD_OP, SIMP_EXP, REL_OP, PRIM_EXP, PRIM_OP, EXP, GRCOM, GRCOM_LIST,
@@ -13,6 +16,9 @@ enum NonTerminal {
   DEF, VAR_DEF, DEF_PART, BLOCK, PROGRAM, VPRIME
 };
 
+/**
+ * Map from non terminals to thier first sets of symbols.
+ */
 const map<NonTerminal, set<Symbol>> First{
   {NAME, {Symbol::ID}},
   {BOOL_SYM, {Symbol::FALSE, Symbol::TRUE}},

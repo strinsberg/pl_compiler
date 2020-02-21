@@ -1,3 +1,4 @@
+#include <set>
 #include "Parser.h"
 #include "Administration.h"
 #include "Symbol.h"
@@ -8,11 +9,11 @@ Parser::Parser(Administration& a) : admin(a) {}
 
 void Parser::parse() {
   look = admin.getToken();
-  program();
+  program( std::set<Symbol>{Symbol::ENDFILE} );
 }
 
 
-void Parser::match(Symbol sym) {
+void Parser::match(Symbol sym, std::set<Symbol> stop) {
   // To Debug
   std::cout << "Matched: " << look.toString() << std::endl << std::endl;
 
@@ -26,28 +27,28 @@ void Parser::match(Symbol sym) {
 }
 
 
-void Parser::program() {
+void Parser::program(std::set<Symbol> stop) {
   std::cout << "program" << std::endl;
-  block();
-  match(Symbol::DOT);
+  block(stop);
+  match(Symbol::DOT, stop);
 }
 
 
-void Parser::block() {
+void Parser::block(std::set<Symbol> stop) {
   std::cout << "block" << std::endl;
 
-  match(Symbol::BEGIN);
-  defPart();
-  stmtPart();
-  match(Symbol::END);
+  match(Symbol::BEGIN, stop);
+  defPart(stop);
+  stmtPart(stop);
+  match(Symbol::END, stop);
 }
 
-void Parser::stmtPart() {
+void Parser::stmtPart(std::set<Symbol> stop) {
   std::cout << "stmtPart" << std::endl;
 
   while (stmtFirst()) {
-    stmt();
-    match(Symbol::SEMI);
+    stmt(stop);
+    match(Symbol::SEMI, stop);
   }
 }
 
@@ -58,66 +59,66 @@ bool Parser::stmtFirst() {
       or next == Symbol::DO); 
 }
 
-void Parser::stmt() {
+void Parser::stmt(std::set<Symbol> stop) {
   std::cout << "stmt" << std::endl;
 
   Symbol next = look.getSymbol();
   if (next == Symbol::SKIP)
-    emptyStmt();
+    emptyStmt(stop);
   else if (next == Symbol::READ)
-    readStmt();
+    readStmt(stop);
   else if (next == Symbol::WRITE)
-    writeStmt();
+    writeStmt(stop);
   else if (next == Symbol::ID)
-    assignStmt();
+    assignStmt(stop);
   else if (next == Symbol::CALL)
-    procStmt();
+    procStmt(stop);
   else if (next == Symbol::IF)
-    ifStmt();
+    ifStmt(stop);
   else
-    doStmt();
+    doStmt(stop);
   
   // Probably having an error here if nothing is matched would be good
   // otherwise the error when none are correct will expect a do stmt
 }
 
-void Parser::emptyStmt() {
+void Parser::emptyStmt(std::set<Symbol> stop) {
   std::cout << "emptyStmt" << std::endl;
 
-  match(Symbol::SKIP);
+  match(Symbol::SKIP, stop);
 }
 
-void Parser::readStmt() {
+void Parser::readStmt(std::set<Symbol> stop) {
   std::cout << "readStmt" << std::endl;
 
-  match(Symbol::READ);
-  vacsList();
+  match(Symbol::READ, stop);
+  vacsList(stop);
 }
 
-void Parser::vacsList() {
+void Parser::vacsList(std::set<Symbol> stop) {
   std::cout << "vacsList" << std::endl;
 
-  varAccess();
+  varAccess(stop);
   while (look.getSymbol() == Symbol::COMMA) {
-    match(Symbol::COMMA);
-    varAccess();
+    match(Symbol::COMMA, stop);
+    varAccess(stop);
   }
 }
 
-void Parser::writeStmt() {
+void Parser::writeStmt(std::set<Symbol> stop) {
   std::cout << "writeStmt" << std::endl;
 
-  match(Symbol::WRITE);
-  exprList();
+  match(Symbol::WRITE, stop);
+  exprList(stop);
 }
 
 
-void Parser::defPart() {
+void Parser::defPart(std::set<Symbol> stop) {
   std::cout << "defPart" << std::endl;
 
   while (defFirst()) {
-    def();
-    match(Symbol::SEMI);
+    def(stop);
+    match(Symbol::SEMI, stop);
   }
 }
 
@@ -131,305 +132,305 @@ bool Parser::defFirst() {
 }
 
 
-void Parser::def() {
+void Parser::def(std::set<Symbol> stop) {
   std::cout << "def" << std::endl;
 
   Symbol next = look.getSymbol();
   if (next == Symbol::CONST) {
-    constDef();
+    constDef(stop);
   } else if (next == Symbol::INT or next == Symbol::BOOL) {
-    varDef();
+    varDef(stop);
   } else {
-    procDef();
+    procDef(stop);
   }
 }
 
 
-void Parser::constDef() {
+void Parser::constDef(std::set<Symbol> stop) {
    std::cout << "constDef" << std::endl;
 
-   match(Symbol::CONST);
-   match(Symbol::ID);
-   match(Symbol::EQUAL);
-   constant();
+   match(Symbol::CONST, stop);
+   match(Symbol::ID, stop);
+   match(Symbol::EQUAL, stop);
+   constant(stop);
 }
 
 
-void Parser::varDef() {
+void Parser::varDef(std::set<Symbol> stop) {
   std::cout << "varDef" << std::endl;
 
-  typeSym();
-  vPrime();
+  typeSym(stop);
+  vPrime(stop);
 }
 
 
-void Parser::typeSym() {
+void Parser::typeSym(std::set<Symbol> stop) {
   std::cout << "typeSym" << std::endl;
 
   Symbol next = look.getSymbol();
   if(next == Symbol::INT) {
-    match(Symbol::INT);
+    match(Symbol::INT, stop);
   } else {
-    match(Symbol::BOOL);
+    match(Symbol::BOOL, stop);
   }
 }
 
 
-void Parser::vPrime() {
+void Parser::vPrime(std::set<Symbol> stop) {
   std::cout << "vPrime" << std::endl;
 
   if (look.getSymbol() == Symbol::ID) {
-    varList();
+    varList(stop);
   } else {
-      match(Symbol::ARRAY);
-      varList();
-      match(Symbol::LHSQR);
-      constant();
-      match(Symbol::RHSQR);
+      match(Symbol::ARRAY, stop);
+      varList(stop);
+      match(Symbol::LHSQR, stop);
+      constant(stop);
+      match(Symbol::RHSQR, stop);
   }
 }
 
-void Parser::varList() {
+void Parser::varList(std::set<Symbol> stop) {
   std::cout << "varList" << std::endl;
 
-  match(Symbol::ID);
+  match(Symbol::ID, stop);
   while(look.getSymbol() == Symbol::COMMA) {
-      match(Symbol::COMMA);
-      match(Symbol::ID);
+      match(Symbol::COMMA, stop);
+      match(Symbol::ID, stop);
   }
 }
 
 
-void Parser::procDef(){
+void Parser::procDef(std::set<Symbol> stop){
   std::cout << "procDef" << std::endl;
 
-  match(Symbol::PROC);
-  match(Symbol::ID);
-  block();
+  match(Symbol::PROC, stop);
+  match(Symbol::ID, stop);
+  block(stop);
 }
 
 
 // Will need to be adjusted when we add proper grammar
-void Parser::exprList() {
+void Parser::exprList(std::set<Symbol> stop) {
   std::cout << "Expression List" << std::endl;
 
-  expr();
+  expr(stop);
 
   while(look.getSymbol() == Symbol::COMMA) {
-    match(Symbol::COMMA);
-    expr();
+    match(Symbol::COMMA, stop);
+    expr(stop);
   }
 }
 
-void Parser::assignStmt() {
+void Parser::assignStmt(std::set<Symbol> stop) {
   std::cout << "assignStmt" << std::endl;
 
-  vacsList();
-  match(Symbol::INIT);
-  exprList();
+  vacsList(stop);
+  match(Symbol::INIT, stop);
+  exprList(stop);
 }
 
-void Parser::procStmt() {
+void Parser::procStmt(std::set<Symbol> stop) {
   std::cout << "procStmt" << std::endl;
 
-  match(Symbol::CALL);
-  match(Symbol::ID);
+  match(Symbol::CALL, stop);
+  match(Symbol::ID, stop);
 }
 
-void Parser::ifStmt() {
+void Parser::ifStmt(std::set<Symbol> stop) {
   std::cout << "ifStmt" << std::endl;
 
-  match(Symbol::IF);
-  guardedList();
-  match(Symbol::FI);
+  match(Symbol::IF, stop);
+  guardedList(stop);
+  match(Symbol::FI, stop);
 }
 
-void Parser::doStmt() {
+void Parser::doStmt(std::set<Symbol> stop) {
   std::cout << "doStmt" << std::endl;
 
-  match(Symbol::DO);
-  guardedList();
-  match(Symbol::OD);
+  match(Symbol::DO, stop);
+  guardedList(stop);
+  match(Symbol::OD, stop);
 }
 
-void Parser::guardedList() {
+void Parser::guardedList(std::set<Symbol> stop) {
   std::cout << "guardedList" << std::endl;
 
-  guardedComm();
+  guardedComm(stop);
   while (look.getSymbol() == Symbol::GUARD) {
-    match(Symbol::GUARD);
-    guardedComm();
+    match(Symbol::GUARD, stop);
+    guardedComm(stop);
   }
 }
 
-void Parser::guardedComm() {
+void Parser::guardedComm(std::set<Symbol> stop) {
   std::cout << "guardedComm" << std::endl;
 
-  expr();
-  match(Symbol::ARROW);
-  stmtPart();
+  expr(stop);
+  match(Symbol::ARROW, stop);
+  stmtPart(stop);
 }
 
 
-void Parser::expr() {
+void Parser::expr(std::set<Symbol> stop) {
   std::cout << "expr" << std::endl;
 
-  primeExpr();
+  primeExpr(stop);
 
   while (look.getSymbol() == Symbol::AMP or
       look.getSymbol() == Symbol::BAR) {
-    primeOp();
-    primeExpr();
+    primeOp(stop);
+    primeExpr(stop);
   }
 }
 
 
-void Parser::primeOp() {
+void Parser::primeOp(std::set<Symbol> stop) {
   std::cout << "prime-op" << std::endl;
 
   if(look.getSymbol() == Symbol::AMP) {
-    match(Symbol::AMP);
+    match(Symbol::AMP, stop);
   } else {
-    match(Symbol::BAR);
+    match(Symbol::BAR, stop);
   }
 }
 
 
-void Parser::primeExpr() {
+void Parser::primeExpr(std::set<Symbol> stop) {
   std::cout << "prime-Expr" << std::endl;
 
-  simpleExpr();
+  simpleExpr(stop);
 
   if(look.getSymbol() == Symbol::LESS or
       look.getSymbol() == Symbol::EQUAL or
       look.getSymbol() == Symbol::GREAT) {
-        relOp();
-        simpleExpr();
+        relOp(stop);
+        simpleExpr(stop);
       }
 }
 
 
-void Parser::relOp() {
+void Parser::relOp(std::set<Symbol> stop) {
   std::cout << "rel-Op" << std::endl;
 
   if(look.getSymbol() == Symbol::LESS) {
-    match(Symbol::LESS);
+    match(Symbol::LESS, stop);
   } else if (look.getSymbol() == Symbol::EQUAL) {
-    match(Symbol::EQUAL);
+    match(Symbol::EQUAL, stop);
   } else {
-    match(Symbol::GREAT);
+    match(Symbol::GREAT, stop);
   }
 }
 
 
-void Parser::simpleExpr() {
+void Parser::simpleExpr(std::set<Symbol> stop) {
   std::cout << "simpleExpr" << std::endl;
   if (look.getSymbol() == Symbol::MINUS)
-    match(Symbol::MINUS);
+    match(Symbol::MINUS, stop);
 
-  term();
+  term(stop);
 
   while (look.getSymbol() == Symbol::PLUS
       or look.getSymbol() == Symbol::MINUS) {
-    addOp();
-    term();
+    addOp(stop);
+    term(stop);
   }
 }
 
 
-void Parser::term() {
+void Parser::term(std::set<Symbol> stop) {
   std::cout << "Term" << std::endl;
 
-  factor();
+  factor(stop);
 
   while(look.getSymbol() == Symbol::TIMES
       or look.getSymbol() == Symbol::FSLASH
       or look.getSymbol() == Symbol::BSLASH) {
-    multOp();
-    factor();
+    multOp(stop);
+    factor(stop);
   }
 }
 
 
-void Parser::factor() {
+void Parser::factor(std::set<Symbol> stop) {
   std::cout << "Factor" << std::endl;
 
   if(look.getSymbol() == Symbol::NUM) {
-    match(Symbol::NUM);
+    match(Symbol::NUM, stop);
   } else if (look.getSymbol() == Symbol::TRUE
       or look.getSymbol() == Symbol::FALSE) {
-    boolSym();
+    boolSym(stop);
   } else if (look.getSymbol() == Symbol::LHRND) {
-    match(Symbol::LHRND);
-    expr();
-    match(Symbol::RHRND);
+    match(Symbol::LHRND, stop);
+    expr(stop);
+    match(Symbol::RHRND, stop);
   } else if (look.getSymbol() == Symbol::TILD) {
-    match(Symbol::TILD);
-    factor();
+    match(Symbol::TILD, stop);
+    factor(stop);
   } else {
-    varAccess();
+    varAccess(stop);
   }
 }
 
 
-void Parser::addOp() {
+void Parser::addOp(std::set<Symbol> stop) {
   std::cout << "addOp" << std::endl;
 
   if (look.getSymbol() == Symbol::PLUS)
-    match(Symbol::PLUS);
+    match(Symbol::PLUS, stop);
   else
-    match(Symbol::MINUS);
+    match(Symbol::MINUS, stop);
 }
 
 
-void Parser::multOp() {
+void Parser::multOp(std::set<Symbol> stop) {
   std::cout << "multOp" << std::endl;
 
   if (look.getSymbol() == Symbol::TIMES)
-    match(Symbol::TIMES);
+    match(Symbol::TIMES, stop);
   else if (look.getSymbol() == Symbol::FSLASH)
-    match(Symbol::FSLASH);
+    match(Symbol::FSLASH, stop);
   else
-    match(Symbol::BSLASH);
+    match(Symbol::BSLASH, stop);
 }
 
 
-void Parser::varAccess() {
+void Parser::varAccess(std::set<Symbol> stop) {
   std::cout << "varAccess" << std::endl;
 
-  match(Symbol::ID);
+  match(Symbol::ID, stop);
   if (look.getSymbol() == Symbol::LHSQR)
-    idxSelect();
+    idxSelect(stop);
 }
 
 
-void Parser::idxSelect() {
+void Parser::idxSelect(std::set<Symbol> stop) {
   std::cout << "idxSelect" << std::endl;
 
-  match(Symbol::LHSQR);
-  expr();
-  match(Symbol::RHSQR);
+  match(Symbol::LHSQR, stop);
+  expr(stop);
+  match(Symbol::RHSQR, stop);
 }
 
 
-void Parser::constant() {
+void Parser::constant(std::set<Symbol> stop) {
   std::cout << "constant" << std::endl;
 
   if (look.getSymbol() == Symbol::NUM)
-    match(Symbol::NUM);
+    match(Symbol::NUM, stop);
   else if (look.getSymbol() == Symbol::TRUE
         or look.getSymbol() == Symbol::FALSE)
-    boolSym();
+    boolSym(stop);
   else
-    match(Symbol::ID);
+    match(Symbol::ID, stop);
 }
 
 
-void Parser::boolSym() {
+void Parser::boolSym(std::set<Symbol> stop) {
   std::cout << "boolSym" << std::endl;
 
   if (look.getSymbol() == Symbol::TRUE)
-    match(Symbol::TRUE);
+    match(Symbol::TRUE, stop);
   else
-    match(Symbol::FALSE);
+    match(Symbol::FALSE, stop);
 }
