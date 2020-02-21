@@ -166,9 +166,9 @@ void Parser::def(std::set<Symbol> stop) {
 void Parser::constDef(std::set<Symbol> stop) {
    std::cout << "constDef" << std::endl;
 
-   match(Symbol::CONST, stop);
-   match(Symbol::ID, stop);
-   match(Symbol::EQUAL, stop);
+   match(Symbol::CONST, munion({stop, {Symbol::ID}, {Symbol::EQUAL}, First.at(NT::CONST_NT)}));
+   match(Symbol::ID, munion({stop, {Symbol::EQUAL}, First.at(NT::CONST_NT)}));
+   match(Symbol::EQUAL, munion({stop, First.at(NT::CONST_NT)}));
    constant(stop);
 }
 
@@ -187,9 +187,12 @@ void Parser::typeSym(std::set<Symbol> stop) {
   Symbol next = look.getSymbol();
   if(next == Symbol::INT) {
     match(Symbol::INT, stop);
-  } else {
+  } else if (next == Symbol::BOOL){
     match(Symbol::BOOL, stop);
+  } else {
+    syntaxError(stop);
   }
+  syntaxCheck(stop);
 }
 
 
@@ -210,10 +213,10 @@ void Parser::vPrime(std::set<Symbol> stop) {
 void Parser::varList(std::set<Symbol> stop) {
   std::cout << "varList" << std::endl;
 
-  match(Symbol::ID, stop);
+  match(Symbol::ID, munion({stop, {Symbol::COMMA}}));
   while(look.getSymbol() == Symbol::COMMA) {
-      match(Symbol::COMMA, stop);
-      match(Symbol::ID, stop);
+      match(Symbol::COMMA, munion({stop, {Symbol::ID}}));
+      match(Symbol::ID, munion({stop, {Symbol::COMMA}}));
   }
 }
 
