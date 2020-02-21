@@ -337,7 +337,7 @@ void Parser::relOp(std::set<Symbol> stop) {
     match(Symbol::LESS, stop);
   } else if (look.getSymbol() == Symbol::EQUAL) {
     match(Symbol::EQUAL, stop);
-  } else {
+  } else if (look.getSymbol() == Symbol::GREAT){
     match(Symbol::GREAT, stop);
   } else {
     syntaxError(stop);
