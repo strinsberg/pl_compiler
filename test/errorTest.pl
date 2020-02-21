@@ -1,3 +1,6 @@
 begin
-  integer
+  integer i;
+  Boolean found;
+
+  found := true;
 end.
