@@ -15,8 +15,9 @@ class Administration {
     * Creates a new Administration object.
     * @param fout The output file stream.
     * @param sc The scanner beign used by administration.
+    * @param debug Set debug mode. Default false.
     */
-  Administration(std::ostream& fout, Scanner& sc);
+  Administration(std::ostream& fout, Scanner& sc, bool debug = false);
 
   Token getToken();
 
@@ -26,14 +27,10 @@ class Administration {
   void newLine();
 
   /**
-   * Deal with a syntax error.
-   * Updates error states correctly and prints an error showing information
-   * about the expected and actual tokens or symbols.
-   * @parm expected The Symbol type we expected to see.
-   * @param actual The lexeme we got.
-   * @return false when the max number of errors is reached.
+   * Print debugging info to the console if in debug mode.
+   * @param text The info to print.
    */
-  void syntaxError(Symbol expected, Token& actual);
+  void debugInfo(std::string text);
 
   /**
    * Display text for an error.
@@ -66,6 +63,11 @@ class Administration {
    * The total number of errors so far.
    */
   int errorCount;
+
+  /**
+   * Wether or not to print debugging info.
+   */
+  bool debug;
 
   /**
    * Checks if current token is an error token.

@@ -29,7 +29,7 @@ void Parser::match(Symbol sym, std::set<Symbol> stop) {
 
 
 void Parser::syntaxError(std::set<Symbol> stop) {
-  admin.error("Syntax Error");  // need more info using look.getSymbol()
+  admin.error("Syntax error near: " + SymbolToString.at(look.getSymbol()));  // need more info using look.getSymbol()
   while (! stop.count(look.getSymbol()))
     look = admin.getToken();
 }
