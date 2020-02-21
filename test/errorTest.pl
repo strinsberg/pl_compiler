@@ -1,6 +1,9 @@
 begin
+  Boolean a, b, c;
+  integer i := 1;
   integer i;
-  Boolean found;
-  i := 2;
-  found := true;
+  i := 1;
+  a := true;
+  b := false;
+  a := b;
 end.

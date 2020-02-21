@@ -58,11 +58,6 @@ class Parser {
   void defPart(std::set<Symbol> stop);
 
   /**
-   * Checks for the accepted symbols for definition.
-   */
-  bool defFirst();
-
-  /**
    * Parses a definition from the stream of tokens.
    */
   void def(std::set<Symbol> stop);
@@ -101,11 +96,6 @@ class Parser {
    * Parses the statement part of the program.
    */
   void stmtPart(std::set<Symbol> stop);
-
-  /**
-   * Checks to see if the next token is in the first std::set of stmt.
-   */
-  bool stmtFirst();
 
   /**
    * Parses a statement.

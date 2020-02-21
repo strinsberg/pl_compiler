@@ -322,13 +322,11 @@ void Parser::primeOp(std::set<Symbol> stop) {
 void Parser::primeExpr(std::set<Symbol> stop) {
   std::cout << "prime-Expr" << std::endl;
 
-  simpleExpr(munion({stop, First.at(NT::REL_OP), First.at(NT::SIMP_EXP)}));
+  simpleExpr(munion({stop, First.at(NT::REL_OP)}));
 
-  if(look.getSymbol() == Symbol::LESS or
-      look.getSymbol() == Symbol::EQUAL or
-      look.getSymbol() == Symbol::GREAT) {
-        relOp(munion({stop, First.at(NT::REL_OP), First.at(NT::SIMP_EXP)}));
-        simpleExpr(munion({stop, First.at(NT::REL_OP), First.at(NT::SIMP_EXP)}));
+  if(First.at(NT::REL_OP).count(look.getSymbol())) {
+        relOp(munion({stop, First.at(NT::SIMP_EXP)}));
+        simpleExpr(munion({stop, First.at(NT::REL_OP)}));
       }
 }
 
@@ -352,15 +350,16 @@ void Parser::relOp(std::set<Symbol> stop) {
 void Parser::simpleExpr(std::set<Symbol> stop) {
   std::cout << "simpleExpr" << std::endl;
   //possible syntax check
+  syntaxCheck(munion({stop, {Symbol::MINUS}}));
   if (look.getSymbol() == Symbol::MINUS)
     match(Symbol::MINUS, munion({stop, First.at(NT::TERM)}));
 
-  term(munion({stop, First.at(NT::ADD_OP), First.at(NT::TERM)}));
+  term(munion({stop, First.at(NT::ADD_OP)}));
 
   while (look.getSymbol() == Symbol::PLUS
       or look.getSymbol() == Symbol::MINUS) {
-    addOp(munion({stop, First.at(NT::ADD_OP), First.at(NT::TERM)}));
-    term(munion({stop, First.at(NT::ADD_OP), First.at(NT::TERM)}));
+    addOp(munion({stop, First.at(NT::TERM)}));
+    term(munion({stop, First.at(NT::ADD_OP)}));
   }
 }
 
@@ -368,11 +367,11 @@ void Parser::simpleExpr(std::set<Symbol> stop) {
 void Parser::term(std::set<Symbol> stop) {
   std::cout << "Term" << std::endl;
 
-  factor(munion({stop, First.at(NT::MULT_OP), First.at(NT::FACTOR)}));
+  factor(munion({stop, First.at(NT::MULT_OP)}));
 
   while (First.at(NT::MULT_OP).count(look.getSymbol())) {
-    multOp(munion({stop, First.at(NT::MULT_OP), First.at(NT::FACTOR)}));
-    factor(munion({stop, First.at(NT::MULT_OP), First.at(NT::FACTOR)}));
+    multOp(munion({stop, First.at(NT::FACTOR)}));
+    factor(munion({stop, First.at(NT::MULT_OP)}));
   }
 }
 

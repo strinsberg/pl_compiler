@@ -38,11 +38,11 @@ const std::map<NT, std::set<Symbol>> First{
   {GRCOM, {Symbol::NUM, Symbol::ID, Symbol::FALSE, Symbol::TRUE, Symbol::MINUS, Symbol::LHRND, Symbol::TILD}},
   {GRCOM_LIST, {Symbol::NUM, Symbol::ID, Symbol::FALSE, Symbol::TRUE, Symbol::MINUS, Symbol::LHRND, Symbol::TILD}},
   {DO_STMT, {Symbol::DO}},
-  {IF_STMT, {Symbol::IF}},	
+  {IF_STMT, {Symbol::IF}},
   {PROC_STMT, {Symbol::CALL}},
   {VACS_LIST, {Symbol::ID}},
   {ASC_STMT, {Symbol::ID}},
-  {EXP_LIST, {Symbol::NUM, Symbol::ID, Symbol::TRUE, Symbol::FALSE, Symbol::EQUAL, Symbol::LHRND, Symbol::TILD}},
+  {EXP_LIST, {Symbol::MINUS, Symbol::NUM, Symbol::ID, Symbol::TRUE, Symbol::FALSE, Symbol::EQUAL, Symbol::LHRND, Symbol::TILD}},
   {WRITE_STMT, {Symbol::WRITE}},
   {READ_STMT, {Symbol::READ}},
   {EMPTY_STMT, {Symbol::SKIP}},
@@ -58,7 +58,7 @@ const std::map<NT, std::set<Symbol>> First{
   {BLOCK, {Symbol::BEGIN}},
   {PROGRAM, {Symbol::BEGIN}},
   {VPRIME, {Symbol::ID, Symbol::ARRAY}},
-}; 
+};
 
 std::set<Symbol> munion(std::vector<std::set<Symbol>> stopSets) {
   std::set<Symbol> newSet;
@@ -70,4 +70,3 @@ std::set<Symbol> munion(std::vector<std::set<Symbol>> stopSets) {
 }
 
 #endif
-
