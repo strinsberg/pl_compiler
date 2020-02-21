@@ -299,9 +299,12 @@ void Parser::primeOp(std::set<Symbol> stop) {
 
   if(look.getSymbol() == Symbol::AMP) {
     match(Symbol::AMP, stop);
-  } else {
+  } else if (look.getSymbol() == Symbol::BAR){
     match(Symbol::BAR, stop);
+  } else {
+    syntaxError(stop);
   }
+  syntaxCheck(stop);
 }
 
 
@@ -328,7 +331,10 @@ void Parser::relOp(std::set<Symbol> stop) {
     match(Symbol::EQUAL, stop);
   } else {
     match(Symbol::GREAT, stop);
+  } else {
+    syntaxError(stop);
   }
+  syntaxCheck(stop);
 }
 
 
