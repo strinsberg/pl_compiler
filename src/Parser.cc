@@ -265,18 +265,18 @@ void Parser::doStmt(std::set<Symbol> stop) {
 void Parser::guardedList(std::set<Symbol> stop) {
   std::cout << "guardedList" << std::endl;
 
-  guardedComm(stop);
+  guardedComm(munion({stop, {Symbol::GUARD}, First.at(NT::GRCOM)}));
   while (look.getSymbol() == Symbol::GUARD) {
-    match(Symbol::GUARD, stop);
-    guardedComm(stop);
+    match(Symbol::GUARD, munion({stop, {Symbol::GUARD}, First.at(NT::GRCOM)}));
+    guardedComm(munion({stop, {Symbol::GUARD}, First.at(NT::GRCOM)}));
   }
 }
 
 void Parser::guardedComm(std::set<Symbol> stop) {
   std::cout << "guardedComm" << std::endl;
 
-  expr(stop);
-  match(Symbol::ARROW, stop);
+  expr(munion({stop, {Symbol::ARROW}, First.at(NT::STMT_PART)}));
+  match(Symbol::ARROW, munion({stop, First.at(NT::STMT_PART)}));
   stmtPart(stop);
 }
 
@@ -329,7 +329,7 @@ void Parser::relOp(std::set<Symbol> stop) {
     match(Symbol::LESS, stop);
   } else if (look.getSymbol() == Symbol::EQUAL) {
     match(Symbol::EQUAL, stop);
-  } else {
+  } else if (look.getSymbol() == Symbol::GREAT) {
     match(Symbol::GREAT, stop);
   } else {
     syntaxError(stop);
