@@ -19,7 +19,7 @@ void Parser::match(Symbol sym, std::set<Symbol> stop) {
   // If the symbol matched look ahead token then move to the next one
   // otherwise call a syntax error.
   if (sym == look.getSymbol()) {
-    std::cout << "Matched: " << look.toString() << std::endl << std::endl;
+    admin.debugInfo("Matched: " + look.toString() +"\n");
     look = admin.getToken();
   } else {
     syntaxError(stop);
@@ -43,14 +43,14 @@ void Parser::syntaxCheck(std::set<Symbol> stop) {
 // Recursive rule functions ///////////////////////////////////////////
 
 void Parser::program(std::set<Symbol> stop) {
-  std::cout << "program" << std::endl;
+  admin.debugInfo("program");
   block(munion({stop, {Symbol::DOT}}));
   match(Symbol::DOT, stop);
 }
 
 
 void Parser::block(std::set<Symbol> stop) {
-  std::cout << "block" << std::endl;
+  admin.debugInfo("block");
 
   match(Symbol::BEGIN, munion({stop, First.at(NT::DEF_PART), First.at(NT::STMT_PART), {Symbol::END}}));
   defPart(munion({stop, First.at(NT::STMT_PART), {Symbol::END}}));
@@ -59,7 +59,7 @@ void Parser::block(std::set<Symbol> stop) {
 }
 
 void Parser::stmtPart(std::set<Symbol> stop) {
-  std::cout << "stmtPart" << std::endl;
+  admin.debugInfo("stmtPart");
 
   while (First.at(NT::STMT).count(look.getSymbol())) {
     stmt(munion({stop, {Symbol::SEMI}}));
@@ -69,7 +69,7 @@ void Parser::stmtPart(std::set<Symbol> stop) {
 
 
 void Parser::stmt(std::set<Symbol> stop) {
-  std::cout << "stmt" << std::endl;
+  admin.debugInfo("stmt");
   bool err = false;
   Symbol next = look.getSymbol();
   if (next == Symbol::SKIP)
@@ -99,13 +99,13 @@ void Parser::stmt(std::set<Symbol> stop) {
 }
 
 void Parser::emptyStmt(std::set<Symbol> stop) {
-  std::cout << "emptyStmt" << std::endl;
+  admin.debugInfo("emptyStmt");
 
   match(Symbol::SKIP, stop);
 }
 
 void Parser::readStmt(std::set<Symbol> stop) {
-  std::cout << "readStmt" << std::endl;
+  admin.debugInfo("readStmt");
 
   match(Symbol::READ, munion({stop, First.at(NT::VACS_LIST)}));
   vacsList(stop);
@@ -113,7 +113,7 @@ void Parser::readStmt(std::set<Symbol> stop) {
 
 
 void Parser::vacsList(std::set<Symbol> stop) {
-  std::cout << "vacsList" << std::endl;
+  admin.debugInfo("vacsList");
 
   varAccess(munion({stop, {Symbol::COMMA}}));
   while (look.getSymbol() == Symbol::COMMA) {
@@ -123,7 +123,7 @@ void Parser::vacsList(std::set<Symbol> stop) {
 }
 
 void Parser::writeStmt(std::set<Symbol> stop) {
-  std::cout << "writeStmt" << std::endl;
+  admin.debugInfo("writeStmt");
 
   match(Symbol::WRITE, munion({stop, First.at(NT::EXP_LIST)}));
   exprList(stop);
@@ -131,7 +131,7 @@ void Parser::writeStmt(std::set<Symbol> stop) {
 
 
 void Parser::defPart(std::set<Symbol> stop) {
-  std::cout << "defPart" << std::endl;
+  admin.debugInfo("defPart");
 
   while (First.at(NT::DEF).count(look.getSymbol())) {
     def(munion({stop, {Symbol::SEMI}}));
@@ -141,7 +141,7 @@ void Parser::defPart(std::set<Symbol> stop) {
 
 
 void Parser::def(std::set<Symbol> stop) {
-  std::cout << "def" << std::endl;
+  admin.debugInfo("def");
 
   bool err = false;
   Symbol next = look.getSymbol();
@@ -164,7 +164,7 @@ void Parser::def(std::set<Symbol> stop) {
 
 
 void Parser::constDef(std::set<Symbol> stop) {
-   std::cout << "constDef" << std::endl;
+   admin.debugInfo("constDef");
 
    match(Symbol::CONST, munion({stop, {Symbol::ID}, {Symbol::EQUAL}, First.at(NT::CONST_NT)}));
    match(Symbol::ID, munion({stop, {Symbol::EQUAL}, First.at(NT::CONST_NT)}));
@@ -174,7 +174,7 @@ void Parser::constDef(std::set<Symbol> stop) {
 
 
 void Parser::varDef(std::set<Symbol> stop) {
-  std::cout << "varDef" << std::endl;
+  admin.debugInfo("varDef");
 
   typeSym(munion({stop, First.at(NT::VPRIME)}));
   vPrime(stop);
@@ -182,7 +182,7 @@ void Parser::varDef(std::set<Symbol> stop) {
 
 
 void Parser::typeSym(std::set<Symbol> stop) {
-  std::cout << "typeSym" << std::endl;
+  admin.debugInfo("typeSym");
 
   Symbol next = look.getSymbol();
   if(next == Symbol::INT) {
@@ -197,7 +197,7 @@ void Parser::typeSym(std::set<Symbol> stop) {
 
 
 void Parser::vPrime(std::set<Symbol> stop) {
-  std::cout << "vPrime" << std::endl;
+  admin.debugInfo("vPrime");
 
   if (look.getSymbol() == Symbol::ID) {
     varList(stop);
@@ -211,7 +211,7 @@ void Parser::vPrime(std::set<Symbol> stop) {
 }
 
 void Parser::varList(std::set<Symbol> stop) {
-  std::cout << "varList" << std::endl;
+  admin.debugInfo("varList");
 
   match(Symbol::ID, munion({stop, {Symbol::COMMA}}));
   while(look.getSymbol() == Symbol::COMMA) {
@@ -222,7 +222,7 @@ void Parser::varList(std::set<Symbol> stop) {
 
 
 void Parser::procDef(std::set<Symbol> stop){
-  std::cout << "procDef" << std::endl;
+  admin.debugInfo("procDef");
 
   match(Symbol::PROC, munion({stop, {Symbol::ID}, First.at(NT::BLOCK)}));
   match(Symbol::ID, munion({stop, First.at(NT::BLOCK)}));
@@ -232,7 +232,7 @@ void Parser::procDef(std::set<Symbol> stop){
 
 // Will need to be adjusted when we add proper grammar
 void Parser::exprList(std::set<Symbol> stop) {
-  std::cout << "Expression List" << std::endl;
+  admin.debugInfo("Expression List");
 
   expr(munion({stop, First.at(NT::EXP), {Symbol::COMMA}}));
 
@@ -243,7 +243,7 @@ void Parser::exprList(std::set<Symbol> stop) {
 }
 
 void Parser::assignStmt(std::set<Symbol> stop) {
-  std::cout << "assignStmt" << std::endl;
+  admin.debugInfo("assignStmt");
 
   vacsList(munion({stop, First.at(NT::EXP_LIST), {Symbol::INIT}}));
   match(Symbol::INIT, munion({stop, First.at(NT::EXP_LIST)}));
@@ -251,14 +251,14 @@ void Parser::assignStmt(std::set<Symbol> stop) {
 }
 
 void Parser::procStmt(std::set<Symbol> stop) {
-  std::cout << "procStmt" << std::endl;
+  admin.debugInfo("procStmt");
 
   match(Symbol::CALL, munion({stop, {Symbol::ID}}));
   match(Symbol::ID, stop);
 }
 
 void Parser::ifStmt(std::set<Symbol> stop) {
-  std::cout << "ifStmt" << std::endl;
+  admin.debugInfo("ifStmt");
 
   match(Symbol::IF, munion({stop, First.at(NT::GRCOM_LIST), {Symbol::FI}}));
   guardedList(munion({stop, {Symbol::FI}}));
@@ -266,7 +266,7 @@ void Parser::ifStmt(std::set<Symbol> stop) {
 }
 
 void Parser::doStmt(std::set<Symbol> stop) {
-  std::cout << "doStmt" << std::endl;
+  admin.debugInfo("doStmt");
 
   match(Symbol::DO, munion({stop, First.at(NT::GRCOM_LIST), {Symbol::OD}}));
   guardedList(munion({stop, {Symbol::OD}}));
@@ -274,7 +274,7 @@ void Parser::doStmt(std::set<Symbol> stop) {
 }
 
 void Parser::guardedList(std::set<Symbol> stop) {
-  std::cout << "guardedList" << std::endl;
+  admin.debugInfo("guardedList");
 
   guardedComm(munion({stop, {Symbol::GUARD}, First.at(NT::GRCOM)}));
   while (look.getSymbol() == Symbol::GUARD) {
@@ -284,7 +284,7 @@ void Parser::guardedList(std::set<Symbol> stop) {
 }
 
 void Parser::guardedComm(std::set<Symbol> stop) {
-  std::cout << "guardedComm" << std::endl;
+  admin.debugInfo("guardedComm");
 
   expr(munion({stop, {Symbol::ARROW}, First.at(NT::STMT_PART)}));
   match(Symbol::ARROW, munion({stop, First.at(NT::STMT_PART)}));
@@ -293,7 +293,7 @@ void Parser::guardedComm(std::set<Symbol> stop) {
 
 
 void Parser::expr(std::set<Symbol> stop) {
-  std::cout << "expr" << std::endl;
+  admin.debugInfo("expr");
 
   primeExpr(munion({stop, First.at(NT::PRIM_OP), First.at(NT::PRIM_EXP)}));
 
@@ -306,7 +306,7 @@ void Parser::expr(std::set<Symbol> stop) {
 
 
 void Parser::primeOp(std::set<Symbol> stop) {
-  std::cout << "prime-op" << std::endl;
+  admin.debugInfo("prime-op");
 
   if(look.getSymbol() == Symbol::AMP) {
     match(Symbol::AMP, stop);
@@ -320,7 +320,7 @@ void Parser::primeOp(std::set<Symbol> stop) {
 
 
 void Parser::primeExpr(std::set<Symbol> stop) {
-  std::cout << "prime-Expr" << std::endl;
+  admin.debugInfo("prime-Expr");
 
   simpleExpr(munion({stop, First.at(NT::REL_OP), First.at(NT::SIMP_EXP)}));
 
@@ -334,7 +334,7 @@ void Parser::primeExpr(std::set<Symbol> stop) {
 
 
 void Parser::relOp(std::set<Symbol> stop) {
-  std::cout << "rel-Op" << std::endl;
+  admin.debugInfo("rel-Op");
 
   if(look.getSymbol() == Symbol::LESS) {
     match(Symbol::LESS, stop);
@@ -350,7 +350,7 @@ void Parser::relOp(std::set<Symbol> stop) {
 
 
 void Parser::simpleExpr(std::set<Symbol> stop) {
-  std::cout << "simpleExpr" << std::endl;
+  admin.debugInfo("simpleExpr");
   //possible syntax check
   if (look.getSymbol() == Symbol::MINUS)
     match(Symbol::MINUS, munion({stop, First.at(NT::TERM)}));
@@ -366,7 +366,7 @@ void Parser::simpleExpr(std::set<Symbol> stop) {
 
 
 void Parser::term(std::set<Symbol> stop) {
-  std::cout << "Term" << std::endl;
+  admin.debugInfo("Term");
 
   factor(munion({stop, First.at(NT::MULT_OP), First.at(NT::FACTOR)}));
 
@@ -378,7 +378,7 @@ void Parser::term(std::set<Symbol> stop) {
 
 
 void Parser::factor(std::set<Symbol> stop) {
-  std::cout << "Factor" << std::endl;
+  admin.debugInfo("Factor");
 
   bool err = false;
   if(look.getSymbol() == Symbol::NUM) {
@@ -411,7 +411,7 @@ void Parser::factor(std::set<Symbol> stop) {
 
 
 void Parser::addOp(std::set<Symbol> stop) {
-  std::cout << "addOp" << std::endl;
+  admin.debugInfo("addOp");
 
   if (look.getSymbol() == Symbol::PLUS)
     match(Symbol::PLUS, stop);
@@ -424,7 +424,7 @@ void Parser::addOp(std::set<Symbol> stop) {
 
 
 void Parser::multOp(std::set<Symbol> stop) {
-  std::cout << "multOp" << std::endl;
+  admin.debugInfo("multOp");
 
   if (look.getSymbol() == Symbol::TIMES)
     match(Symbol::TIMES, stop);
@@ -439,7 +439,7 @@ void Parser::multOp(std::set<Symbol> stop) {
 
 
 void Parser::varAccess(std::set<Symbol> stop) {
-  std::cout << "varAccess" << std::endl;
+  admin.debugInfo("varAccess");
 
   match(Symbol::ID, munion({stop, First.at(NT::IDX_SEL)}));
   // syntax check on next symbol is run in match
@@ -449,7 +449,7 @@ void Parser::varAccess(std::set<Symbol> stop) {
 
 
 void Parser::idxSelect(std::set<Symbol> stop) {
-  std::cout << "idxSelect" << std::endl;
+  admin.debugInfo("idxSelect");
 
   match(Symbol::LHSQR, munion({stop, First.at(NT::EXP), {Symbol::RHSQR}}));
   expr(munion({stop, {Symbol::RHSQR}}));
@@ -458,7 +458,7 @@ void Parser::idxSelect(std::set<Symbol> stop) {
 
 
 void Parser::constant(std::set<Symbol> stop) {
-  std::cout << "constant" << std::endl;
+  admin.debugInfo("constant");
 
   if (look.getSymbol() == Symbol::NUM)
     match(Symbol::NUM, stop);
@@ -474,7 +474,7 @@ void Parser::constant(std::set<Symbol> stop) {
 
 
 void Parser::boolSym(std::set<Symbol> stop) {
-  std::cout << "boolSym" << std::endl;
+  admin.debugInfo("boolSym");
 
   if (look.getSymbol() == Symbol::TRUE) {
     match(Symbol::TRUE, stop);

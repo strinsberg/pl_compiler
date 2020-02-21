@@ -12,13 +12,17 @@ using namespace std;
 
 int main(int argc, char** argv) {
   int opt;
+  bool verbose = false;
 
   // Deal with command line arguments
   std::string outfile;
-  while((opt = getopt(argc, argv, "o:")) != -1) {
+  while((opt = getopt(argc, argv, "o:v")) != -1) {
     switch (opt) {
       case 'o':
         outfile = std::string(optarg);
+        break;
+      case 'v':
+        verbose = true;
         break;
       default:
         cerr << "Invalid Argument: " << (char)opt << endl;
@@ -49,7 +53,7 @@ int main(int argc, char** argv) {
   // Create necessary components
   SymbolTable sym;
   Scanner scanner(fs, sym);
-  Administration admin(ofs, scanner);
+  Administration admin(ofs, scanner, verbose);
   Parser parser(admin);
 
   // Run the compiler
