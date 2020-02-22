@@ -324,7 +324,7 @@ void Parser::primeOp(std::set<Symbol> stop) {
 void Parser::primeExpr(std::set<Symbol> stop) {
   admin.debugInfo("prime-Expr");
 
-  simpleExpr(munion({stop, First.at(NT::REL_OP)}));
+  simpleExpr(munion({stop, First.at(NT::REL_OP), First.at(NT::SIMP_EXP)}));
 
   if(First.at(NT::REL_OP).count(look.getSymbol())) {
         relOp(munion({stop, First.at(NT::SIMP_EXP)}));
