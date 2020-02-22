@@ -20,46 +20,73 @@ enum NT {
  * Map from non terminals to thier first sets of symbols.
  */
 const std::map<NT, std::set<Symbol>> First{
-  {NAME, {Symbol::ID}},
-  {BOOL_SYM, {Symbol::FALSE, Symbol::TRUE}},
-  {NUM_NT, {Symbol::NUM}},
-  {CONST_NT, {Symbol::NUM, Symbol::FALSE, Symbol::TRUE, Symbol::ID}},
-  {IDX_SEL, {Symbol::LHSQR}},
-  {VACS, {Symbol::ID}},
-  {FACTOR, {Symbol::ID, Symbol::FALSE, Symbol::TRUE, Symbol::NUM, Symbol::LHRND, Symbol::TILD}},
-  {MULT_OP, {Symbol::TIMES, Symbol::FSLASH, Symbol::BSLASH}},
-  {TERM, {Symbol::NUM, Symbol::FALSE, Symbol::TRUE, Symbol::ID, Symbol::LHRND, Symbol::TILD}},
-  {ADD_OP, {Symbol::PLUS, Symbol::MINUS}},
-  {SIMP_EXP, {Symbol::NUM, Symbol::ID, Symbol::FALSE, Symbol::TRUE, Symbol::MINUS, Symbol::LHRND, Symbol::TILD}},
-  {REL_OP, {Symbol::LESS, Symbol::EQUAL, Symbol::GREAT}},
-  {PRIM_EXP, {Symbol::NUM, Symbol::ID, Symbol::FALSE, Symbol::TRUE, Symbol::MINUS, Symbol::LHRND, Symbol::TILD}},
-  {PRIM_OP, {Symbol::AMP, Symbol::BAR}},
-  {EXP, {Symbol::NUM, Symbol::ID, Symbol::FALSE, Symbol::TRUE, Symbol::MINUS, Symbol::LHRND, Symbol::TILD}},
-  {GRCOM, {Symbol::NUM, Symbol::ID, Symbol::FALSE, Symbol::TRUE, Symbol::MINUS, Symbol::LHRND, Symbol::TILD}},
-  {GRCOM_LIST, {Symbol::NUM, Symbol::ID, Symbol::FALSE, Symbol::TRUE, Symbol::MINUS, Symbol::LHRND, Symbol::TILD}},
-  {DO_STMT, {Symbol::DO}},
-  {IF_STMT, {Symbol::IF}},
-  {PROC_STMT, {Symbol::CALL}},
-  {VACS_LIST, {Symbol::ID}},
-  {ASC_STMT, {Symbol::ID}},
-  {EXP_LIST, {Symbol::MINUS, Symbol::NUM, Symbol::ID, Symbol::TRUE, Symbol::FALSE, Symbol::EQUAL, Symbol::LHRND, Symbol::TILD}},
+  {NAME,       {Symbol::ID}},
+  {BOOL_SYM,   {Symbol::FALSE, Symbol::TRUE}},
+  {NUM_NT,     {Symbol::NUM}},
+  {CONST_NT,   {Symbol::NUM, Symbol::FALSE, Symbol::TRUE, Symbol::ID}},
+  {IDX_SEL,    {Symbol::LHSQR}},
+  {VACS,       {Symbol::ID}},
+  {FACTOR,     {Symbol::ID, Symbol::FALSE, Symbol::TRUE, Symbol::NUM,
+                Symbol::LHRND, Symbol::TILD}},
+  {MULT_OP,    {Symbol::TIMES, Symbol::FSLASH, Symbol::BSLASH}},
+  {TERM,       {Symbol::NUM, Symbol::FALSE, Symbol::TRUE, Symbol::ID,
+                Symbol::LHRND, Symbol::TILD}},
+  {ADD_OP,     {Symbol::PLUS, Symbol::MINUS}},
+  {SIMP_EXP,   {Symbol::NUM, Symbol::ID, Symbol::FALSE, Symbol::TRUE,
+                Symbol::MINUS, Symbol::LHRND, Symbol::TILD}},
+  {REL_OP,     {Symbol::LESS, Symbol::EQUAL, Symbol::GREAT}},
+  {PRIM_EXP,   {Symbol::NUM, Symbol::ID, Symbol::FALSE, Symbol::TRUE,
+                Symbol::MINUS, Symbol::LHRND, Symbol::TILD}},
+  {PRIM_OP,    {Symbol::AMP, Symbol::BAR}},
+  {EXP,        {Symbol::NUM, Symbol::ID, Symbol::FALSE, Symbol::TRUE,
+                Symbol::MINUS, Symbol::LHRND, Symbol::TILD}},
+  {GRCOM,      {Symbol::NUM, Symbol::ID, Symbol::FALSE, Symbol::TRUE,
+                Symbol::MINUS, Symbol::LHRND, Symbol::TILD}},
+  {GRCOM_LIST, {Symbol::NUM, Symbol::ID, Symbol::FALSE, Symbol::TRUE,
+                Symbol::MINUS, Symbol::LHRND, Symbol::TILD}},
+  {DO_STMT,    {Symbol::DO}},
+  {IF_STMT,    {Symbol::IF}},
+  {PROC_STMT,  {Symbol::CALL}},
+  {VACS_LIST,  {Symbol::ID}},
+  {ASC_STMT,   {Symbol::ID}},
+  {EXP_LIST,   {Symbol::MINUS, Symbol::NUM, Symbol::ID, Symbol::TRUE,
+                Symbol::FALSE, Symbol::EQUAL, Symbol::LHRND, Symbol::TILD}},
   {WRITE_STMT, {Symbol::WRITE}},
-  {READ_STMT, {Symbol::READ}},
+  {READ_STMT,  {Symbol::READ}},
   {EMPTY_STMT, {Symbol::SKIP}},
-  {STMT, {Symbol::SKIP, Symbol::READ, Symbol::WRITE, Symbol::CALL, Symbol::IF, Symbol::DO, Symbol::ID}},
-  {STMT_PART, {Symbol::EPSILON, Symbol::SKIP, Symbol::READ, Symbol::WRITE, Symbol::CALL, Symbol::IF, Symbol::DO, Symbol::ID}},
-  {PROC_DEF, {Symbol::PROC}},
-  {VAR_LIST, {Symbol::ID}},
-  {TYPE_SYM, {Symbol::INT, Symbol::BOOL}},
-  {CONST_DEF, {Symbol::CONST}},
-  {DEF, {Symbol::CONST, Symbol::PROC, Symbol::INT, Symbol::BOOL}},
-  {VAR_DEF, {Symbol::INT, Symbol::BOOL}},
-  {DEF_PART, {Symbol::EPSILON, Symbol::CONST, Symbol::PROC, Symbol::INT, Symbol::BOOL}},
-  {BLOCK, {Symbol::BEGIN}},
-  {PROGRAM, {Symbol::BEGIN}},
-  {VPRIME, {Symbol::ID, Symbol::ARRAY}},
+  {STMT,       {Symbol::SKIP, Symbol::READ, Symbol::WRITE, Symbol::CALL,
+                Symbol::IF, Symbol::DO, Symbol::ID}},
+  {STMT_PART,  {Symbol::EPSILON, Symbol::SKIP, Symbol::READ, Symbol::WRITE,
+                Symbol::CALL, Symbol::IF, Symbol::DO, Symbol::ID}},
+  {PROC_DEF,   {Symbol::PROC}},
+  {VAR_LIST,   {Symbol::ID}},
+  {TYPE_SYM,   {Symbol::INT, Symbol::BOOL}},
+  {CONST_DEF,  {Symbol::CONST}},
+  {DEF,        {Symbol::CONST, Symbol::PROC, Symbol::INT, Symbol::BOOL}},
+  {VAR_DEF,    {Symbol::INT, Symbol::BOOL}},
+  {DEF_PART,   {Symbol::EPSILON, Symbol::CONST, Symbol::PROC, Symbol::INT,
+                Symbol::BOOL}},
+  {BLOCK,      {Symbol::BEGIN}},
+  {PROGRAM,    {Symbol::BEGIN}},
+  {VPRIME,     {Symbol::ID, Symbol::ARRAY}},
 };
 
+/**
+ * Check if a symbol is in a set.
+ * Helper for checking stop set membership.
+ * @param S The symbol set to check.
+ * @param sym The symbol to check.
+ * @return true if sym is in S.
+ */
+bool in(std::set<Symbol> S, Symbol sym) {
+  return S.count(sym);
+}
+
+/**
+ * Union a vector of stopsets together.
+ * @param stopSets A vector of Symbol sets to union.
+ * @return a set of all of the given stopsets.
+ */
 std::set<Symbol> munion(std::vector<std::set<Symbol>> stopSets) {
   std::set<Symbol> newSet;
   for (auto& S : stopSets) {

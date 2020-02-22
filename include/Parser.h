@@ -36,10 +36,20 @@ class Parser {
 
   /**
    * Match a Token and move to the next one.
+   * @param stop The stopsets used to recover from the error.
    */
   void match(Symbol symbol, std::set<Symbol> stop);
 
+  /**
+   * Process a syntax error and perform error recovery.
+   * @param stop The stopsets used to recover from the error.
+   */
   void syntaxError(std::set<Symbol> stop);
+
+  /**
+   * Checks the next token to see if it will be valid.
+   * @param stop The stopsets used to recover from an error.
+   */
   void syntaxCheck(std::set<Symbol> stop);
 
   /**
@@ -68,26 +78,6 @@ class Parser {
   void constDef(std::set<Symbol> stop);
 
   /**
-   * Parses a varaible definition from the stream of tokens.
-   */
-  void varDef(std::set<Symbol> stop);
-
-  /**
-   * Parses a definition type from the stream of tokens.
-   */
-  void typeSym(std::set<Symbol> stop);
-
-  /**
-   * Parses a varaible vs array from the stream of tokens.
-   */
-  void vPrime(std::set<Symbol> stop);
-
-  /**
-   * Parses a varaible list from the stream of tokens.
-   */
-  void varList(std::set<Symbol> stop);
-
-  /**
    * Parses a procedure definition from the stream of tokens.
    */
   void procDef(std::set<Symbol> stop);
@@ -113,19 +103,9 @@ class Parser {
   void readStmt(std::set<Symbol> stop);
 
   /**
-   * Parses a variable access list.
-   */
-  void vacsList(std::set<Symbol> stop);
-
-  /**
    * Parses a write stamtement.
    */
   void writeStmt(std::set<Symbol> stop);
-
-  /**
-   * Parses a expression list from the stream of tokens.
-   */
-  void exprList(std::set<Symbol> stop);
 
   /**
    * Parses an assignment statement.
@@ -148,6 +128,56 @@ class Parser {
   void doStmt(std::set<Symbol> stop);
 
   /**
+   * Parses a variable access list.
+   */
+  void vacsList(std::set<Symbol> stop);
+
+  /**
+   * Parses variable access.
+   */
+  void varAccess(std::set<Symbol> stop);
+
+  /**
+   * Parses a varaible definition from the stream of tokens.
+   */
+  void varDef(std::set<Symbol> stop);
+
+  /**
+   * Parses a varaible vs array from the stream of tokens.
+   */
+  void vPrime(std::set<Symbol> stop);
+
+  /**
+   * Parses a varaible list from the stream of tokens.
+   */
+  void varList(std::set<Symbol> stop);
+
+  /**
+   * Parses an index selector. ie) A[i].
+   */
+  void idxSelect(std::set<Symbol> stop);
+
+  /**
+   * Parses a expression list from the stream of tokens.
+   */
+  void exprList(std::set<Symbol> stop);
+
+  /**
+   * Parses a expression from the stream of tokens.
+   */
+  void expr(std::set<Symbol> stop);
+
+  /**
+   * Parses a primary expression from the stream of tokens.
+   */
+  void primeExpr(std::set<Symbol> stop);
+
+  /**
+   * Parses a simple expression from the stream of tokens.
+   */
+  void simpleExpr(std::set<Symbol> stop);
+
+  /**
    * Parses a list of guarded commands.
    */
   void guardedList(std::set<Symbol> stop);
@@ -158,30 +188,6 @@ class Parser {
   void guardedComm(std::set<Symbol> stop);
 
   /**
-   * Parses a expression from the stream of tokens.
-   */
-  void expr(std::set<Symbol> stop);
-  /**
-   * Parses a primary operator from the stream of tokens.
-   */
-  void primeOp(std::set<Symbol> stop);
-
-  /**
-   * Parses a primary expression from the stream of tokens.
-   */
-  void primeExpr(std::set<Symbol> stop);
-
-   /**
-    * Parses a realtional operator from the stream of tokens.
-    */
-  void relOp(std::set<Symbol> stop);
-
-  /**
-   * Parses a simple expression from the stream of tokens.
-   */
-  void simpleExpr(std::set<Symbol> stop);
-
-  /**
    * Parses a term from the stream of tokens.
    */
   void term(std::set<Symbol> stop);
@@ -190,6 +196,16 @@ class Parser {
    * Parses a factor from the stream of tokens.
    */
   void factor(std::set<Symbol> stop);
+
+  /**
+   * Parses a primary operator from the stream of tokens.
+   */
+  void primeOp(std::set<Symbol> stop);
+
+   /**
+    * Parses a realtional operator from the stream of tokens.
+    */
+  void relOp(std::set<Symbol> stop);
 
   /**
    * Parses a plus or minus operator from the stream of tokens.
@@ -203,19 +219,14 @@ class Parser {
   void multOp(std::set<Symbol> stop);
 
   /**
-   * Parses variable access.
-   */
-  void varAccess(std::set<Symbol> stop);
-
-  /**
-   * Parses an index selector. ie) A[i].
-   */
-  void idxSelect(std::set<Symbol> stop);
-
-  /**
    * Parses a const non-terminal
    */
   void constant(std::set<Symbol> stop);
+
+  /**
+   * Parses a definition type from the stream of tokens.
+   */
+  void typeSym(std::set<Symbol> stop);
 
   /**
    * Parses a true or false from the stream of tokens.

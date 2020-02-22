@@ -14,6 +14,8 @@ void Parser::parse() {
 }
 
 
+// Matching and errors ///////////////////////////////////////////////////////
+
 void Parser::match(Symbol sym, std::set<Symbol> stop) {
 
   // If the symbol matched look ahead token then move to the next one
@@ -42,7 +44,7 @@ void Parser::syntaxCheck(std::set<Symbol> stop) {
 }
 
 
-// Recursive rule functions ///////////////////////////////////////////
+// Recursive rule functions //////////////////////////////////////////////////
 
 void Parser::program(std::set<Symbol> stop) {
   admin.debugInfo("program");
@@ -60,77 +62,8 @@ void Parser::block(std::set<Symbol> stop) {
   match(Symbol::END, stop);
 }
 
-void Parser::stmtPart(std::set<Symbol> stop) {
-  admin.debugInfo("stmtPart");
 
-  while (First.at(NT::STMT).count(look.getSymbol())) {
-    stmt(munion({stop, {Symbol::SEMI}}));
-    match(Symbol::SEMI, munion({stop, First.at(NT::STMT)}));
-  }
-}
-
-
-void Parser::stmt(std::set<Symbol> stop) {
-  admin.debugInfo("stmt");
-  bool err = false;
-  Symbol next = look.getSymbol();
-  if (next == Symbol::SKIP)
-    emptyStmt(stop);
-  else if (next == Symbol::READ)
-    readStmt(stop);
-  else if (next == Symbol::WRITE)
-    writeStmt(stop);
-  else if (next == Symbol::ID)
-    assignStmt(stop);
-  else if (next == Symbol::CALL)
-    procStmt(stop);
-  else if (next == Symbol::IF)
-    ifStmt(stop);
-  else if (next == Symbol::DO)
-    doStmt(stop);
-  else
-    err = true;
-  std::set<Symbol> allFirst = munion({First.at(NT::EMPTY_STMT), First.at(NT::READ_STMT), First.at(NT::WRITE_STMT), First.at(NT::ASC_STMT), First.at(NT::PROC_STMT), First.at(NT::IF_STMT), First.at(NT::DO_STMT)});
-  if(!allFirst.count(Symbol::EPSILON) && err)
-    syntaxError(stop);
-  else
-    syntaxCheck(stop);
-
-  // Probably having an error here if nothing is matched would be good
-  // otherwise the error when none are correct will expect a do stmt
-}
-
-void Parser::emptyStmt(std::set<Symbol> stop) {
-  admin.debugInfo("emptyStmt");
-
-  match(Symbol::SKIP, stop);
-}
-
-void Parser::readStmt(std::set<Symbol> stop) {
-  admin.debugInfo("readStmt");
-
-  match(Symbol::READ, munion({stop, First.at(NT::VACS_LIST)}));
-  vacsList(stop);
-}
-
-
-void Parser::vacsList(std::set<Symbol> stop) {
-  admin.debugInfo("vacsList");
-
-  varAccess(munion({stop, {Symbol::COMMA}}));
-  while (look.getSymbol() == Symbol::COMMA) {
-    match(Symbol::COMMA, munion({stop, First.at(NT::VACS_LIST)}));
-    varAccess(munion({stop, {Symbol::COMMA}}));
-  }
-}
-
-void Parser::writeStmt(std::set<Symbol> stop) {
-  admin.debugInfo("writeStmt");
-
-  match(Symbol::WRITE, munion({stop, First.at(NT::EXP_LIST)}));
-  exprList(stop);
-}
-
+// Definition Rules //////////////////////////////////////////////////////////
 
 void Parser::defPart(std::set<Symbol> stop) {
   admin.debugInfo("defPart");
@@ -183,18 +116,126 @@ void Parser::varDef(std::set<Symbol> stop) {
 }
 
 
-void Parser::typeSym(std::set<Symbol> stop) {
-  admin.debugInfo("typeSym");
+void Parser::procDef(std::set<Symbol> stop){
+  admin.debugInfo("procDef");
 
-  Symbol next = look.getSymbol();
-  if(next == Symbol::INT) {
-    match(Symbol::INT, stop);
-  } else if (next == Symbol::BOOL){
-    match(Symbol::BOOL, stop);
-  } else {
-    syntaxError(stop);
+  match(Symbol::PROC, munion({stop, {Symbol::ID}, First.at(NT::BLOCK)}));
+  match(Symbol::ID, munion({stop, First.at(NT::BLOCK)}));
+  block(stop);
+}
+
+
+// Statement Rules ///////////////////////////////////////////////////////////
+
+void Parser::stmtPart(std::set<Symbol> stop) {
+  admin.debugInfo("stmtPart");
+
+  while (First.at(NT::STMT).count(look.getSymbol())) {
+    stmt(munion({stop, {Symbol::SEMI}}));
+    match(Symbol::SEMI, munion({stop, First.at(NT::STMT)}));
   }
-  syntaxCheck(stop);
+}
+
+
+void Parser::stmt(std::set<Symbol> stop) {
+  admin.debugInfo("stmt");
+  bool err = false;
+  Symbol next = look.getSymbol();
+  if (next == Symbol::SKIP)
+    emptyStmt(stop);
+  else if (next == Symbol::READ)
+    readStmt(stop);
+  else if (next == Symbol::WRITE)
+    writeStmt(stop);
+  else if (next == Symbol::ID)
+    assignStmt(stop);
+  else if (next == Symbol::CALL)
+    procStmt(stop);
+  else if (next == Symbol::IF)
+    ifStmt(stop);
+  else if (next == Symbol::DO)
+    doStmt(stop);
+  else
+    err = true;
+  std::set<Symbol> allFirst = munion({First.at(NT::EMPTY_STMT), First.at(NT::READ_STMT), First.at(NT::WRITE_STMT), First.at(NT::ASC_STMT), First.at(NT::PROC_STMT), First.at(NT::IF_STMT), First.at(NT::DO_STMT)});
+  if(!allFirst.count(Symbol::EPSILON) && err)
+    syntaxError(stop);
+  else
+    syntaxCheck(stop);
+
+  // Probably having an error here if nothing is matched would be good
+  // otherwise the error when none are correct will expect a do stmt
+}
+
+
+void Parser::emptyStmt(std::set<Symbol> stop) {
+  admin.debugInfo("emptyStmt");
+
+  match(Symbol::SKIP, stop);
+}
+
+
+void Parser::readStmt(std::set<Symbol> stop) {
+  admin.debugInfo("readStmt");
+
+  match(Symbol::READ, munion({stop, First.at(NT::VACS_LIST)}));
+  vacsList(stop);
+}
+
+
+void Parser::writeStmt(std::set<Symbol> stop) {
+  admin.debugInfo("writeStmt");
+
+  match(Symbol::WRITE, munion({stop, First.at(NT::EXP_LIST)}));
+  exprList(stop);
+}
+
+
+void Parser::assignStmt(std::set<Symbol> stop) {
+  admin.debugInfo("assignStmt");
+
+  vacsList(munion({stop, First.at(NT::EXP_LIST), {Symbol::INIT}}));
+  match(Symbol::INIT, munion({stop, First.at(NT::EXP_LIST)}));
+  exprList(stop);
+}
+
+
+void Parser::procStmt(std::set<Symbol> stop) {
+  admin.debugInfo("procStmt");
+
+  match(Symbol::CALL, munion({stop, {Symbol::ID}}));
+  match(Symbol::ID, stop);
+}
+
+
+void Parser::ifStmt(std::set<Symbol> stop) {
+  admin.debugInfo("ifStmt");
+
+  match(Symbol::IF, munion({stop, First.at(NT::GRCOM_LIST), {Symbol::FI}}));
+  guardedList(munion({stop, {Symbol::FI}}));
+  match(Symbol::FI, stop);
+}
+
+
+void Parser::doStmt(std::set<Symbol> stop) {
+  admin.debugInfo("doStmt");
+
+  match(Symbol::DO, munion({stop, First.at(NT::GRCOM_LIST), {Symbol::OD}}));
+  guardedList(munion({stop, {Symbol::OD}}));
+  match(Symbol::OD, stop);
+}
+
+
+// Variable Rules ////////////////////////////////////////////////////////////
+
+void Parser::vacsList(std::set<Symbol> stop) {
+  admin.debugInfo("vacsList");
+
+  varAccess(munion({stop, {Symbol::COMMA}}));
+  while (look.getSymbol() == Symbol::COMMA) {
+    match(Symbol::COMMA, munion({stop, First.at(NT::VACS_LIST)}));
+    varAccess(munion({stop, {Symbol::COMMA}}));
+  }
 }
 
 
@@ -212,6 +253,7 @@ void Parser::vPrime(std::set<Symbol> stop) {
   }
 }
 
+
 void Parser::varList(std::set<Symbol> stop) {
   admin.debugInfo("varList");
 
@@ -223,16 +265,27 @@ void Parser::varList(std::set<Symbol> stop) {
 }
 
 
-void Parser::procDef(std::set<Symbol> stop){
-  admin.debugInfo("procDef");
+void Parser::varAccess(std::set<Symbol> stop) {
+  admin.debugInfo("varAccess");
 
-  match(Symbol::PROC, munion({stop, {Symbol::ID}, First.at(NT::BLOCK)}));
-  match(Symbol::ID, munion({stop, First.at(NT::BLOCK)}));
-  block(stop);
+  match(Symbol::ID, munion({stop, First.at(NT::IDX_SEL)}));
+  // syntax check on next symbol is run in match
+  if (look.getSymbol() == Symbol::LHSQR)
+    idxSelect(stop);
 }
 
 
-// Will need to be adjusted when we add proper grammar
+void Parser::idxSelect(std::set<Symbol> stop) {
+  admin.debugInfo("idxSelect");
+
+  match(Symbol::LHSQR, munion({stop, First.at(NT::EXP), {Symbol::RHSQR}}));
+  expr(munion({stop, {Symbol::RHSQR}}));
+  match(Symbol::RHSQR, stop);
+}
+
+
+// Expression Rules //////////////////////////////////////////////////////////
+
 void Parser::exprList(std::set<Symbol> stop) {
   admin.debugInfo("Expression List");
 
@@ -242,55 +295,6 @@ void Parser::exprList(std::set<Symbol> stop) {
     match(Symbol::COMMA, munion({stop, First.at(NT::EXP)}));
     expr(munion({stop, {Symbol::COMMA}}));
   }
-}
-
-void Parser::assignStmt(std::set<Symbol> stop) {
-  admin.debugInfo("assignStmt");
-
-  vacsList(munion({stop, First.at(NT::EXP_LIST), {Symbol::INIT}}));
-  match(Symbol::INIT, munion({stop, First.at(NT::EXP_LIST)}));
-  exprList(stop);
-}
-
-void Parser::procStmt(std::set<Symbol> stop) {
-  admin.debugInfo("procStmt");
-
-  match(Symbol::CALL, munion({stop, {Symbol::ID}}));
-  match(Symbol::ID, stop);
-}
-
-void Parser::ifStmt(std::set<Symbol> stop) {
-  admin.debugInfo("ifStmt");
-
-  match(Symbol::IF, munion({stop, First.at(NT::GRCOM_LIST), {Symbol::FI}}));
-  guardedList(munion({stop, {Symbol::FI}}));
-  match(Symbol::FI, stop);
-}
-
-void Parser::doStmt(std::set<Symbol> stop) {
-  admin.debugInfo("doStmt");
-
-  match(Symbol::DO, munion({stop, First.at(NT::GRCOM_LIST), {Symbol::OD}}));
-  guardedList(munion({stop, {Symbol::OD}}));
-  match(Symbol::OD, stop);
-}
-
-void Parser::guardedList(std::set<Symbol> stop) {
-  admin.debugInfo("guardedList");
-
-  guardedComm(munion({stop, {Symbol::GUARD}, First.at(NT::GRCOM)}));
-  while (look.getSymbol() == Symbol::GUARD) {
-    match(Symbol::GUARD, munion({stop, First.at(NT::GRCOM)}));
-    guardedComm(munion({stop, {Symbol::GUARD}}));
-  }
-}
-
-void Parser::guardedComm(std::set<Symbol> stop) {
-  admin.debugInfo("guardedComm");
-
-  expr(munion({stop, {Symbol::ARROW}, First.at(NT::STMT_PART)}));
-  match(Symbol::ARROW, munion({stop, First.at(NT::STMT_PART)}));
-  stmtPart(stop);
 }
 
 
@@ -307,45 +311,15 @@ void Parser::expr(std::set<Symbol> stop) {
 }
 
 
-void Parser::primeOp(std::set<Symbol> stop) {
-  admin.debugInfo("prime-op");
-
-  if(look.getSymbol() == Symbol::AMP) {
-    match(Symbol::AMP, stop);
-  } else if (look.getSymbol() == Symbol::BAR){
-    match(Symbol::BAR, stop);
-  } else {
-    syntaxError(stop);
-  }
-  syntaxCheck(stop);
-}
-
-
 void Parser::primeExpr(std::set<Symbol> stop) {
   admin.debugInfo("prime-Expr");
 
-  simpleExpr(munion({stop, First.at(NT::REL_OP)}));
+  simpleExpr(munion({stop, First.at(NT::REL_OP), First.at(NT::SIMP_EXP)}));
 
   if(First.at(NT::REL_OP).count(look.getSymbol())) {
         relOp(munion({stop, First.at(NT::SIMP_EXP)}));
         simpleExpr(munion({stop, First.at(NT::REL_OP)}));
       }
-}
-
-
-void Parser::relOp(std::set<Symbol> stop) {
-  admin.debugInfo("rel-Op");
-
-  if(look.getSymbol() == Symbol::LESS) {
-    match(Symbol::LESS, stop);
-  } else if (look.getSymbol() == Symbol::EQUAL) {
-    match(Symbol::EQUAL, stop);
-  } else if (look.getSymbol() == Symbol::GREAT) {
-    match(Symbol::GREAT, stop);
-  } else {
-    syntaxError(stop);
-  }
-  syntaxCheck(stop);
 }
 
 
@@ -368,6 +342,29 @@ void Parser::simpleExpr(std::set<Symbol> stop) {
   }
 }
 
+
+// Guarded Command Rules /////////////////////////////////////////////////////
+
+void Parser::guardedList(std::set<Symbol> stop) {
+  admin.debugInfo("guardedList");
+
+  guardedComm(munion({stop, {Symbol::GUARD}, First.at(NT::GRCOM)}));
+  while (look.getSymbol() == Symbol::GUARD) {
+    match(Symbol::GUARD, munion({stop, First.at(NT::GRCOM)}));
+    guardedComm(munion({stop, {Symbol::GUARD}}));
+  }
+}
+
+void Parser::guardedComm(std::set<Symbol> stop) {
+  admin.debugInfo("guardedComm");
+
+  expr(munion({stop, {Symbol::ARROW}, First.at(NT::STMT_PART)}));
+  match(Symbol::ARROW, munion({stop, First.at(NT::STMT_PART)}));
+  stmtPart(stop);
+}
+
+
+// Term and Factor Rules /////////////////////////////////////////////////////
 
 void Parser::term(std::set<Symbol> stop) {
   admin.debugInfo("Term");
@@ -414,6 +411,38 @@ void Parser::factor(std::set<Symbol> stop) {
 }
 
 
+// Operator Rules ////////////////////////////////////////////////////////////
+
+void Parser::primeOp(std::set<Symbol> stop) {
+  admin.debugInfo("prime-op");
+
+  if(look.getSymbol() == Symbol::AMP) {
+    match(Symbol::AMP, stop);
+  } else if (look.getSymbol() == Symbol::BAR){
+    match(Symbol::BAR, stop);
+  } else {
+    syntaxError(stop);
+  }
+  syntaxCheck(stop);
+}
+
+
+void Parser::relOp(std::set<Symbol> stop) {
+  admin.debugInfo("rel-Op");
+
+  if(look.getSymbol() == Symbol::LESS) {
+    match(Symbol::LESS, stop);
+  } else if (look.getSymbol() == Symbol::EQUAL) {
+    match(Symbol::EQUAL, stop);
+  } else if (look.getSymbol() == Symbol::GREAT) {
+    match(Symbol::GREAT, stop);
+  } else {
+    syntaxError(stop);
+  }
+  syntaxCheck(stop);
+}
+
+
 void Parser::addOp(std::set<Symbol> stop) {
   admin.debugInfo("addOp");
 
@@ -442,24 +471,7 @@ void Parser::multOp(std::set<Symbol> stop) {
 }
 
 
-void Parser::varAccess(std::set<Symbol> stop) {
-  admin.debugInfo("varAccess");
-
-  match(Symbol::ID, munion({stop, First.at(NT::IDX_SEL)}));
-  // syntax check on next symbol is run in match
-  if (look.getSymbol() == Symbol::LHSQR)
-    idxSelect(stop);
-}
-
-
-void Parser::idxSelect(std::set<Symbol> stop) {
-  admin.debugInfo("idxSelect");
-
-  match(Symbol::LHSQR, munion({stop, First.at(NT::EXP), {Symbol::RHSQR}}));
-  expr(munion({stop, {Symbol::RHSQR}}));
-  match(Symbol::RHSQR, stop);
-}
-
+// Symbol Rules //////////////////////////////////////////////////////////////
 
 void Parser::constant(std::set<Symbol> stop) {
   admin.debugInfo("constant");
@@ -472,6 +484,21 @@ void Parser::constant(std::set<Symbol> stop) {
     match(Symbol::ID, stop);
   else {
     syntaxError(stop);  // epsilon is guaranteed not in any of these
+  }
+  syntaxCheck(stop);
+}
+
+
+void Parser::typeSym(std::set<Symbol> stop) {
+  admin.debugInfo("typeSym");
+
+  Symbol next = look.getSymbol();
+  if(next == Symbol::INT) {
+    match(Symbol::INT, stop);
+  } else if (next == Symbol::BOOL){
+    match(Symbol::BOOL, stop);
+  } else {
+    syntaxError(stop);
   }
   syntaxCheck(stop);
 }
