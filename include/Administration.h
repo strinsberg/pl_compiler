@@ -3,8 +3,8 @@
 
 #include <iostream>
 #include "Token.h"
+#include "Scanner.h"
 
-class Scanner;
 
 const int MAX_ERRORS = 10;
 
@@ -12,54 +12,67 @@ const int MAX_ERRORS = 10;
 class Administration {
  public:
    /**
-     * Creates a new Administration object.
-     * @param fout The output file stream.
-     * @param sc The scanner beign used by administration.
-     */
-  Administration(std::ostream& fout, Scanner& sc);
+    * Creates a new Administration object.
+    * @param fout The output file stream.
+    * @param sc The scanner beign used by administration.
+    * @param debug Set debug mode. Default false.
+    */
+  Administration(std::ostream& fout, Scanner& sc, bool debug = false);
+
+  Token getToken();
 
   /**
-    * Adds line number and resets correctLine.
-    */
+   * Adds line number and resets correctLine.
+   */
   void newLine();
 
   /**
-    * Display text for an error.
-    * @param text The error message.
-    */
+   * Print debugging info to the console if in debug mode.
+   * @param text The info to print.
+   */
+  void debugInfo(std::string text);
+
+  /**
+   * Display text for an error.
+   * @param text The error message.
+   */
   void error(std::string text);
 
-  /**
-    * Scan the whole file and output all tokens to fout.
-    * Returns the number of tokens.
-    */
-  int scan();
-
  private:
-   /**
-     * File to print all tokens to.
-     */
+  /**
+   * File to print all tokens to.
+   */
   std::ostream& fout;
+
   /**
-    * The scanner to use on the input.
-    */
+   * The scanner to use on the input.
+   */
   Scanner& scanner;
+
   /**
-    * The current line number.
-    */
+   * The current line number.
+   */
   int lineNum;
+
   /**
-    * True if the line has no errors so far.
-    */
+   * True if the line has no errors so far.
+   */
   bool correctLine;
+
   /**
-    * The total number of errors so far.
-    */
+   * The total number of errors so far.
+   */
   int errorCount;
+
   /**
-    * Checks if current token is an error token.
-    * @param ntoken The current token.
-    */
+   * Wether or not to print debugging info.
+   */
+  bool debug;
+
+  /**
+   * Checks if current token is an error token.
+   * @param ntoken The current token.
+   */
   void checkError(Token ntoken);
 };
 

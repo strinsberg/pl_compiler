@@ -5,6 +5,8 @@
 
 Scanner::Scanner(std::istream &ifs, SymbolTable &symboltable) : fin(ifs),
                       symtable(symboltable), line(""), pos(0) {
+  // Load all symbol types into the symbol map for easy identification from
+  // their characters
   symmap["."] = Symbol::DOT;
   symmap[","] = Symbol::COMMA;
   symmap[";"] = Symbol::SEMI;
@@ -28,18 +30,22 @@ Scanner::Scanner(std::istream &ifs, SymbolTable &symboltable) : fin(ifs),
   symmap["->"] = Symbol::ARROW;
 }
 
+
 Token Scanner::getToken() {
+  // If the current line of input being parsed is empty get a new one
   if (line == "") {
     getline(fin, line);
     line.push_back('\t');
   }
 
+  // Skip any whitespace before the next token
   while (isWhitespace(line[pos])) {
     pos++;
   }
 
   char s = line[pos];
 
+  // Decide what token type to scan
   if(pos < line.length() && s != '$') {
     if(isSpecial(s)) {
         return recognizeSpecial();
@@ -49,6 +55,7 @@ Token Scanner::getToken() {
         return recognizeName();
     }
 
+  // Get a new line from the input and create newline or eof tokens if needed
   } else {
     std::string tmpline;
     if (!std::getline(fin, tmpline)) {
@@ -62,47 +69,48 @@ Token Scanner::getToken() {
   }
 }
 
+
 bool Scanner::isWhitespace(char inchar) {
   if (inchar == ' ' || inchar == '\t') {
     return true;
   }
+
   return false;
 }
+
 
 bool Scanner::isSpecial(char inchar) {
   std::string specials = ".,;[]&|~<=>+-*/\\():$";
   std::size_t found = specials.find(inchar);
+
   if(found != std::string::npos) {
     return true;
   }
+
   return false;
 }
 
+
 Token Scanner::recognizeName() {
-  Symbol error = Symbol::EMPTY;
   std::string lexeme = "";
 
+  // If the char is not allowed in a name return a char_err token
   if(!std::isalpha(line[pos]) && !std::isdigit(line[pos]) && line[pos] != '_') {
       lexeme+=(line[pos++]);
-      error = Symbol::CHAR_ERR;
-  } else {
-    while(!isWhitespace(line[pos]) &&!isSpecial(line[pos]) && pos < line.length()) {
-      if(!std::isalpha(line[pos]) && !std::isdigit(line[pos]) && line[pos] != '_') {
-          break;
-        }
-        lexeme+=(line[pos++]);
-      }
+      return Token(Symbol::CHAR_ERR, lexeme);
   }
 
-  auto it = symmap.find(lexeme);
-  if(it != symmap.end()) {
-      return Token(it->second, lexeme);
+  // Until the next char is not alphanumeric or an underscore add it to the
+  // lexeme being scanned.
+  while(!isWhitespace(line[pos]) &&!isSpecial(line[pos]) && pos < line.length()) {
+    if(!std::isalpha(line[pos]) && !std::isdigit(line[pos]) && line[pos] != '_')
+      break;
+  
+    lexeme+=(line[pos++]);
   }
 
-  if(error != Symbol::EMPTY) {
-    return Token(error, lexeme);
-  }
-
+  // If the lexeme is in the symbol table return the token
+  // otherwise insert the lexeme into the table and return the resulting token
   Token token = symtable.search(lexeme);
   if (token.getSymbol() == Symbol::EMPTY)
     return symtable.insert(lexeme);
@@ -112,47 +120,45 @@ Token Scanner::recognizeName() {
 
 
 Token Scanner::recognizeSpecial() {
-  Symbol error = Symbol::EMPTY;
   std::string lexeme = "";
 
-  char chr = line[pos];
-  if ((chr == '+' || chr == '-') && std::isdigit(line.at(pos+1)))
-    return recognizeNumeral();
-
-  while(!isWhitespace(line[pos]) && pos < line.length()) {
-    if(!isSpecial(line[pos])) {
-      error = Symbol::CHAR_ERR;
-      break;
-    }
-    lexeme+=(line[pos++]);
+  // If we can make a lexeme of size 2 do it 
+  lexeme+=(line[pos++]);
+  if (pos < line.size()) {
     std::string checkmap = lexeme + line[pos];
-    if(symmap.find(checkmap) == symmap.end()) {
-      break;
+   
+    if(symmap.find(checkmap) != symmap.end()) {
+      pos++;
+      return Token(symmap[checkmap], checkmap);
     }
   }
 
+  // If character is not a symbol return a char_err token
+  // otherwise return the proper symbol token
   if(symmap.find(lexeme) == symmap.end()) {
-    error = Symbol::CHAR_ERR;
-  }
-
-  if (error != Symbol::EMPTY) {
-    return Token(error, lexeme);
+    return Token(Symbol::CHAR_ERR, lexeme);
   } else {
     return Token(symmap[lexeme], lexeme);
   }
 }
 
+
 Token Scanner::recognizeNumeral() {
   std::string lexeme = "";
 
+  // While the next char is a digit add it to the lexeme
   while(!isWhitespace(line[pos]) && pos < line.length()) {
-    if(line[pos] != '-' && line[pos] != '+' && !std::isdigit(line[pos])) {
+    if(!std::isdigit(line[pos])) {
       break;
     }
+
     lexeme+=(line[pos]);
     pos++;
   }
-  int num = 0;
+
+  // Try turning the lexeme into a valid number
+  // Throw an error if it is too big to be an integer
+  int num;
   try {
     num  = std::stoi(lexeme);
   } catch (std::out_of_range& e) {
@@ -161,3 +167,4 @@ Token Scanner::recognizeNumeral() {
 
   return Token(Symbol::NUM, lexeme, num);
 }
+

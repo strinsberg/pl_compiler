@@ -1,29 +1,34 @@
-steve ri*cky
+begin
+  proc Search
+    begin
+    Boolean a b;
+    end;
 
-:=* *-> -!>
+  proc six
+    begin
+    A,,,,,,,,C := 5, 4;
+    B := ?;
+    a := 5; b 6;
+    integer f;
+    end;
 
-12345, -10 +23 - + $ajlsdalkdhaljdlkasd
+  if true -> yes := false; []
+    false -> bad := 6;
+    ~true -> nope := 10;
+  fi;
 
-123!dflij
+  if false-> bye := 8; []
+  fi;
 
-$ this is a comment
+  do
+    call Search;
 
-error*** 123error *0 <= >= ! ; ,
+  call Search;
+  call 6;
 
-!git g!it
+  a := true & false | hi;
+  b := -10;
 
-;, steve; grad,
+  Boolean hi;
 
-1234asd$adhasuhdaihd
-
-if fi do od
-
--
-!
-!
-!
-!
-!
-!
-!
-!
+end;

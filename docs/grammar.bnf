@@ -1,0 +1,184 @@
+===== Grammar =====
+
+PROGRAM     := BLOCK .
+
+BLOCK       := begin DEF_PART STMT_PART end
+
+DEF_PART    := { DEF ; }
+
+DEF         := CONST_DEF |
+              VAR_DEF |
+              PROC_DEF
+
+CONST_DEF   := const CONST_NAME = CONST
+
+VAR_DEF     := TYPE_SYM VPRIME
+
+VPRIME      := VAR_LIST |
+              array VAR_LIST '[' CONST ']'
+
+TYPE_SYM    := integer |
+              Boolean
+
+VAR_LIST    := VAR_NAME { , VAR_NAME }
+
+PROC_DEF    := proc PROC_NAME BLOCK
+
+=== Done here down
+STMT_PART   := { STMT ; }
+
+STMT        := EMPTY_STMT |
+              READ_STMT |
+              WRITE_STMT |
+              ASSGN_STMT |
+              PROC_STMT |
+              IF_STMT |
+              DO_STMT |
+
+EMPTY_STMT  := skip
+
+READ_STMT   := read VACS_LIST
+
+VACS_LIST   := VACS { , VACS }
+
+WRITE_STMT  := write EXPR_LIST
+
+EXPR_LIST   := EXPR { , EXPR }
+
+ASGN_STMT   := VACS_LIST ':=' EXPR_LIST
+
+PROC_STMT   := call PROC_NAME
+
+IF_STMT     := if GRCOM_LIST fi
+
+DO_STMT     := do GRCOM_LIST od
+
+GRCOM_LIST  := GRCOM { '[]' GRCOM }
+
+GRCOM       := EXPR -> STMT_PART
+
+EXPR        := PRIM_EXPR { PRIM_OP PRIM_EXPR }
+
+PRIM_OP     := & | '|'
+
+PRIM_EXPR   := SIMP_EXPR [ REL_OP SIMP_EXPR ]
+
+REL_OP      := < | = | >
+
+SIMP_EXPR   := [ - ] TERM { ADD_OP TERM }
+
+ADD_OP      := + | -
+
+TERM        := FACTOR { MULT_OP FACTOR }
+
+MULT_OP     := * | / | \
+
+FACTOR      := NUM | BOOL_SYM |
+              VACS |
+              ( EXPR ) |
+              ~ FACTOR
+
+VACS        := VAR_NAME [ IDX_SEL ]
+
+IDX_SEL     := '[' EXPR ']'
+
+CONST       := NUM | BOOL_SYM | CONST_NAME
+
+NUM         := DIGIT { DIGIT }
+
+BOOL_SYM    := false | true
+
+NAME        := LETTER { LETTER | DIGIT | _ }   // ID
+
+LETTER      := a - z | A - Z
+
+DIGIT       := 0 - 9
+
+
+
+===== First Sets =====
+
+NAME(ID)	[name]
+BOOL_SYM	[false, true]
+NUM		[num]
+CONST		[num, false, true, name]
+IDX_SEL		[ '[' ]
+VACS		[name]
+FACTOR		[name, false, true, num, '(', '~']
+MULT_OP		['*', '/', '\']
+TERM		[num, false, true, name, '(', '~']
+ADD_OP		['+', '-']
+SIMP_EXP	[num, name, false, true, '-', '(', '~']
+REL_OP		['<', '=', '>']
+PRIM_EXP	[num, name, false, true, '-', '(', '~']
+PRIM_OP		['&', '|']
+EXP		[num, name, false, true, '-', '(', '~']
+GRCOM		[num, name, false, true, '-', '(', '~']
+GRCOM_LIST	[num, name, false, true, '-', '(', '~']
+DO_STMT		[do]
+IF_STMT		[if]	
+PROC_STMT	[call]
+VACS_LIST	[name]
+ASC_STMT	[name]
+EXP_LIST	[num, name, true, false, '=', '(', '~']
+WRITE		[write]
+READ		[read]
+EMPTY		[skip]
+STMT		[skip, read, write, call, if, do, name]
+STMT_PART	[epsilon, skip, read, write, call, if, do, name]
+PROC_DEF	[proc]
+VAR_LIST	[name]
+TYPE_SYM	[integer, Boolean]
+CONST_DEF	[const]
+DEF		[const, proc, integer, Boolean]
+VAR_DEF		[integer, Boolean]
+DEF_PART	[epsilon, const, proc, integer, Boolean]
+BLOCK		[begin]
+PROGRAM		[begin]
+VPRIME		[name, array]
+
+===== Follow Sets =====
+
+BLOCK		['.']
+DEF_PART	[end, skip, read, write, name, call, if, do]
+STMT_PART	[end, fi, od, '[]']
+DEF		[';']
+CONST_DEF	[';']
+VAR_DEF		[';']
+PROC_DEF	[';']
+CONST_NAME	['=']
+TYPE_SYM	[name, array]
+VAR_LIST	[';', ']']
+VAR_NAME	[';', '[', ',']
+PROC_NAME	[begin]
+STMT		[';']
+EMPTY_STMT	[';']
+READ_STMT	[';']
+WRITE_STMT	[';']
+ASSGN_STMT	[';']
+PROC_STMT	[';']
+IF_STMT		[';']
+DO_STMT		[';']
+VAC_LIST	[';', ':=']
+VACS		[',', ';', '->', ')', ']', '&', '|', '<', '=', '>', '+', '-', '*', '/', '\']
+EXP_LIST	[';']
+EXP		[',', ';', '->', ')', ']']
+PROC_NAME	[';']
+GRCOM_LIST	[fi, od]
+GRCOM		[fi, od, '[]']
+PRIM_EXP	[',', ';', '->', ')', ']', '&', '|']
+PRIME_OP	['-', num, false, true, name, '(', '~']
+SIMP_EXP	[',', ';', '->', ')', ']', '&', '|', '<', '=', '>']
+REL_OP		['-', num, false, true, name, '(', '~']
+TERM		[',', ';', '->', ')', ']', '&', '|', '<', '=', '>', '+', '-']
+ADD_OP		[num, name, false, true, '(', '~']
+FACTOR		[',', ';', '->', ')', ']', '&', '|', '<', '=', '>', '+', '-', '*', '/', '\']
+MULT_OP		[num, name, false, true, '(', '~']
+CONST		[';', ']']
+VARNAME		[',', ';', '->', ')', '[', ']', '&', '|', '<', '=', '>', '+', '-', '*', '/', '\']
+NUM		[',', ';', '->', ')', ']', '&', '|', '<', '=', '>', '+', '-', '*', '/', '\']
+BOOL_SYM	[',', ';', '->', ')', ']', '&', '|', '<', '=', '>', '+', '-', '*', '/', '\']
+CONST_NAME	[',', ';', '->', ')', ']', '&', '|', '<', '=', '>', '+', '-', '*', '/', '\']
+
+
+

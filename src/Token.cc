@@ -1,7 +1,8 @@
 #include "Token.h"
 #include "Symbol.h"
 #include <string>
-#include <iostream>
+#include <sstream>
+
 
 Token::Token() : sname(Symbol::EMPTY) {}
 
@@ -39,6 +40,17 @@ void Token::setVal(int v) {
   val = v;
 }
 
-void Token::toString(std::ostream& out) const {
-  out << "<" << SymbolToString.at(sname) << ", " << lexeme << ", " << val << ">";
+
+std::string Token::toString() {
+  std::stringstream ss;
+  ss << "<" << SymbolToString.at(sname);
+
+  if (sname == Symbol::ID)  
+    ss << "  " << lexeme;
+
+  if (sname == Symbol::NUM)
+    ss << " "<< val;
+
+  ss << ">";
+  return ss.str();
 }
