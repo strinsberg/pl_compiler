@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <string>
 
 
 Administration::Administration(std::ostream& ofs, Scanner& sc, bool deb)
@@ -40,8 +41,6 @@ void Administration::newLine() {
 
 
 void Administration::error(std::string text) {
-  errorCount++;
-
   if (errorCount > MAX_ERRORS) {
     std::cerr << "*** Reached Maximum Allowed Errors ***" << std::endl;
     exit(-1);
@@ -49,6 +48,7 @@ void Administration::error(std::string text) {
 
   // If we have not yet had an error on this line print out error text
   if (correctLine != false) {
+    errorCount++;
     std::cerr << "Error: Line: " << lineNum << " -> " << text << std::endl;
     correctLine = false;
   }
@@ -63,8 +63,7 @@ void Administration::debugInfo(std::string text) {
 
 void Administration::checkError(Token ntoken){
   if(ntoken.getSymbol() == Symbol::CHAR_ERR)
-    error("Invalid Char ( " + ntoken.getLexeme() + " )");
+    error("Invalid Char: '" + ntoken.getLexeme() + "'");
   else if(ntoken.getSymbol() == Symbol::NUM_ERR)
-    error("Number not a valid integer ( " + ntoken.getLexeme() + " )");
+    error("Number not a valid integer: '" + ntoken.getLexeme() + "'");
 }
-

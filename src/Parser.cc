@@ -29,14 +29,16 @@ void Parser::match(Symbol sym, std::set<Symbol> stop) {
 
 
 void Parser::syntaxError(std::set<Symbol> stop) {
-  admin.error("Syntax error near: " + SymbolToString.at(look.getSymbol()));  // need more info using look.getSymbol()
+  admin.error("Syntax error near: '" + look.getLexeme() + "'");  // need more info using look.getSymbol()
   while (! stop.count(look.getSymbol()))
     look = admin.getToken();
 }
 
 void Parser::syntaxCheck(std::set<Symbol> stop) {
-  if (! stop.count(look.getSymbol()))
+  if (! stop.count(look.getSymbol())){
+    admin.debugInfo("Fail Syntax Check: '" + look.getLexeme() + "'");
     syntaxError(stop);
+  }
 }
 
 
@@ -238,7 +240,7 @@ void Parser::exprList(std::set<Symbol> stop) {
 
   while(look.getSymbol() == Symbol::COMMA) {
     match(Symbol::COMMA, munion({stop, First.at(NT::EXP)}));
-    expr(munion({stop, First.at(NT::EXP), {Symbol::COMMA}}));
+    expr(munion({stop, {Symbol::COMMA}}));
   }
 }
 
@@ -278,8 +280,8 @@ void Parser::guardedList(std::set<Symbol> stop) {
 
   guardedComm(munion({stop, {Symbol::GUARD}, First.at(NT::GRCOM)}));
   while (look.getSymbol() == Symbol::GUARD) {
-    match(Symbol::GUARD, munion({stop, {Symbol::GUARD}, First.at(NT::GRCOM)}));
-    guardedComm(munion({stop, {Symbol::GUARD}, First.at(NT::GRCOM)}));
+    match(Symbol::GUARD, munion({stop, First.at(NT::GRCOM)}));
+    guardedComm(munion({stop, {Symbol::GUARD}}));
   }
 }
 
@@ -299,8 +301,8 @@ void Parser::expr(std::set<Symbol> stop) {
 
   while (look.getSymbol() == Symbol::AMP or
       look.getSymbol() == Symbol::BAR) {
-    primeOp(munion({stop, First.at(NT::PRIM_OP), First.at(NT::PRIM_EXP)}));
-    primeExpr(munion({stop, First.at(NT::PRIM_OP), First.at(NT::PRIM_EXP)}));
+    primeOp(munion({stop, First.at(NT::PRIM_EXP)}));
+    primeExpr(munion({stop, First.at(NT::PRIM_OP)}));
   }
 }
 
@@ -349,7 +351,7 @@ void Parser::relOp(std::set<Symbol> stop) {
 
 void Parser::simpleExpr(std::set<Symbol> stop) {
   admin.debugInfo("simpleExpr");
-  //possible syntax check
+
   syntaxCheck(munion({stop, {Symbol::MINUS}}));
   if (look.getSymbol() == Symbol::MINUS)
     match(Symbol::MINUS, munion({stop, First.at(NT::TERM)}));
@@ -359,6 +361,9 @@ void Parser::simpleExpr(std::set<Symbol> stop) {
   while (look.getSymbol() == Symbol::PLUS
       or look.getSymbol() == Symbol::MINUS) {
     addOp(munion({stop, First.at(NT::TERM)}));
+    syntaxCheck(munion({stop, {Symbol::MINUS}}));
+    if (look.getSymbol() == Symbol::MINUS)
+      match(Symbol::MINUS, munion({stop, First.at(NT::TERM)}));
     term(munion({stop, First.at(NT::ADD_OP)}));
   }
 }
