@@ -16,19 +16,21 @@
 \section{Purpose of Software}
 The software we are building is a PL compiler that will compile files in the PL
 language so that they can be run on a stack machine. The current phase is the
-implementation of the scanner. This program will take text files and scan them
-for tokens in the PL language. The tokens will be output to a file to verify
-that the correct tokens are being produced. In the future the scanner will be
-used by the parser to get tokens from PL programs for the parser to use when
-it verifies the code and creates the necessary object code for our stack machine.
-The current implementation allows for scanning test files to see what kind of tokens
-are produced.
+implementation of the Parser with error checking and recovery.
+This program will take text files and parse them to see if they are syntactically correct
+pl programs. Currently it outputs the tokens that were parsed to a file and identifies
+syntax errors. The scanner built in the previous portion of the project is used to
+collect tokens and pass them to the scanner. Current test files are available to
+test each function in the recursive decent implementation of the parser. They also test
+several different errors to ensure proper error recovery. Debugging output can also be
+enabled to see what recursive descent function has been called and when tokens are matched.
 
 
 \section{Design}
 This section decribes each class, its function, and how it connects to other classes.
 More detailed documentation of the specific functions and members of each class
-is available in the \textbf{ReferenceDoc.pdf}.
+is available in the \textbf{ReferenceDoc.pdf}. The \textbf{New Additions} start in the
+Administration section.
 
 \subsection{Scanner}
 The Scanner class is the main class for this part of the project. It is responsible
@@ -66,12 +68,44 @@ that maps token types to a string identifer so symbols can be printed in a
 readable way.
 
 \subsection{Administration}
-The Administraton class is responsible for all of the things that are not part
-of the previous classes. At this moment it is mostly responsible for using
-the scanner and calling \verb|getToken()|. It outputs each token it receives as
-a string in a file for debugging. It is also responsible for keeping track of
-errors and printing error messages. Currently it will print only one error message
-per line of input. When it encounters a total of 10 errors it will terminate
-the scanning phase. It also keeps track of the number of the line that is being scanned.
+The Administration class is responsible for connecting all the other classes. It
+holds information for input and output files. It also is responsible for calling
+the scanner to get tokens and keeping track of line numbers. The class
+outputs each scanned token to a file while it runs. It also keeps track
+of the number of errors per line and makes sure that only one error is printed
+per line. It also keeps track of the total number of lines with errors. After 10
+lines have encountered errors the parsing is suspended.
+
+\subsection{Parser}
+The paser class is responsible for ensuring the syntax of the input program is correct.
+There is only one public function in the parser \verb|parse()|. Calling this function begins
+the recursive descent parsing of the input file. Through the administration class the next
+token is obtained from the scanner. One lookahead token is maintained at all times. This token
+is used to decide what grammar rules to pursue while parsing is taking place.
+
+Each function in the parser follows a rule in the grammar
+of pl. These functions either call other functions representing more rules as well as match
+tokens. If the lookahead token does not match up with the next expected terminal symbol then an
+error is thrown. The parser calls the administration class to print the error contents. Then in
+order to recover from the error the parser looks for the next token that will put the parser back
+in a stable state so it can continue parsing. In order to do this, the parser must pass a set of
+tokens that it expects to see to the recursive functions. This way it knows when to stop
+advancing after an error. Theses sets are explained in more detail in the grammar section.
+
+If the parser is free of errors there is currently no output. Debugging information that displays
+the parser functions that are called and what tokens are matched. When errors are encountered
+it is possible to see what rule was being parsed.
+
+\subsection{Grammar}
+In order to properly perform error recovery the parser must know what terminal symbols are expected
+to put a the parser back in a stable state. The set of expected tokens is called a stopset.
+These stopsets are built by the first sets that were built from the pl grammar.
+
+In the grammar header we explicitly build all the necessary first sets and store them in a map.
+We maintain an enum with non-terminal symbols to index this map and access the first sets.
+This map allows us build stopsets easily by unioning these sets together and passing them around during the parsing.
+Along with this map there are some helper functions that allow easy union a set and easily check a set for membership.
+The membership function is not stricly necessary, and is not being used yet, but we hope it will
+improve the readability when checking to see if a symbol is in a stopset.
 
 \end{document}

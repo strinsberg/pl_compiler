@@ -24,6 +24,8 @@ The entire class contributed equally on this project. We discussed the design an
 	\item Token.h
 	\item Scanner.h
 	\item Administration.h
+  \item Parser.h
+  \item Grammar.h
 \end{itemize}
 
 \subsection{Source Files}
@@ -33,15 +35,16 @@ The entire class contributed equally on this project. We discussed the design an
 	\item Token.cc
 	\item Scanner.cc
 	\item Administration.cc
+  \item Parser.cc
 \end{itemize}
 
 \subsection{Test Files}
 \begin{itemize}
-	\item fullTabTest.pl - Tests making the symbol table full
-	\item keywordTest.pl - Tests each of the valid keywords
-	\item maxNumTest.pl - Tests numbers and makes sure integer overflow is detected
-	\item errorTest.pl - Tests other errors and Test that after 10 errors we quit execution
-	\item scannerOfficialTest.pl - Test a PL program from the Brinch Hanson texbook
+	\item officialTest.pl - A full test program from the Brinch Hansen textbook.
+  \item stmts.pl - Tests all of the statement rules.
+  \item defs.pl - Test all of the defenition rules.
+  \item simpleExps.pl - Tests all of the expression rules.
+  \item errorTest.pl - Tests a number of different errors. Tries to ensure that the parser catches all errors and recovers to a stable state.
 \end{itemize}
 
 \section{Compiling and Running}
@@ -54,7 +57,8 @@ The entire class contributed equally on this project. We discussed the design an
 
 \verb|        \$ compiler <testfile-path> -o <output-file>|
 
-	\item If you omit the \verb|<output-file>| option the tokens will be output to a file called \verb|pl.out|
+	\item If you omit the \verb|-o <output-file>| flag the tokens will be output to a file called \verb|pl.out|
+	\item If you add the \verb|-v| flag some debugging info will be printed. This will include each function that is called and matched tokens. This will not affect the output of tokens.
 \end{enumerate}
 
 \section{Bugs}
@@ -62,6 +66,6 @@ None. That we know about.
 
 
 \section{Time Spent}
-30 total hours spent on this project if you count all group member contributions.
+Hours spent on this project combine all group member contributions. Scanner 30 hrs. Parser 40 hours.
 
 \end{document}
