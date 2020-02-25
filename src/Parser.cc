@@ -89,7 +89,9 @@ void Parser::def(std::set<Symbol> stop) {
   }
   else
     err = true;
+
   std::set<Symbol> allFirst = munion({First.at(NT::CONST_DEF), First.at(NT::VAR_DEF), First.at(NT::PROC_DEF)});
+
   if(!allFirst.count(Symbol::EPSILON) && err)
     syntaxError(stop);
   else
@@ -157,14 +159,14 @@ void Parser::stmt(std::set<Symbol> stop) {
     doStmt(stop);
   else
     err = true;
-  std::set<Symbol> allFirst = munion({First.at(NT::EMPTY_STMT), First.at(NT::READ_STMT), First.at(NT::WRITE_STMT), First.at(NT::ASC_STMT), First.at(NT::PROC_STMT), First.at(NT::IF_STMT), First.at(NT::DO_STMT)});
+
+  std::set<Symbol> allFirst = munion({First.at(NT::EMPTY_STMT), First.at(NT::READ_STMT), First.at(NT::WRITE_STMT),
+      First.at(NT::ASC_STMT), First.at(NT::PROC_STMT), First.at(NT::IF_STMT), First.at(NT::DO_STMT)});
+
   if(!allFirst.count(Symbol::EPSILON) && err)
     syntaxError(stop);
   else
     syntaxCheck(stop);
-
-  // Probably having an error here if nothing is matched would be good
-  // otherwise the error when none are correct will expect a do stmt
 }
 
 
@@ -269,7 +271,6 @@ void Parser::varAccess(std::set<Symbol> stop) {
   admin.debugInfo("varAccess");
 
   match(Symbol::ID, munion({stop, First.at(NT::IDX_SEL)}));
-  // syntax check on next symbol is run in match
   if (look.getSymbol() == Symbol::LHSQR)
     idxSelect(stop);
 }
@@ -317,9 +318,9 @@ void Parser::primeExpr(std::set<Symbol> stop) {
   simpleExpr(munion({stop, First.at(NT::REL_OP), First.at(NT::SIMP_EXP)}));
 
   if(First.at(NT::REL_OP).count(look.getSymbol())) {
-        relOp(munion({stop, First.at(NT::SIMP_EXP)}));
-        simpleExpr(munion({stop, First.at(NT::REL_OP)}));
-      }
+    relOp(munion({stop, First.at(NT::SIMP_EXP)}));
+    simpleExpr(munion({stop, First.at(NT::REL_OP)}));
+  }
 }
 
 
@@ -336,8 +337,10 @@ void Parser::simpleExpr(std::set<Symbol> stop) {
       or look.getSymbol() == Symbol::MINUS) {
     addOp(munion({stop, First.at(NT::TERM)}));
     syntaxCheck(munion({stop, {Symbol::MINUS}}));
+
     if (look.getSymbol() == Symbol::MINUS)
       match(Symbol::MINUS, munion({stop, First.at(NT::TERM)}));
+
     term(munion({stop, First.at(NT::ADD_OP)}));
   }
 }

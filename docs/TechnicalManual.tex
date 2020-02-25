@@ -16,19 +16,21 @@
 \section{Purpose of Software}
 The software we are building is a PL compiler that will compile files in the PL
 language so that they can be run on a stack machine. The current phase is the
-implementation of the scanner. This program will take text files and scan them
-for tokens in the PL language. The tokens will be output to a file to verify
-that the correct tokens are being produced. In the future the scanner will be
-used by the parser to get tokens from PL programs for the parser to use when
-it verifies the code and creates the necessary object code for our stack machine.
-The current implementation allows for scanning test files to see what kind of tokens
-are produced.
+implementation of the Parser with error checking and recovery.
+This program will take text files and parse them to see if they are syntactically correct
+pl programs. Currently it outputs the tokens that were parsed to a file and identifies
+syntax errors. The scanner built in the previous portion of the project is used to
+collect tokens and pass them to the scanner. Current test files are available to
+test each function in the recursive decent implementation of the parser. They also test
+several different errors to ensure proper error recovery. Debugging output can also be
+enabled to see what recursive descent function has been called and when tokens are matched.
 
 
 \section{Design}
 This section decribes each class, its function, and how it connects to other classes.
 More detailed documentation of the specific functions and members of each class
-is available in the \textbf{ReferenceDoc.pdf}.
+is available in the \textbf{ReferenceDoc.pdf}. \textbf{New} project additions are
+detailed after the \textbf{Administration} section.
 
 \subsection{Scanner}
 The Scanner class is the main class for this part of the project. It is responsible
@@ -73,5 +75,25 @@ a string in a file for debugging. It is also responsible for keeping track of
 errors and printing error messages. Currently it will print only one error message
 per line of input. When it encounters a total of 10 errors it will terminate
 the scanning phase. It also keeps track of the number of the line that is being scanned.
+
+\subsection{Parser}
+The paser class is responsible for ensureing the syntax of the input program is correct.
+There is only one public function in the parser \verb|parse()|. Calling this function begins
+the recursive descent parsing of the input file. Each function follows a rule in the grammar
+of pl. These functions either call other functions representing more rules as well as match
+tokens. This will ensure that the syntax is correct because if a terminal is found that
+is not expected in the input an error message is output.
+The error correction is performed by advancing tokens until the parser is back in a stable state.
+Once in a stable state we pre-emptively check the next token for errors.
+
+\subsection{Grammar}
+In order to properly perform error recovery the parser needs to know when an expected token is
+found. The set of possible proper tokens is called a stop set. These stopsets are built by the
+first sets that we built from the pl grammar. In the grammar header we explicitly build all
+the necessary first sets and store them in a map. We maintain an enum with non-terminal
+symbols to index this map and access the first sets. This map allows us build stopsets easily by
+unioning these sets together and passing them around during the parsing. Along with this map
+there are some helper functions that allow easy union a set and easily check a set for membership.
+The membership function is not stricly necessary, but it improves redability.
 
 \end{document}
