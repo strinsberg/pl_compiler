@@ -224,6 +224,11 @@ class Parser {
   void constant(std::set<Symbol> stop);
 
   /**
+   * Parses a const num non-terminal
+   */
+  void cPrime(std::set<Symbol> stop);
+
+  /**
    * Parses a definition type from the stream of tokens.
    */
   void typeSym(std::set<Symbol> stop);
@@ -232,6 +237,24 @@ class Parser {
    * Parses a true or false from the stream of tokens.
    */
   void boolSym(std::set<Symbol> stop);
+
+  void fieldList(std::set<Symbol> stop);
+
+  void recordSection(std::set<Symbol> stop);
+
+  void procBlock(std::set<Symbol> stop);
+
+  void formParamList(std::set<Symbol> stop);
+
+  void paramDef(std::set<Symbol> stop);
+
+  void actParamList(std::set<Symbol> stop);
+
+  void actParam(std::set<Symbol> stop);
+
+  void selec(std::set<Symbol> stop);
+
+  void fieldSelec(std::set<Symbol> stop);
 };
 
 #endif

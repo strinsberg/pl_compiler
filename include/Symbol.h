@@ -13,7 +13,7 @@ enum Symbol {
   INT, BOOL, FALSE, TRUE, BEGIN, END, CONST, ARRAY, PROC, SKIP, READ, WRITE,
   CALL, IF, FI, DO, OD,
 
-  ID, KEY, ENDFILE, EMPTY, EPSILON, NEWLINE, NUM,
+  ID, KEY, ENDFILE, EMPTY, EPSILON, NEWLINE, NUM, RECORD, FLOAT, VAR,
 
   NAME_ERR, NUM_ERR, CHAR_ERR, FULL_TAB
 };
@@ -72,6 +72,9 @@ const std::map<Symbol, std::string> SymbolToString {
   {FI, "fi"},
   {DO, "do"},
   {OD, "od"},
+  {VAR, "var"},
+  {RECORD, "record"},
+  {FLOAT, "float"},
 };
 
 #endif

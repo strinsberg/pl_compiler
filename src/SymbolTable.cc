@@ -104,4 +104,7 @@ void SymbolTable::loadKeywords() {
   loadKey(Symbol::BOOL, "Boolean");
   loadKey(Symbol::TRUE, "true");
   loadKey(Symbol::FALSE, "false");
+  loadKey(Symbol::RECORD, "record");
+  loadKey(Symbol::VAR, "var");
+  loadKey(Symbol::FLOAT, "float");
 }
