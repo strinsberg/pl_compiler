@@ -114,9 +114,9 @@ void Parser::varDef(std::set<Symbol> stop) {
   admin.debugInfo("varDef");
 
   if (look.getSymbol() == Symbol::RECORD) {
-    match(Symbol::RECORD,munion({stop, {Symbol::ID}, First.at(NT::FIELD_LIST)}));
-    match(Symbol::ID, munion({stop, First.at(NT::FIELD_LIST)}));
-    fieldList(stop);
+    match(Symbol::RECORD,munion({stop, {Symbol::ID, Symbol::END}, First.at(NT::FIELD_LIST)}));
+    match(Symbol::ID, munion({stop, {Symbol::END}, First.at(NT::FIELD_LIST)}));
+    fieldList(munion({stop, {Symbol::END}}));
     match(Symbol::END, stop);
   } else {
     typeSym(munion({stop, First.at(NT::VPRIME)}));
@@ -128,9 +128,9 @@ void Parser::varDef(std::set<Symbol> stop) {
 void Parser::procDef(std::set<Symbol> stop){
   admin.debugInfo("procDef");
 
-  match(Symbol::PROC, munion({stop, {Symbol::ID}, First.at(NT::BLOCK)}));
-  match(Symbol::ID, munion({stop, First.at(NT::BLOCK)}));
-  block(stop);
+  match(Symbol::PROC, munion({stop, {Symbol::ID}, First.at(NT::PROC_BLOCK)}));
+  match(Symbol::ID, munion({stop, First.at(NT::PROC_BLOCK)}));
+  procBlock(stop);
 }
 
 
@@ -212,8 +212,10 @@ void Parser::assignStmt(std::set<Symbol> stop) {
 void Parser::procStmt(std::set<Symbol> stop) {
   admin.debugInfo("procStmt");
 
-  match(Symbol::CALL, munion({stop, {Symbol::ID}}));
-  match(Symbol::ID, stop);
+  match(Symbol::CALL, munion({stop, {Symbol::ID, Symbol::LHRND, Symbol::RHRND},
+        First.at(NT::ACT_PLIST)}));
+  match(Symbol::ID, munion({stop, {Symbol::LHRND, Symbol::RHRND},
+        First.at(NT::ACT_PLIST)}));
   if(look.getSymbol() == Symbol::LHRND) {
     match(Symbol::LHRND, munion({stop, {Symbol::RHRND}, First.at(NT::ACT_PLIST)}));
     actParamList(munion({stop, {Symbol::RHRND}}));
@@ -283,9 +285,9 @@ void Parser::varList(std::set<Symbol> stop) {
 void Parser::varAccess(std::set<Symbol> stop) {
   admin.debugInfo("varAccess");
 
-  match(Symbol::ID, munion({stop, First.at(NT::IDX_SEL)}));
-  if (look.getSymbol() == Symbol::LHSQR)
-    idxSelect(stop);
+  match(Symbol::ID, munion({stop, First.at(NT::SELECT)}));
+  if (First.at(NT::SELECT).count(look.getSymbol()))
+    selec(stop);
 }
 
 
@@ -399,7 +401,7 @@ void Parser::factor(std::set<Symbol> stop) {
 
   bool err = false;
   if(look.getSymbol() == Symbol::NUM) {
-    match(Symbol::NUM, stop);
+    constant(stop);
   } else if (look.getSymbol() == Symbol::TRUE
       or look.getSymbol() == Symbol::FALSE) {
     boolSym(stop);
@@ -577,6 +579,8 @@ void Parser::procBlock(std::set<Symbol> stop) {
   if(look.getSymbol() == Symbol::LHRND){
     match(Symbol::LHRND, munion({stop, First.at(NT::FORM_PLIST),
       {Symbol::RHRND}, First.at(NT::BLOCK)}));
+    formParamList(munion({stop, {Symbol::RHRND}, First.at(NT::BLOCK)}));
+    match(Symbol::RHRND, munion({stop, First.at(NT::BLOCK)}));
   }
   block(stop);
 }
@@ -627,9 +631,9 @@ void Parser::actParam(std::set<Symbol> stop) {
 void Parser::selec(std::set<Symbol> stop) {
   admin.debugInfo("selec");
 
-  if(First.at(NT::IDX_SEL).count(look.getSymbol()))
+  if(look.getSymbol() == Symbol::LHSQR)
     idxSelect(stop);
-  else if (First.at(NT::FIELD_SEL).count(look.getSymbol()))
+  else if (look.getSymbol() == Symbol::DOT)
     fieldSelec(stop);
 }
 
