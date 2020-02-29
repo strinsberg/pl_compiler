@@ -114,7 +114,8 @@ void Parser::varDef(std::set<Symbol> stop) {
   admin.debugInfo("varDef");
 
   if (look.getSymbol() == Symbol::RECORD) {
-    match(Symbol::RECORD,munion({stop, First.at(NT::FIELD_LIST)}));
+    match(Symbol::RECORD,munion({stop, {Symbol::ID}, First.at(NT::FIELD_LIST)}));
+    match(Symbol::ID, munion({stop, First.at(NT::FIELD_LIST)}));
     fieldList(stop);
     match(Symbol::END, stop);
   } else {
