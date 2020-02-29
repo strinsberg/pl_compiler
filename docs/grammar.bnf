@@ -12,19 +12,30 @@ DEF         := CONST_DEF |
 
 CONST_DEF   := const CONST_NAME = CONST
 
-VAR_DEF     := TYPE_SYM VPRIME
+VAR_DEF     := TYPE_SYM VPRIME |
+	      record FIELD_LIST end
 
 VPRIME      := VAR_LIST |
               array VAR_LIST '[' CONST ']'
 
+FIELD_LIST  := REC_SEC { ; REC_SEC }
+
+REC_SEC     := TYPE_SYM FIELD_NAME { , FIELD_NAME }
+
 TYPE_SYM    := integer |
-              Boolean
+              Boolean |
+              float
 
 VAR_LIST    := VAR_NAME { , VAR_NAME }
 
-PROC_DEF    := proc PROC_NAME BLOCK
+PROC_DEF    := proc PROC_NAME PROC_BLOCK
 
-=== Done here down
+PROC_BLOCK  := [ ( FORM_PLIST ) ] BLOCK
+
+FORM_PLIST  := PARAM_DEF { ; PARAM_DEF }
+
+PARAM_DEF   := [ var ] TYPE_SYM VAR_LIST
+
 STMT_PART   := { STMT ; }
 
 STMT        := EMPTY_STMT |
@@ -47,7 +58,11 @@ EXPR_LIST   := EXPR { , EXPR }
 
 ASGN_STMT   := VACS_LIST ':=' EXPR_LIST
 
-PROC_STMT   := call PROC_NAME
+PROC_STMT   := call PROC_NAME [ ( ACT_PLIST ) ]
+
+ACT_PLIST   := ACT_PARAM { , ACT_PARAM }
+
+ACT_PARAM   := EXPR_LIST | VACS_LIST
 
 IF_STMT     := if GRCOM_LIST fi
 
@@ -78,11 +93,17 @@ FACTOR      := NUM | BOOL_SYM |
               ( EXPR ) |
               ~ FACTOR
 
-VACS        := VAR_NAME [ IDX_SEL ]
+VACS        := VAR_NAME SELECT
+
+SELECT      := IDX_SEL | FIELD_SEL
 
 IDX_SEL     := '[' EXPR ']'
 
-CONST       := NUM | BOOL_SYM | CONST_NAME
+FIELD_SEL   := . FIELD_NAME
+
+CONST       := NUM CPRIME | BOOL_SYM | CONST_NAME
+
+CPRIME      := . NUM | epsilon
 
 NUM         := DIGIT { DIGIT }
 
@@ -102,7 +123,9 @@ NAME(ID)	[name]
 BOOL_SYM	[false, true]
 NUM		[num]
 CONST		[num, false, true, name]
+FIELD_SEL       [.]
 IDX_SEL		[ '[' ]
+SELECT		[ '[', .]
 VACS		[name]
 FACTOR		[name, false, true, num, '(', '~']
 MULT_OP		['*', '/', '\']
@@ -116,7 +139,9 @@ EXP		[num, name, false, true, '-', '(', '~']
 GRCOM		[num, name, false, true, '-', '(', '~']
 GRCOM_LIST	[num, name, false, true, '-', '(', '~']
 DO_STMT		[do]
-IF_STMT		[if]	
+IF_STMT		[if]
+ACT_PARAM       [num, name, true, false, '=', '(', '~']
+ACT_PLIST	[num, name, true, false, '=', '(', '~']
 PROC_STMT	[call]
 VACS_LIST	[name]
 ASC_STMT	[name]
@@ -126,18 +151,23 @@ READ		[read]
 EMPTY		[skip]
 STMT		[skip, read, write, call, if, do, name]
 STMT_PART	[epsilon, skip, read, write, call, if, do, name]
+PARAM_DEF	[var, integer, Boolean, float]
+FORM_PLIST	[var, integer, Boolean, float]
+PROC_BLOCK      [ '(' , begin]
 PROC_DEF	[proc]
 VAR_LIST	[name]
 TYPE_SYM	[integer, Boolean, float]
+REC_SEC   	[integer, Boolean, float]
 CONST_DEF	[const]
-DEF		[const, proc, integer, Boolean]
-VAR_DEF		[integer, Boolean, float]
-DEF_PART	[epsilon, const, proc, integer, Boolean]
+DEF		[const, proc, integer, Boolean, float, record]
+VAR_DEF		[integer, Boolean, float, record]
+DEF_PART	[epsilon, const, proc, integer, Boolean, float, record]
 BLOCK		[begin]
 PROGRAM		[begin]
 VPRIME		[name, array]
 
 ===== Follow Sets =====
+# Not updated for new rules #
 
 BLOCK		['.']
 DEF_PART	[end, skip, read, write, name, call, if, do]
