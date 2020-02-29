@@ -101,7 +101,9 @@ IDX_SEL     := '[' EXPR ']'
 
 FIELD_SEL   := . FIELD_NAME
 
-CONST       := NUM | BOOL_SYM | CONST_NAME | NUM.NUM
+CONST       := NUM CPRIME | BOOL_SYM | CONST_NAME
+
+CPRIME      := . NUM | epsilon
 
 NUM         := DIGIT { DIGIT }
 

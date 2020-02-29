@@ -14,7 +14,8 @@ enum NT {
   DO_STMT, IF_STMT, PROC_STMT, VACS_LIST, ASC_STMT, EXP_LIST, WRITE_STMT,
   READ_STMT, EMPTY_STMT, STMT, STMT_PART, PROC_DEF, VAR_LIST, TYPE_SYM, CONST_DEF,
   DEF, VAR_DEF, DEF_PART, BLOCK, PROGRAM, VPRIME, FIELD_LIST, PROC_BLOCK,
-  REC_SEC, FORM_PLIST, PARAM_DEF, ACT_PLIST, ACT_PARAM, SELECT, FIELD_SEL
+  REC_SEC, FORM_PLIST, PARAM_DEF, ACT_PLIST, ACT_PARAM, SELECT, FIELD_SEL,
+  CPRIME
 };
 
 /**
@@ -24,6 +25,7 @@ const std::map<NT, std::set<Symbol>> First{
   {NAME,       {Symbol::ID}},
   {BOOL_SYM,   {Symbol::FALSE, Symbol::TRUE}},
   {NUM_NT,     {Symbol::NUM}},
+  {CPRIME,     {Symbol::DOT, Symbol::EPSILON}},
   {CONST_NT,   {Symbol::NUM, Symbol::FALSE, Symbol::TRUE, Symbol::ID}},
   {FIELD_SEL   {Symbol::DOT}},
   {IDX_SEL,    {Symbol::LHSQR}},
