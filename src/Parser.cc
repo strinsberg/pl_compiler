@@ -515,6 +515,7 @@ void Parser::cPrime(std::set<Symbol> stop) {
     match(Symbol::DOT, munion({stop, {Symbol::NUM}}));
     match(Symbol::NUM, stop);
   }
+  syntaxCheck(stop);
 }
 
 
@@ -624,6 +625,9 @@ void Parser::actParam(std::set<Symbol> stop) {
     exprList(stop);
   else if (First.at(NT::VACS_LIST).count(look.getSymbol()))
     varAccess(stop);
+  else
+    syntaxError(stop);
+  syntaxCheck(stop);
 }
 
 // Selector Rules //////////////////////////////////////////////////////////////
@@ -635,6 +639,9 @@ void Parser::selec(std::set<Symbol> stop) {
     idxSelect(stop);
   else if (look.getSymbol() == Symbol::DOT)
     fieldSelec(stop);
+  else
+    syntaxError(stop);
+  syntaxCheck(stop);
 }
 
 void Parser::fieldSelec(std::set<Symbol> stop) {
