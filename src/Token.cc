@@ -8,7 +8,7 @@ Token::Token() : sname(Symbol::EMPTY) {}
 
 
 Token::Token(Symbol sym, std::string lex, int v)
-    : sname(sym), lexeme(lex), val(v) {}
+    : sname(sym), lexeme(lex), iVal(v) {}
 
 
 Symbol Token::getSymbol() {
@@ -22,9 +22,33 @@ std::string Token::getLexeme() {
 
 
 int Token::getVal() {
-  return val;
+  return iVal;
 }
 
+
+double Token::setFVal() {
+  return fVal;
+}
+
+
+int Token::setSize() {
+  return size;
+}
+
+
+Symbol Token::setDType() {
+  return dType;
+}
+
+
+Symbol Token::setIdType() {
+  return idType;
+}
+
+
+std::map<string, Symbol> & getFields() {
+  return fields;
+}
 
 void Token::setSymbol(Symbol sym) {
   sname = sym;
@@ -36,8 +60,28 @@ void Token::setLexeme(std::string str) {
 }
 
 
-void Token::setVal(int v) {
-  val = v;
+void Token::setIVal(int v) {
+  iVal = v;
+}
+
+
+void Token::setFVal(double val) {
+  fVal = val;
+}
+
+
+void Token::setSize(int s) {
+  size = s;
+}
+
+
+void Token::setDType(Symbol type) {
+  dType = type;
+}
+
+
+void Token::setIdType(Symbol type) {
+  idType = type;
 }
 
 
@@ -49,7 +93,7 @@ std::string Token::toString() {
     ss << "  " << lexeme;
 
   if (sname == Symbol::NUM)
-    ss << " "<< val;
+    ss << " "<< iVal;
 
   ss << ">";
   return ss.str();

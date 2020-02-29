@@ -37,6 +37,12 @@ class Token {
    */
   int getVal();
 
+  double setFVal();
+  int setSize();
+  Symbol setDType();
+  Symbol setIdType();
+  std::map<string, Symbol> & getFields();
+
   /**
    * Sets the symbol.
    * @param sym The symbol to give the token.
@@ -53,7 +59,12 @@ class Token {
    * Sets the value.
    * @param val The value to give the token.
    */
-  void setVal(int val);
+  void setIVal(int val);
+
+  void setFVal(double val);
+  void setSize(int size);
+  void setDType(Symbol type);
+  void setIdType(Symbol type);
 
   /**
    * Returns a string representation of the Token.
@@ -72,9 +83,18 @@ class Token {
   std::string lexeme;
 
   /**
-   * The numeric value of the token or it's position in the symbol table.
+   * The numeric value of the token.
    */
-  int val;
+  int iVal;
+  double fVal;
+  
+  int size;
+
+  Symbol dType;
+  Symbol idType;
+
+  // Mini symbol table for storing record fields
+  std::map<std::string, Token> fields;
 };
 
 #endif

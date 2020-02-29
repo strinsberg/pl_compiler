@@ -15,7 +15,7 @@ enum Symbol {
 
   ID, KEY, ENDFILE, EMPTY, EPSILON, NEWLINE, NUM, RECORD, FLOAT, VAR,
 
-  NAME_ERR, NUM_ERR, CHAR_ERR, FULL_TAB
+  NAME_ERR, NUM_ERR, CHAR_ERR, FULL_TAB, UNDEF
 };
 
 
@@ -75,6 +75,7 @@ const std::map<Symbol, std::string> SymbolToString {
   {VAR, "var"},
   {RECORD, "record"},
   {FLOAT, "float"},
+  {UNDEF, "Undefined"}
 };
 
 #endif
