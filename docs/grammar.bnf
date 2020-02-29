@@ -13,7 +13,7 @@ DEF         := CONST_DEF |
 CONST_DEF   := const CONST_NAME = CONST
 
 VAR_DEF     := TYPE_SYM VPRIME |
-	      record FIELD_LIST end
+	      record ID FIELD_LIST end
 
 VPRIME      := VAR_LIST |
               array VAR_LIST '[' CONST ']'
