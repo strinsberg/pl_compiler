@@ -1,3 +1,3 @@
 begin
-  record;
+  record
 end.

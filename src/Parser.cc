@@ -112,12 +112,12 @@ void Parser::constDef(std::set<Symbol> stop) {
 
 void Parser::varDef(std::set<Symbol> stop) {
   admin.debugInfo("varDef");
+
   if (look.getSymbol() == Symbol::RECORD) {
-    match(Symbol::RECORD,munion({stop, First.at(NT::FIELDLIST)})
+    match(Symbol::RECORD,munion({stop, First.at(NT::FIELD_LIST)}));
     fieldList(stop);
     match(Symbol::END, stop);
-  }
-  else {
+  } else {
     typeSym(munion({stop, First.at(NT::VPRIME)}));
     vPrime(stop);
   }
@@ -213,6 +213,12 @@ void Parser::procStmt(std::set<Symbol> stop) {
 
   match(Symbol::CALL, munion({stop, {Symbol::ID}}));
   match(Symbol::ID, stop);
+  if(look.getSymbol() == Symbol::LHRND) {
+    match(Symbol::LHRND, munion({stop, {Symbol::RHRND}, First.at(NT::ACT_PLIST)}));
+    actParamList(munion({stop, {Symbol::RHRND}}));
+    match(Symbol::RHRND, stop);
+
+  }
 }
 
 
@@ -485,9 +491,10 @@ void Parser::multOp(std::set<Symbol> stop) {
 void Parser::constant(std::set<Symbol> stop) {
   admin.debugInfo("constant");
 
-  if (look.getSymbol() == Symbol::NUM)
-    match(Symbol::NUM, stop);
-  else if (First.at(NT::BOOL_SYM).count(look.getSymbol()))
+  if (look.getSymbol() == Symbol::NUM) {
+    match(Symbol::NUM, munion({stop, First.at(NT::CPRIME)}));
+    cPrime(stop);
+  } else if (First.at(NT::BOOL_SYM).count(look.getSymbol()))
     boolSym(stop);
   else if (look.getSymbol() == Symbol::ID)
     match(Symbol::ID, stop);
@@ -495,6 +502,16 @@ void Parser::constant(std::set<Symbol> stop) {
     syntaxError(stop);  // epsilon is guaranteed not in any of these
   }
   syntaxCheck(stop);
+}
+
+
+void Parser::cPrime(std::set<Symbol> stop) {
+  admin.debugInfo("cPrime");
+
+  if(look.getSymbol() == Symbol::DOT){
+    match(Symbol::DOT, munion({stop, {Symbol::NUM}}));
+    match(Symbol::NUM, stop);
+  }
 }
 
 
@@ -534,9 +551,9 @@ void Parser::boolSym(std::set<Symbol> stop) {
 void Parser::fieldList (std::set<Symbol> stop) {
   admin.debugInfo("fieldList");
 
-  recordSection(munion({stop, {Symbol::SEMI},  First.at(NT::RECSEC)}));
+  recordSection(munion({stop, {Symbol::SEMI},  First.at(NT::REC_SEC)}));
   while(look.getSymbol() == Symbol::SEMI){
-    match(Symbol::SEMI, munion({stop, First.at(RECSEC)}));
+    match(Symbol::SEMI, munion({stop, First.at(NT::REC_SEC)}));
     recordSection(munion({stop, {Symbol::SEMI}}));
   }
 }
@@ -558,7 +575,7 @@ void Parser::procBlock(std::set<Symbol> stop) {
   admin.debugInfo("procBlock");
 
   if(look.getSymbol() == Symbol::LHRND){
-    match(Symbo::LHRND, munion({stop, First.at(NT::FORM_PLIST),
+    match(Symbol::LHRND, munion({stop, First.at(NT::FORM_PLIST),
       {Symbol::RHRND}, First.at(NT::BLOCK)}));
   }
   block(stop);
@@ -584,4 +601,41 @@ void Parser::paramDef(std::set<Symbol> stop) {
 
   typeSym(munion({stop, First.at(NT::VAR_LIST)}));
   varList(stop);
+}
+
+void Parser::actParamList(std::set<Symbol> stop) {
+  admin.debugInfo("actParamList");
+
+  actParam(munion({stop, {Symbol::COMMA}, First.at(ACT_PARAM)}));
+  while(look.getSymbol() == Symbol::COMMA){
+    match(Symbol::COMMA, munion({stop, First.at(NT::ACT_PARAM)}));
+    actParam(munion({stop, {Symbol::COMMA}}));
+  }
+}
+
+void Parser::actParam(std::set<Symbol> stop) {
+  admin.debugInfo("actParam");
+
+  if(First.at(NT::EXP_LIST).count(look.getSymbol()))
+    exprList(stop);
+  else if (First.at(NT::VACS_LIST).count(look.getSymbol()))
+    varAccess(stop);
+}
+
+// Selector Rules //////////////////////////////////////////////////////////////
+
+void Parser::selec(std::set<Symbol> stop) {
+  admin.debugInfo("selec");
+
+  if(First.at(NT::IDX_SEL).count(look.getSymbol()))
+    idxSelect(stop);
+  else if (First.at(NT::FIELD_SEL).count(look.getSymbol()))
+    fieldSelec(stop);
+}
+
+void Parser::fieldSelec(std::set<Symbol> stop) {
+  admin.debugInfo("fieldSelec");
+
+  match(Symbol::DOT, munion({stop, {Symbol::ID}}));
+  match(Symbol::ID, stop);
 }

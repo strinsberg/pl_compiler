@@ -224,6 +224,11 @@ class Parser {
   void constant(std::set<Symbol> stop);
 
   /**
+   * Parses a const num non-terminal
+   */
+  void cPrime(std::set<Symbol> stop);
+
+  /**
    * Parses a definition type from the stream of tokens.
    */
   void typeSym(std::set<Symbol> stop);
