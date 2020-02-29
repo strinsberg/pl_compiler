@@ -562,9 +562,8 @@ void Parser::fieldList (std::set<Symbol> stop) {
 void Parser::recordSection(std::set<Symbol> stop) {
   admin.debugInfo("recordSection");
 
-  typeSym(munion({stop, First.at(NT::VPRIME)}));
-  vPrime(stop);
-  match(Symbol::ID, munion({stop, {Symbol::ID}, {Symbol::COMMA}}));
+  typeSym(munion({stop, {Symbol::ID, Symbol::COMMA}}));
+  match(Symbol::ID, munion({stop, {Symbol::ID, Symbol::COMMA}}));
   while(look.getSymbol() == Symbol::COMMA) {
     match(Symbol::COMMA, munion({stop, {Symbol::ID}}));
     match(Symbol::ID, munion({stop, {Symbol::COMMA}}));
