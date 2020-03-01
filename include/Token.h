@@ -37,11 +37,11 @@ class Token {
    */
   int getVal();
 
-  double setFVal();
-  int setSize();
-  Symbol setDType();
-  Symbol setIdType();
-  std::map<string, Symbol> & getFields();
+  double getFVal();
+  int getSize();
+  Symbol getDType();
+  Symbol getIdType();
+  std::map<std::string, Token>& getFields();
 
   /**
    * Sets the symbol.

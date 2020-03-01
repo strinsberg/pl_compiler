@@ -26,27 +26,27 @@ int Token::getVal() {
 }
 
 
-double Token::setFVal() {
+double Token::getFVal() {
   return fVal;
 }
 
 
-int Token::setSize() {
+int Token::getSize() {
   return size;
 }
 
 
-Symbol Token::setDType() {
+Symbol Token::getDType() {
   return dType;
 }
 
 
-Symbol Token::setIdType() {
+Symbol Token::getIdType() {
   return idType;
 }
 
 
-std::map<string, Symbol> & getFields() {
+std::map<std::string, Token>& Token::getFields() {
   return fields;
 }
 
