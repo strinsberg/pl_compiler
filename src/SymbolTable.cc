@@ -87,24 +87,7 @@ void SymbolTable::loadKey(Symbol sym, const std::string& lexeme) {
 
 
 void SymbolTable::loadKeywords() {
-  loadKey(Symbol::BEGIN, "begin");
-  loadKey(Symbol::END, "end");
-  loadKey(Symbol::CONST, "const");
-  loadKey(Symbol::ARRAY, "array");
-  loadKey(Symbol::PROC, "proc");
-  loadKey(Symbol::SKIP, "skip");
-  loadKey(Symbol::READ, "read");
-  loadKey(Symbol::WRITE, "write");
-  loadKey(Symbol::CALL, "call");
-  loadKey(Symbol::IF, "if");
-  loadKey(Symbol::FI, "fi");
-  loadKey(Symbol::DO, "do");
-  loadKey(Symbol::OD, "od");
-  loadKey(Symbol::INT, "integer");
-  loadKey(Symbol::BOOL, "Boolean");
-  loadKey(Symbol::TRUE, "true");
-  loadKey(Symbol::FALSE, "false");
-  loadKey(Symbol::RECORD, "record");
-  loadKey(Symbol::VAR, "var");
-  loadKey(Symbol::FLOAT, "float");
+  for (auto& it : WordSym) {
+    loadKey(it.second, it.first);
+  }
 }

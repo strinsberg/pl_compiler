@@ -13,9 +13,8 @@ class Scanner {
    * Constructor for the scanner, initializes the private varaibles to
    * appropriate values.
    * @param ifs The file stream.
-   * @param symboltable The Symbol Table used throughout the scan being updated.
    */
-  Scanner(std::istream &ifs, SymbolTable &symboltable);
+  Scanner(std::istream &ifs);
 
   /**
    * Destructor of rthe scanner.
@@ -32,11 +31,6 @@ class Scanner {
    * The file stream.
    */
   std::istream &fin;
- 
-  /**
-   * The Symbol Table being checked and filled with tokens.
-   */
-  SymbolTable &symtable;
 
   /**
    * The current line the scanner is reading.
@@ -47,11 +41,6 @@ class Scanner {
    * The postion of the char the scanner is reading.
    */
   std::size_t pos;
-
-  /**
-   * The map containing the symbols
-   */
-  std::map<std::string, Symbol> symmap;
 
   /**
    * Checks the input symbol against Whitespace whether tab or space.

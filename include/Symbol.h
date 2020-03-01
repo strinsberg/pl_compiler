@@ -87,7 +87,7 @@ const std::map<std::string, Symbol> SpecialSym {
   {",", Symbol::COMMA},
   {";", Symbol::SEMI},
   {"[", Symbol::LHSQR},
-  {"]", = Symbol::RHSQR},
+  {"]", Symbol::RHSQR},
   {"&", Symbol::AMP},
   {"|", Symbol::BAR},
   {"~", Symbol::TILD},
@@ -102,7 +102,7 @@ const std::map<std::string, Symbol> SpecialSym {
   {"(", Symbol::LHRND},
   {")", Symbol::RHRND},
   {":=", Symbol::INIT},
-  {"[]", = Symbol::GUARD},
+  {"[]", Symbol::GUARD},
   {"->", Symbol::ARROW}
 };
 
