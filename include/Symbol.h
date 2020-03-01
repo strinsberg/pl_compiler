@@ -78,4 +78,58 @@ const std::map<Symbol, std::string> SymbolToString {
   {UNDEF, "Undefined"}
 };
 
+
+/**
+ * Map for all special lexemes to their symbol.
+ */
+const std::map<std::string, Symbol> SpecialSym {
+  {".", Symbol::DOT},
+  {",", Symbol::COMMA},
+  {";", Symbol::SEMI},
+  {"[", Symbol::LHSQR},
+  {"]", = Symbol::RHSQR},
+  {"&", Symbol::AMP},
+  {"|", Symbol::BAR},
+  {"~", Symbol::TILD},
+  {"<", Symbol::LESS},
+  {"=", Symbol::EQUAL},
+  {">", Symbol::GREAT},
+  {"+", Symbol::PLUS},
+  {"-", Symbol::MINUS},
+  {"*", Symbol::TIMES},
+  {"/", Symbol::FSLASH},
+  {"\\", Symbol::BSLASH},
+  {"(", Symbol::LHRND},
+  {")", Symbol::RHRND},
+  {":=", Symbol::INIT},
+  {"[]", = Symbol::GUARD},
+  {"->", Symbol::ARROW}
+};
+
+
+/**
+ * Map for all keywords (word symbols) to their symbol.
+ */
+const std::map<std::string, Symbol> WordSym {
+  {"begin", Symbol::BEGIN},
+  {"end", Symbol::END},
+  {"const", Symbol::CONST},
+  {"array", Symbol::ARRAY},
+  {"proc", Symbol::PROC},
+  {"skip", Symbol::SKIP},
+  {"read", Symbol::READ},
+  {"write", Symbol::WRITE},
+  {"call", Symbol::CALL},
+  {"if", Symbol::IF},
+  {"fi", Symbol::FI},
+  {"do", Symbol::DO},
+  {"od", Symbol::OD},
+  {"integer", Symbol::INT},
+  {"Boolean", Symbol::BOOL},
+  {"true", Symbol::TRUE},
+  {"false", Symbol::FALSE},
+  {"record", Symbol::RECORD},
+  {"var", Symbol::VAR},
+  {"float", Symbol::FLOAT}
+};
 #endif
