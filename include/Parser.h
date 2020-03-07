@@ -168,17 +168,17 @@ class Parser {
   /**
    * Parses a expression from the stream of tokens.
    */
-  void expr(std::set<Symbol> stop);
+  Type expr(std::set<Symbol> stop);
 
   /**
    * Parses a primary expression from the stream of tokens.
    */
-  void primeExpr(std::set<Symbol> stop);
+  Type primeExpr(std::set<Symbol> stop);
 
   /**
    * Parses a simple expression from the stream of tokens.
    */
-  void simpleExpr(std::set<Symbol> stop);
+Type simpleExpr(std::set<Symbol> stop);
 
   /**
    * Parses a list of guarded commands.
@@ -193,12 +193,12 @@ class Parser {
   /**
    * Parses a term from the stream of tokens.
    */
-  void term(std::set<Symbol> stop);
+  Type term(std::set<Symbol> stop);
 
   /**
    * Parses a factor from the stream of tokens.
    */
-  void factor(std::set<Symbol> stop);
+  Type factor(std::set<Symbol> stop);
 
   /**
    * Parses a primary operator from the stream of tokens.
