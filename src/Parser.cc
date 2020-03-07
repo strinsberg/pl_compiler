@@ -317,24 +317,36 @@ void Parser::varList(std::set<Symbol> stop) {
 }
 
 
-void Parser::varAccess(std::set<Symbol> stop) {
+Type Parser::varAccess(std::set<Symbol> stop) {
   admin.debugInfo("varAccess");
 
+  std::string name = look.getLexeme();
   match(Symbol::ID, munion({stop, First.at(NT::SELECT)}));
-  if (First.at(NT::SELECT).count(look.getSymbol()))
-    selec(stop);
-  // may need to return the token for the variable being accessed so that
-  // it can be accessed. How to identify record types and thier fields?
+
+  bool err;
+  TableEntry entry = blocks.find(look.getVal(), err);  
+  if (err)
+    admin.error(name + " is undeclared");
+
+  if (First.at(NT::SELECT).count(look.getSymbol())) {
+    return selec(stop, entry);
+  } else {
+    return entry.ttype;
+  }
 }
 
 
-void Parser::idxSelect(std::set<Symbol> stop) {
+Type Parser::idxSelect(std::set<Symbol> stop, TableEntry entry) {
   admin.debugInfo("idxSelect");
 
   match(Symbol::LHSQR, munion({stop, First.at(NT::EXP), {Symbol::RHSQR}}));
-  expr(munion({stop, {Symbol::RHSQR}}));
+  Type type = expr(munion({stop, {Symbol::RHSQR}}));
+  if (type != Type::INTEGER)
+    admin.error("Index must be an integer");
+
+  // need to bounds check once expressions return proper values
   match(Symbol::RHSQR, stop);
-  // May need to return token info
+  return entry.ttype;
 }
 
 
@@ -707,21 +719,38 @@ void Parser::actParam(std::set<Symbol> stop) {
 
 void Parser::selec(std::set<Symbol> stop) {
   admin.debugInfo("selec");
+  Type type = Type::UNIVERSAL;
 
-  if(look.getSymbol() == Symbol::LHSQR)
-    idxSelect(stop);
-  else if (look.getSymbol() == Symbol::DOT)
-    fieldSelec(stop);
-  else
+  if(look.getSymbol() == Symbol::LHSQR) {
+    TableEntry entry = blocks.find(look.getVal());
+    type = idxSelect(stop, entry);
+  } else if (look.getSymbol() == Symbol::DOT) {
+    TableEntry entry = blocks.find(look.getVal());
+    type = fieldSelec(stop, entry);
+  } else {
     syntaxError(stop);
+  }
   syntaxCheck(stop);
-  // May need to return info for the selection
+  return type;
 }
 
-void Parser::fieldSelec(std::set<Symbol> stop) {
+Type Parser::fieldSelec(std::set<Symbol> stop, TableEntry entry) {
   admin.debugInfo("fieldSelec");
 
   match(Symbol::DOT, munion({stop, {Symbol::ID}}));
   match(Symbol::ID, stop);
-  // May need to return info for the selection
+
+  if (entry.tkind != Kind::K_RECORD) {
+    admin.error("Not a record");
+    return Type::UNIVERSAL;
+  }
+
+  bool err;
+  TableEntry field = entry.fields.find(idx, err);
+  if (err) {
+    admin.error("Not a valid field");
+    return Type::UNIVERSAL;
+  } else {
+    return field.ttype;
+  }
 }

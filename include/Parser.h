@@ -257,7 +257,7 @@ class Parser {
 
   void selec(std::set<Symbol> stop);
 
-  void fieldSelec(std::set<Symbol> stop);
+  Type fieldSelec(std::set<Symbol> stop, TableEntry entry);
 };
 
 #endif
