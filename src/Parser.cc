@@ -281,8 +281,6 @@ std::vector<TableEntry> Parser::vacsList(std::set<Symbol> stop) {
     match(Symbol::COMMA, munion({stop, First.at(NT::VACS_LIST)}));
     varAccess(munion({stop, {Symbol::COMMA}}));
   }
-  // May need to return a list of token references so semantic checks and
-  // assignments or access can be done.
   return types;
 }
 
@@ -294,7 +292,8 @@ void Parser::vPrime(std::set<Symbol> stop, Type type) {
   if (look.getSymbol() == Symbol::ID) {
     idxs = varList(stop);
     for (auto i : idxs) {
-      blocks.define(i, Kind::VARIABLE, type, 0, 0);
+      if (!blocks.define(i, Kind::VARIABLE, type, 0, 0))
+        admin.error("Multiple definitions of the same variable.");
     }
 
   } else {
