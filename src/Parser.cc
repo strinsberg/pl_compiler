@@ -355,41 +355,54 @@ std::vector<TableEntry> Parser::exprList(std::set<Symbol> stop) {
 }
 
 
-void Parser::expr(std::set<Symbol> stop) {
+Type Parser::expr(std::set<Symbol> stop) {
   admin.debugInfo("expr");
 
-  primeExpr(munion({stop, First.at(NT::PRIM_OP), First.at(NT::PRIM_EXP)}));
+  Type type = primeExpr(munion({stop, First.at(NT::PRIM_OP), First.at(NT::PRIM_EXP)}));
 
   while (look.getSymbol() == Symbol::AMP or
       look.getSymbol() == Symbol::BAR) {
     primeOp(munion({stop, First.at(NT::PRIM_EXP)}));
-    primeExpr(munion({stop, First.at(NT::PRIM_OP)}));
+    Type type2 = primeExpr(munion({stop, First.at(NT::PRIM_OP)}));
+    if(type2 != Type::BOOLEAN) {
+      type = Type::UNIVERSAL;
+      admin.error("Cannot use & or | with non Boolean types");
+    }
   }
+
+  return type;
+
   // May need to return token info so the results of the expression can be used
 }
 
 
-void Parser::primeExpr(std::set<Symbol> stop) {
+Type Parser::primeExpr(std::set<Symbol> stop) {
   admin.debugInfo("prime-Expr");
 
-  simpleExpr(munion({stop, First.at(NT::REL_OP), First.at(NT::SIMP_EXP)}));
+  Type type = simpleExpr(munion({stop, First.at(NT::REL_OP), First.at(NT::SIMP_EXP)}));
 
   if(First.at(NT::REL_OP).count(look.getSymbol())) {
     relOp(munion({stop, First.at(NT::SIMP_EXP)}));
-    simpleExpr(munion({stop, First.at(NT::REL_OP)}));
+    Type type2 = simpleExpr(munion({stop, First.at(NT::REL_OP)}));
+    if(type != type2) {
+      type = Type::UNIVERSAL;
+      admin.error("Type Mismatch");
+    }
   }
+
+  return type;
   // May need to return token info so the results of the expression can be used
 }
 
 
-void Parser::simpleExpr(std::set<Symbol> stop) {
+Type Parser::simpleExpr(std::set<Symbol> stop) {
   admin.debugInfo("simpleExpr");
 
   syntaxCheck(munion({stop, {Symbol::MINUS}}));
   if (look.getSymbol() == Symbol::MINUS)
     match(Symbol::MINUS, munion({stop, First.at(NT::TERM)}));
 
-  term(munion({stop, First.at(NT::ADD_OP)}));
+  Type type = term(munion({stop, First.at(NT::ADD_OP)}));
 
   while (look.getSymbol() == Symbol::PLUS
       or look.getSymbol() == Symbol::MINUS) {
@@ -399,8 +412,13 @@ void Parser::simpleExpr(std::set<Symbol> stop) {
     if (look.getSymbol() == Symbol::MINUS)
       match(Symbol::MINUS, munion({stop, First.at(NT::TERM)}));
 
-    term(munion({stop, First.at(NT::ADD_OP)}));
+    Type type2 = term(munion({stop, First.at(NT::ADD_OP)}));
+    if(type != type2) {
+      type = Type::UNIVERSAL;
+      admin.error("Type Mismatch");
+    }
   }
+  return type;
   // May need to return token info so the results of the expression can be used
 }
 
@@ -420,45 +438,57 @@ void Parser::guardedList(std::set<Symbol> stop) {
 void Parser::guardedComm(std::set<Symbol> stop) {
   admin.debugInfo("guardedComm");
 
-  expr(munion({stop, {Symbol::ARROW}, First.at(NT::STMT_PART)}));
+  Type type = expr(munion({stop, {Symbol::ARROW}, First.at(NT::STMT_PART)}));
   match(Symbol::ARROW, munion({stop, First.at(NT::STMT_PART)}));
   stmtPart(stop);
+
+  if(type != Type::BOOLEAN) {
+    type = Type::UNIVERSAL;
+    admin.error("Expression before \"->\" must be of the type BOOLEAN");
+  }
 }
 
 
 // Term and Factor Rules /////////////////////////////////////////////////////
 
-void Parser::term(std::set<Symbol> stop) {
+Type Parser::term(std::set<Symbol> stop) {
   admin.debugInfo("Term");
 
-  factor(munion({stop, First.at(NT::MULT_OP)}));
+  Type type = factor(munion({stop, First.at(NT::MULT_OP)}));
 
   while (First.at(NT::MULT_OP).count(look.getSymbol())) {
     multOp(munion({stop, First.at(NT::FACTOR)}));
-    factor(munion({stop, First.at(NT::MULT_OP)}));
+    Type type2 = factor(munion({stop, First.at(NT::MULT_OP)}));
+    if(type != type2) {
+      type = Type::UNIVERSAL;
+      admin.error("Type Mismatch");
+    }
   }
   // May need to return token info so the results of the expression can be used
+  return type;
 }
 
 
-void Parser::factor(std::set<Symbol> stop) {
+Type Parser::factor(std::set<Symbol> stop) {
   admin.debugInfo("Factor");
+  Type type = Type::UNIVERSAL;
 
   bool err = false;
   if(look.getSymbol() == Symbol::NUM) {
-    constant(stop);
+    type = constant(stop);
   } else if (look.getSymbol() == Symbol::TRUE
       or look.getSymbol() == Symbol::FALSE) {
     boolSym(stop);
+    type  = Type::BOOLEAN;
   } else if (look.getSymbol() == Symbol::LHRND) {
     match(Symbol::LHRND, munion({stop, First.at(NT::EXP), {Symbol::RHRND}}));
-    expr(munion({stop, {Symbol::RHRND}}));
+    type = expr(munion({stop, {Symbol::RHRND}}));
     match(Symbol::RHRND, stop);
   } else if (look.getSymbol() == Symbol::TILD) {
     match(Symbol::TILD, munion({stop, First.at(NT::FACTOR)}));
-    factor(stop);
+    type = factor(stop);
   } else if (First.at(NT::VACS).count(look.getSymbol())) {
-    varAccess(stop);
+    type = varAccess(stop);
   } else {
     err = true;
   }
@@ -472,6 +502,7 @@ void Parser::factor(std::set<Symbol> stop) {
   else
     syntaxCheck(stop);
   // May need to return token info so the results of the expression can be used
+  return type;
 }
 
 
