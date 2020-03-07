@@ -5,7 +5,6 @@
 
 
 BlockTable::BlockTable() : blockLevel(0) {
-  define(-1, Kind::UNDEFINED, Type::UNIVERSAL, 0, 0);
 }
 
 
@@ -24,7 +23,7 @@ bool BlockTable::define(int nid, Kind nkind, Type ntype, int nsize, int nval) {
 }
 
 
-TableEntry& BlockTable::find(int lookId, bool& error) {
+TableEntry BlockTable::find(int lookId, bool& error) {
   for(auto it = table.rbegin(); it != table.rend(); it++) {
     if(it->find(lookId) != it->end()) {
       error = false;
@@ -32,7 +31,7 @@ TableEntry& BlockTable::find(int lookId, bool& error) {
     }
   }
   error =  true;
-  return table.back()[-1];
+  return TableEntry();
 }
 
 
