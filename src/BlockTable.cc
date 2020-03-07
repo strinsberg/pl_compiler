@@ -22,10 +22,10 @@ bool BlockTable::define(int nid, Kind nkind, Type ntype, int nsize, int nval) {
 
 
 TableEntry BlockTable::find(int lookId, bool& error) {
-  for(auto s : table) {
-    if(s.find(lookId) != s.end()) {
+  for(auto it = table.rbegin(); it != table.rend(); it++) {
+    if(it->find(lookId) != it->end()) {
       error = false;
-      return s[lookId];
+      return (*it)[lookId];
     }
   }
   error =  true;
