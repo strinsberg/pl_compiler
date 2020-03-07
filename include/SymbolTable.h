@@ -17,20 +17,26 @@ class SymbolTable {
   /**
    * Searches for a lexeme in the symbol table and returns its token.
    * @param str The lexeme to search for.
-   * @return a reference to the token for the lexeme. If the lexeme is not in
-   * the symbol table the token symbol will be Symbol::EMPTY.
+   * @return The index of the token in the symbol table, or -1 for not found.
    */
-  Token& search(const std::string& str);
+  int search(const std::string& str);
 
   /**
-   * Inserts a new lexeme into the symbol table.
-   * Creates a new ID token for the lexeme as once the reserve words are
-   * loaded the only thing loaded should be IDs.
+   * Inserts a new lexeme into the symbol table if it is not already there.
    * @param str Insert a string into the hash table.
-   * @return an ID token for the string.
+   * @return The index of the token in the symbol table, or -1 if it exists.
    * @throws length_error if the symbol table is full.
    */
-  Token& insert(const std::string& str);
+  int insert(const std::string& str);
+
+  /**
+   * Get a reference to the token in the symbol table by its index.
+   * @param idx The index of the token.
+   * @param found 
+   * @return a reference to the token or a dummy empty token.
+   * @throws out_of_range error if the idx is out of bounds.
+   */
+  Token& getToken(int idx, bool& found);
 
   /**
    * Computes a rolling hash for a given string using the MOD constant.
