@@ -1,0 +1,7 @@
+#ifndef TYPES_H
+#define TYPES_H
+
+enum Kind{CONSTANT, VAR, ARRAY, PROCEDURE, UNDEFINED, RECORD};
+enum Type{INT, BOOL, UNIVERSAL, FLOAT};
+
+#endif

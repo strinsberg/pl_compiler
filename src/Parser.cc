@@ -5,7 +5,9 @@
 #include "Grammar.h"
 
 
-Parser::Parser(Administration& a) : admin(a) {}
+Parser::Parser(Administration& a) : admin(a) {
+  BlockTable = {};
+}
 
 
 void Parser::parse() {
@@ -48,7 +50,12 @@ void Parser::syntaxCheck(std::set<Symbol> stop) {
 
 void Parser::program(std::set<Symbol> stop) {
   admin.debugInfo("program");
+
+  SymbolTable blocksym = {};
+  BlockTable.puch_back(blocksym);
+
   block(munion({stop, {Symbol::DOT}}));
+  BlockTable.pop();
   match(Symbol::DOT, stop);
 }
 
@@ -56,9 +63,13 @@ void Parser::program(std::set<Symbol> stop) {
 void Parser::block(std::set<Symbol> stop) {
   admin.debugInfo("block");
 
+  SymbolTable blocksym = {};
+  BlockTable.puch_back(blocksym);
+
   match(Symbol::BEGIN, munion({stop, First.at(NT::DEF_PART), First.at(NT::STMT_PART), {Symbol::END}}));
   defPart(munion({stop, First.at(NT::STMT_PART), {Symbol::END}}));
   stmtPart(munion({stop, {Symbol::END}}));
+  BlockTable.pop();
   match(Symbol::END, stop);
 }
 
@@ -102,7 +113,12 @@ void Parser::def(std::set<Symbol> stop) {
 
 void Parser::constDef(std::set<Symbol> stop) {
    admin.debugInfo("constDef");
+/*
+   SymbolTable consttab = BlockTable.back();
+   Token& consttoken = constab.insert(look.getSymbol().getlexeme());
 
+   constoken.setIdType(Symbol::CONST);
+*/  
    match(Symbol::CONST, munion({stop, {Symbol::ID}, {Symbol::EQUAL}, First.at(NT::CONST_NT)}));
    match(Symbol::ID, munion({stop, {Symbol::EQUAL}, First.at(NT::CONST_NT)}));
    match(Symbol::EQUAL, munion({stop, First.at(NT::CONST_NT)}));
