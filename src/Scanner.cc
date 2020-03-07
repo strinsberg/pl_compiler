@@ -1,9 +1,11 @@
 #include "Scanner.h"
+#include "SymbolTable.h"
 #include <stdexcept>
 #include <string>
 #include <fstream>
 
-Scanner::Scanner(std::istream &ifs) : fin(ifs), line(""), pos(0) {}
+Scanner::Scanner(std::istream &ifs, SymbolTable& st)
+    : fin(ifs), symTab(st), line(""), pos(0) {}
 
 
 Token Scanner::getToken() {
@@ -84,13 +86,16 @@ Token Scanner::recognizeName() {
     lexeme+=(line[pos++]);
   }
 
-  // If the lexeme is not a keyword return an ID token
-  // Otherwise return the token for the keyword.
-  auto found = WordSym.find(lexeme);
-  if (found == WordSym.end())
-    return Token(Symbol::ID, lexeme);
-  else
-    return Token(found->second, lexeme);
+  // If the lexeme is not in the symbol table insert it and return an ID token.
+  // Otherwise return the token in the symbol table.
+  int idx = symTab.search(lexeme);
+  if (idx == -1) {
+    idx = symTab.insert(lexeme);
+    return Token(Symbol::ID, lexeme, idx);
+  } else {
+    bool found = true;
+    return symTab.getToken(idx, found);
+  }
 }
 
 
