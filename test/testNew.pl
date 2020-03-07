@@ -1,16 +1,16 @@
 begin
   integer d;
 
-  record cell
+  record cell1, cell2, cell3
     float x, y;
     Boolean v
   end;
 
-  proc makeCell (float a; float b)
+  proc makeCells (float a; float b)
   begin
-    cell.x := a;
-    cell.y := b;
-    cell.v := false;
+    cell1.x, cell1.y, cell1.v := a, b, false;
+    cell2.x, cell2.y, cell2.v := a, b, false;
+    cell3.x, cell3.y, cell3.v := a, b, false;
   end;
 
   proc inc (var integer a)
@@ -23,6 +23,6 @@ begin
   call inc(d);
 
   cell.v := true;
-  write cell.x, cell.y, cell.v;
+  write cell1.x, cell1.y, cell1.v;
 
 end .

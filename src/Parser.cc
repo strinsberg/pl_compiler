@@ -50,6 +50,7 @@ void Parser::program(std::set<Symbol> stop) {
   admin.debugInfo("program");
   block(munion({stop, {Symbol::DOT}}));
   match(Symbol::DOT, stop);
+  // Add a symbol table for the whole program.
 }
 
 
@@ -60,6 +61,7 @@ void Parser::block(std::set<Symbol> stop) {
   defPart(munion({stop, First.at(NT::STMT_PART), {Symbol::END}}));
   stmtPart(munion({stop, {Symbol::END}}));
   match(Symbol::END, stop);
+  // Add a symbol table for each new block
 }
 
 
@@ -107,6 +109,8 @@ void Parser::constDef(std::set<Symbol> stop) {
    match(Symbol::ID, munion({stop, {Symbol::EQUAL}, First.at(NT::CONST_NT)}));
    match(Symbol::EQUAL, munion({stop, First.at(NT::CONST_NT)}));
    constant(stop);
+   // should add token information to the ID token in the symbol table
+   // const should return some info in token form
 }
 
 
@@ -114,14 +118,17 @@ void Parser::varDef(std::set<Symbol> stop) {
   admin.debugInfo("varDef");
 
   if (look.getSymbol() == Symbol::RECORD) {
-    match(Symbol::RECORD,munion({stop, {Symbol::ID, Symbol::END}, First.at(NT::FIELD_LIST)}));
-    match(Symbol::ID, munion({stop, {Symbol::END}, First.at(NT::FIELD_LIST)}));
+    match(Symbol::RECORD,munion({stop, {Symbol::END},
+          First.at(NT::FIELD_LIST), First.at(NT::VAR_LIST)}));
+    varList(munion({stop, {Symbol::END}, First.at(NT::FIELD_LIST)}));
     fieldList(munion({stop, {Symbol::END}}));
     match(Symbol::END, stop);
   } else {
     typeSym(munion({stop, First.at(NT::VPRIME)}));
     vPrime(stop);
   }
+  // Add type information to IDs in the symbol table
+  // Type sym will have to return this info
 }
 
 
@@ -131,6 +138,7 @@ void Parser::procDef(std::set<Symbol> stop){
   match(Symbol::PROC, munion({stop, {Symbol::ID}, First.at(NT::PROC_BLOCK)}));
   match(Symbol::ID, munion({stop, First.at(NT::PROC_BLOCK)}));
   procBlock(stop);
+  // Also add type info to the ID in symbol table
 }
 
 
@@ -150,6 +158,7 @@ void Parser::stmt(std::set<Symbol> stop) {
   admin.debugInfo("stmt");
   bool err = false;
   Symbol next = look.getSymbol();
+
   if (next == Symbol::SKIP)
     emptyStmt(stop);
   else if (next == Symbol::READ)
@@ -206,6 +215,10 @@ void Parser::assignStmt(std::set<Symbol> stop) {
   vacsList(munion({stop, First.at(NT::EXP_LIST), {Symbol::INIT}}));
   match(Symbol::INIT, munion({stop, First.at(NT::EXP_LIST)}));
   exprList(stop);
+  // Probably have to pass token info back from vacs list and some
+  // constructed tokens holding values from expr list to update
+  // ID values or at least to check them for proper types with
+  // assignments
 }
 
 
@@ -216,12 +229,15 @@ void Parser::procStmt(std::set<Symbol> stop) {
         First.at(NT::ACT_PLIST)}));
   match(Symbol::ID, munion({stop, {Symbol::LHRND, Symbol::RHRND},
         First.at(NT::ACT_PLIST)}));
+
   if(look.getSymbol() == Symbol::LHRND) {
     match(Symbol::LHRND, munion({stop, {Symbol::RHRND}, First.at(NT::ACT_PLIST)}));
     actParamList(munion({stop, {Symbol::RHRND}}));
     match(Symbol::RHRND, stop);
-
   }
+  // May need a new block in here for dealing with optional function params
+  // Or some way of adding them to the procedure token so that they can be
+  // accessed later?
 }
 
 
@@ -253,6 +269,8 @@ void Parser::vacsList(std::set<Symbol> stop) {
     match(Symbol::COMMA, munion({stop, First.at(NT::VACS_LIST)}));
     varAccess(munion({stop, {Symbol::COMMA}}));
   }
+  // May need to return a list of token references so semantic checks and
+  // assignments or access can be done.
 }
 
 
@@ -268,6 +286,7 @@ void Parser::vPrime(std::set<Symbol> stop) {
       constant(munion({stop, {Symbol::RHSQR}}));
       match(Symbol::RHSQR, stop);
   }
+  // May need to return some info
 }
 
 
@@ -279,6 +298,7 @@ void Parser::varList(std::set<Symbol> stop) {
       match(Symbol::COMMA, munion({stop, {Symbol::ID}}));
       match(Symbol::ID, munion({stop, {Symbol::COMMA}}));
   }
+  // May need to return a list of token references for the variables
 }
 
 
@@ -288,6 +308,8 @@ void Parser::varAccess(std::set<Symbol> stop) {
   match(Symbol::ID, munion({stop, First.at(NT::SELECT)}));
   if (First.at(NT::SELECT).count(look.getSymbol()))
     selec(stop);
+  // may need to return the token for the variable being accessed so that
+  // it can be accessed. How to identify record types and thier fields?
 }
 
 
@@ -297,6 +319,7 @@ void Parser::idxSelect(std::set<Symbol> stop) {
   match(Symbol::LHSQR, munion({stop, First.at(NT::EXP), {Symbol::RHSQR}}));
   expr(munion({stop, {Symbol::RHSQR}}));
   match(Symbol::RHSQR, stop);
+  // May need to return token info
 }
 
 
@@ -311,6 +334,8 @@ void Parser::exprList(std::set<Symbol> stop) {
     match(Symbol::COMMA, munion({stop, First.at(NT::EXP)}));
     expr(munion({stop, {Symbol::COMMA}}));
   }
+  // May need to return token information so that the values or their
+  // types can be used in other rules.
 }
 
 
@@ -324,6 +349,7 @@ void Parser::expr(std::set<Symbol> stop) {
     primeOp(munion({stop, First.at(NT::PRIM_EXP)}));
     primeExpr(munion({stop, First.at(NT::PRIM_OP)}));
   }
+  // May need to return token info so the results of the expression can be used
 }
 
 
@@ -336,6 +362,7 @@ void Parser::primeExpr(std::set<Symbol> stop) {
     relOp(munion({stop, First.at(NT::SIMP_EXP)}));
     simpleExpr(munion({stop, First.at(NT::REL_OP)}));
   }
+  // May need to return token info so the results of the expression can be used
 }
 
 
@@ -358,6 +385,7 @@ void Parser::simpleExpr(std::set<Symbol> stop) {
 
     term(munion({stop, First.at(NT::ADD_OP)}));
   }
+  // May need to return token info so the results of the expression can be used
 }
 
 
@@ -393,6 +421,7 @@ void Parser::term(std::set<Symbol> stop) {
     multOp(munion({stop, First.at(NT::FACTOR)}));
     factor(munion({stop, First.at(NT::MULT_OP)}));
   }
+  // May need to return token info so the results of the expression can be used
 }
 
 
@@ -426,6 +455,7 @@ void Parser::factor(std::set<Symbol> stop) {
     syntaxError(stop);
   else
     syntaxCheck(stop);
+  // May need to return token info so the results of the expression can be used
 }
 
 
@@ -505,6 +535,7 @@ void Parser::constant(std::set<Symbol> stop) {
     syntaxError(stop);  // epsilon is guaranteed not in any of these
   }
   syntaxCheck(stop);
+  // May need to return token info with data type for checking
 }
 
 
@@ -516,6 +547,9 @@ void Parser::cPrime(std::set<Symbol> stop) {
     match(Symbol::NUM, stop);
   }
   syntaxCheck(stop);
+  // May need to return token info with data type for checking
+  // May also need to do a little extra work to collect all the tokens
+  // needed for building a float number
 }
 
 
@@ -533,6 +567,7 @@ void Parser::typeSym(std::set<Symbol> stop) {
     syntaxError(stop);
   }
   syntaxCheck(stop);
+  // Should return the type symbol
 }
 
 
@@ -548,6 +583,7 @@ void Parser::boolSym(std::set<Symbol> stop) {
     syntaxError(stop);
   }
   syntaxCheck(stop);
+  // May need to return token with type and value
 }
 
 
@@ -560,6 +596,9 @@ void Parser::fieldList (std::set<Symbol> stop) {
     match(Symbol::SEMI, munion({stop, First.at(NT::REC_SEC)}));
     recordSection(munion({stop, {Symbol::SEMI}}));
   }
+  // need to deal with fields here by adding them to the appropriate record
+  // named token. This may mean returning a map with these in it so that they
+  // can be added to the record token
 }
 
 void Parser::recordSection(std::set<Symbol> stop) {
@@ -571,9 +610,14 @@ void Parser::recordSection(std::set<Symbol> stop) {
     match(Symbol::COMMA, munion({stop, {Symbol::ID}}));
     match(Symbol::ID, munion({stop, {Symbol::COMMA}}));
   }
+  // May need to return a list of ids and types
 }
 
 // Parameter Rules /////////////////////////////////////////////////////////////
+
+// Somewhere in these functions we will need to deal with the parameters and
+// adding them to a symtab or to a proc token as fields
+
 void Parser::procBlock(std::set<Symbol> stop) {
   admin.debugInfo("procBlock");
 
@@ -642,6 +686,7 @@ void Parser::selec(std::set<Symbol> stop) {
   else
     syntaxError(stop);
   syntaxCheck(stop);
+  // May need to return info for the selection
 }
 
 void Parser::fieldSelec(std::set<Symbol> stop) {
@@ -649,4 +694,5 @@ void Parser::fieldSelec(std::set<Symbol> stop) {
 
   match(Symbol::DOT, munion({stop, {Symbol::ID}}));
   match(Symbol::ID, stop);
+  // May need to return info for the selection
 }
