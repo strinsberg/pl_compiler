@@ -392,6 +392,8 @@ Type Parser::primeExpr(std::set<Symbol> stop) {
     if(type != type2) {
       type = Type::UNIVERSAL;
       admin.error("Type Mismatch");
+    } else {
+      type = Type::BOOLEAN;
     }
   }
 
