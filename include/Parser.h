@@ -153,7 +153,7 @@ class Parser {
   /**
    * Parses a varaible list from the stream of tokens.
    */
-  std::vector<TableEntry> varList(std::set<Symbol> stop);
+  std::vector<int> varList(std::set<Symbol> stop);
 
   /**
    * Parses an index selector. ie) A[i].

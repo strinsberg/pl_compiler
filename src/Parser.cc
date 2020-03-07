@@ -289,19 +289,17 @@ std::vector<TableEntry> Parser::vacsList(std::set<Symbol> stop) {
 
 void Parser::vPrime(std::set<Symbol> stop, Type type) {
   admin.debugInfo("vPrime");
-  std::vector<TableEntry> vars;
+  std::vector<int> idxs;
 
   if (look.getSymbol() == Symbol::ID) {
-    vars = varList(stop);
-    for (auto& entry : vars) {
-        entry.tkind = Kind::VARIABLE;
-        entry.ttype = type;
-        entry.size = 0;
+    idxs = varList(stop);
+    for (auto i : idxs) {
+      blocks.define(i, Kind::VARIABLE, type, 0, 0);
     }
 
   } else {
       match(Symbol::ARRAY, munion({stop, First.at(NT::VAR_LIST), {Symbol::LHSQR}, First.at(NT::CONST_NT), {Symbol::RHSQR}}));
-      vars = varList(munion({stop, {Symbol::LHSQR}, First.at(NT::CONST_NT), {Symbol::RHSQR}}));
+      idxs = varList(munion({stop, {Symbol::LHSQR}, First.at(NT::CONST_NT), {Symbol::RHSQR}}));
       match(Symbol::LHSQR, munion({stop, First.at(NT::CONST_NT), {Symbol::RHSQR}}));
 
       int size;
@@ -312,10 +310,10 @@ void Parser::vPrime(std::set<Symbol> stop, Type type) {
       } else {
         size = 10;  // get size from constant???
       }
-      for (auto& entry : vars) {
-        entry.tkind = Kind::K_ARRAY;
-        entry.ttype = type;
-        entry.size = size;
+
+      idxs = varList(stop);
+      for (auto i : idxs) {
+        blocks.define(i, Kind::K_ARRAY, type, size, 0);
       }
 
       match(Symbol::RHSQR, stop);
@@ -323,15 +321,30 @@ void Parser::vPrime(std::set<Symbol> stop, Type type) {
 }
 
 
-std::vector<TableEntry> Parser::varList(std::set<Symbol> stop) {
+std::vector<int> Parser::varList(std::set<Symbol> stop) {
   admin.debugInfo("varList");
+
+  std::vector<TableEntry> entries;
+  bool err = false;
+  int idx = look.getVal();
+  bool check = blocks.define(idx, Kind::UNDEFINED, Type::UNIVERSAL, 0, 0);
+  if(check)
+    entries.push_back(blocks.find(idx, err));
+  else
+     admin.error("Redeclaration of Variable");
 
   match(Symbol::ID, munion({stop, {Symbol::COMMA}}));
   while(look.getSymbol() == Symbol::COMMA) {
       match(Symbol::COMMA, munion({stop, {Symbol::ID}}));
+      idx = look.getVal();
+      bool check = blocks.define(idx, Kind::UNDEFINED, Type::UNIVERSAL, 0, 0);
+      if(check)
+        entries.push_back(blocks.find(idx, err));
+      else
+         admin.error("Redeclaration of Variable");
       match(Symbol::ID, munion({stop, {Symbol::COMMA}}));
   }
-  // May need to return a list of token references for the variables
+  return entries;
 }
 
 
@@ -342,7 +355,7 @@ Type Parser::varAccess(std::set<Symbol> stop) {
   match(Symbol::ID, munion({stop, First.at(NT::SELECT)}));
 
   bool err;
-  TableEntry& entry = blocks.find(look.getVal(), err);  
+  TableEntry entry = blocks.find(look.getVal(), err);  
   if (err)
     admin.error(name + " is undeclared");
 
@@ -610,7 +623,7 @@ Type Parser::constant(std::set<Symbol> stop) {
     type = Type::BOOLEAN;
   } else if (look.getSymbol() == Symbol::ID) {
     bool err = false;
-    TableEntry& ent = blocks.find(look.getVal(), err);
+    TableEntry ent = blocks.find(look.getVal(), err);
     if (err) {
       admin.error(look.getLexeme() + " not declared");
     } else {
