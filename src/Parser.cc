@@ -220,13 +220,18 @@ void Parser::writeStmt(std::set<Symbol> stop) {
 void Parser::assignStmt(std::set<Symbol> stop) {
   admin.debugInfo("assignStmt");
 
-  vacsList(munion({stop, First.at(NT::EXP_LIST), {Symbol::INIT}}));
+  std::vector<TableEntry> vars = vacsList(munion({stop, First.at(NT::EXP_LIST), {Symbol::INIT}}));
   match(Symbol::INIT, munion({stop, First.at(NT::EXP_LIST)}));
-  exprList(stop);
-  // Probably have to pass token info back from vacs list and some
-  // constructed tokens holding values from expr list to update
-  // ID values or at least to check them for proper types with
-  // assignments
+  std::vector<TableEntry> exprs = exprList(stop);
+
+  if (vars.size() != exprs.size()) {
+    admin.error("Number of variables does not match number of expressions");
+  } else {
+    for (size_t i = 0; i < vars.size(); i++) {
+      if (vars[i].ttype != exprs[i].ttype)
+        admin.error("Type mismatch in assignment position " + std::to_string(i+1));
+    }
+  }
 }
 
 
@@ -269,8 +274,9 @@ void Parser::doStmt(std::set<Symbol> stop) {
 
 // Variable Rules ////////////////////////////////////////////////////////////
 
-void Parser::vacsList(std::set<Symbol> stop) {
+std::vector<TableEntry> Parser::vacsList(std::set<Symbol> stop) {
   admin.debugInfo("vacsList");
+  std::vector<TableEntry> types;
 
   varAccess(munion({stop, {Symbol::COMMA}}));
   while (look.getSymbol() == Symbol::COMMA) {
@@ -279,6 +285,7 @@ void Parser::vacsList(std::set<Symbol> stop) {
   }
   // May need to return a list of token references so semantic checks and
   // assignments or access can be done.
+  return types;
 }
 
 
@@ -333,8 +340,9 @@ void Parser::idxSelect(std::set<Symbol> stop) {
 
 // Expression Rules //////////////////////////////////////////////////////////
 
-void Parser::exprList(std::set<Symbol> stop) {
+std::vector<TableEntry> Parser::exprList(std::set<Symbol> stop) {
   admin.debugInfo("Expression List");
+  std::vector<TableEntry> types;
 
   expr(munion({stop, First.at(NT::EXP), {Symbol::COMMA}}));
 
@@ -342,8 +350,8 @@ void Parser::exprList(std::set<Symbol> stop) {
     match(Symbol::COMMA, munion({stop, First.at(NT::EXP)}));
     expr(munion({stop, {Symbol::COMMA}}));
   }
-  // May need to return token information so that the values or their
-  // types can be used in other rules.
+
+  return types;
 }
 
 
