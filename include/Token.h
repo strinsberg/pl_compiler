@@ -22,26 +22,22 @@ class Token {
    */
   Token(Symbol sym, std::string lexeme = "", int val = -1);
 
+  Token(const Token& tok);
+
   /**
    * Returns the symbol.
    */ 
-  Symbol getSymbol();
+  Symbol getSymbol() const;
   
   /**
    * Returns the lexeme.
    */
-  std::string getLexeme();
+  std::string getLexeme() const;
   
   /**
    * Returns the value.
    */
-  int getVal();
-
-  double getFVal();
-  int getSize();
-  Symbol getDType();
-  Symbol getIdType();
-  std::map<std::string, Token>& getFields();
+  int getVal() const;
 
   /**
    * Sets the symbol.
@@ -59,12 +55,7 @@ class Token {
    * Sets the value.
    * @param val The value to give the token.
    */
-  void setIVal(int val);
-
-  void setFVal(double val);
-  void setSize(int size);
-  void setDType(Symbol type);
-  void setIdType(Symbol type);
+  void setVal(int val);
 
   /**
    * Returns a string representation of the Token.
@@ -85,16 +76,7 @@ class Token {
   /**
    * The numeric value of the token.
    */
-  int iVal;
-  double fVal;
-  
-  int size;
-
-  Symbol dType;
-  Symbol idType;
-
-  // Mini symbol table for storing record fields
-  std::map<std::string, Token> fields;
+  int val;
 };
 
 #endif

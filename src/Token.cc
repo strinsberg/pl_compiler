@@ -8,47 +8,27 @@ Token::Token() : sname(Symbol::EMPTY) {}
 
 
 Token::Token(Symbol sym, std::string lex, int v)
-    : sname(sym), lexeme(lex), iVal(v) {}
+    : sname(sym), lexeme(lex), val(v) {}
 
 
-Symbol Token::getSymbol() {
+Token::Token(const Token& tok) : sname(tok.getSymbol()), lexeme(tok.getLexeme()),
+    val(tok.getVal()) {}
+
+
+Symbol Token::getSymbol() const {
   return sname;
 }
 
 
-std::string Token::getLexeme() {
+std::string Token::getLexeme() const {
   return lexeme;
 }
 
 
-int Token::getVal() {
-  return iVal;
+int Token::getVal() const {
+  return val;
 }
 
-
-double Token::getFVal() {
-  return fVal;
-}
-
-
-int Token::getSize() {
-  return size;
-}
-
-
-Symbol Token::getDType() {
-  return dType;
-}
-
-
-Symbol Token::getIdType() {
-  return idType;
-}
-
-
-std::map<std::string, Token>& Token::getFields() {
-  return fields;
-}
 
 void Token::setSymbol(Symbol sym) {
   sname = sym;
@@ -60,28 +40,8 @@ void Token::setLexeme(std::string str) {
 }
 
 
-void Token::setIVal(int v) {
-  iVal = v;
-}
-
-
-void Token::setFVal(double val) {
-  fVal = val;
-}
-
-
-void Token::setSize(int s) {
-  size = s;
-}
-
-
-void Token::setDType(Symbol type) {
-  dType = type;
-}
-
-
-void Token::setIdType(Symbol type) {
-  idType = type;
+void Token::setVal(int v) {
+  val = v;
 }
 
 
@@ -93,7 +53,7 @@ std::string Token::toString() {
     ss << "  " << lexeme;
 
   if (sname == Symbol::NUM)
-    ss << " "<< iVal;
+    ss << " "<< val;
 
   ss << ">";
   return ss.str();
