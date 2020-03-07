@@ -138,7 +138,7 @@ class Parser {
   /**
    * Parses variable access.
    */
-  void varAccess(std::set<Symbol> stop);
+  Type varAccess(std::set<Symbol> stop);
 
   /**
    * Parses a varaible definition from the stream of tokens.
@@ -148,17 +148,17 @@ class Parser {
   /**
    * Parses a varaible vs array from the stream of tokens.
    */
-  void vPrime(std::set<Symbol> stop);
+  void vPrime(std::set<Symbol> stop, Type type);
 
   /**
    * Parses a varaible list from the stream of tokens.
    */
-  void varList(std::set<Symbol> stop);
+  std::vector<TableEntry> varList(std::set<Symbol> stop);
 
   /**
    * Parses an index selector. ie) A[i].
    */
-  void idxSelect(std::set<Symbol> stop);
+  Type idxSelect(std::set<Symbol> stop, TableEntry entry);
 
   /**
    * Parses a expression list from the stream of tokens.
@@ -178,7 +178,7 @@ class Parser {
   /**
    * Parses a simple expression from the stream of tokens.
    */
-Type simpleExpr(std::set<Symbol> stop);
+  Type simpleExpr(std::set<Symbol> stop);
 
   /**
    * Parses a list of guarded commands.
@@ -255,7 +255,7 @@ Type simpleExpr(std::set<Symbol> stop);
 
   void actParam(std::set<Symbol> stop);
 
-  void selec(std::set<Symbol> stop);
+  Type selec(std::set<Symbol> stop, TableEntry entry);
 
   Type fieldSelec(std::set<Symbol> stop, TableEntry entry);
 };

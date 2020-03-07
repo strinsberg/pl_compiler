@@ -132,11 +132,9 @@ void Parser::varDef(std::set<Symbol> stop) {
     fieldList(munion({stop, {Symbol::END}}));
     match(Symbol::END, stop);
   } else {
-    typeSym(munion({stop, First.at(NT::VPRIME)}));
-    vPrime(stop);
+    Type type = typeSym(munion({stop, First.at(NT::VPRIME)}));
+    vPrime(stop, type);
   }
-  // Add type information to IDs in the symbol table
-  // Type sym will have to return this info
 }
 
 
@@ -289,23 +287,43 @@ std::vector<TableEntry> Parser::vacsList(std::set<Symbol> stop) {
 }
 
 
-void Parser::vPrime(std::set<Symbol> stop) {
+void Parser::vPrime(std::set<Symbol> stop, Type type) {
   admin.debugInfo("vPrime");
+  std::vector<TableEntry> vars;
 
   if (look.getSymbol() == Symbol::ID) {
-    varList(stop);
+    vars = varList(stop);
+    for (auto& entry : vars) {
+        entry.tkind = Kind::VARIABLE;
+        entry.ttype = type;
+        entry.size = 0;
+    }
+
   } else {
       match(Symbol::ARRAY, munion({stop, First.at(NT::VAR_LIST), {Symbol::LHSQR}, First.at(NT::CONST_NT), {Symbol::RHSQR}}));
-      varList(munion({stop, {Symbol::LHSQR}, First.at(NT::CONST_NT), {Symbol::RHSQR}}));
+      vars = varList(munion({stop, {Symbol::LHSQR}, First.at(NT::CONST_NT), {Symbol::RHSQR}}));
       match(Symbol::LHSQR, munion({stop, First.at(NT::CONST_NT), {Symbol::RHSQR}}));
-      constant(munion({stop, {Symbol::RHSQR}}));
+
+      int size;
+      Type type = constant(munion({stop, {Symbol::RHSQR}}));
+      if (type != Type::INTEGER) {
+        admin.error("Array size must be an integer");
+        size = 0; 
+      } else {
+        size = 10;  // get size from constant???
+      }
+      for (auto& entry : vars) {
+        entry.tkind = Kind::K_ARRAY;
+        entry.ttype = type;
+        entry.size = size;
+      }
+
       match(Symbol::RHSQR, stop);
   }
-  // May need to return some info
 }
 
 
-void Parser::varList(std::set<Symbol> stop) {
+std::vector<TableEntry> Parser::varList(std::set<Symbol> stop) {
   admin.debugInfo("varList");
 
   match(Symbol::ID, munion({stop, {Symbol::COMMA}}));
@@ -324,7 +342,7 @@ Type Parser::varAccess(std::set<Symbol> stop) {
   match(Symbol::ID, munion({stop, First.at(NT::SELECT)}));
 
   bool err;
-  TableEntry entry = blocks.find(look.getVal(), err);  
+  TableEntry& entry = blocks.find(look.getVal(), err);  
   if (err)
     admin.error(name + " is undeclared");
 
@@ -592,7 +610,7 @@ Type Parser::constant(std::set<Symbol> stop) {
     type = Type::BOOLEAN;
   } else if (look.getSymbol() == Symbol::ID) {
     bool err = false;
-    TableEntry ent = blocks.find(look.getVal(), err);
+    TableEntry& ent = blocks.find(look.getVal(), err);
     if (err) {
       admin.error(look.getLexeme() + " not declared");
     } else {
@@ -748,15 +766,13 @@ void Parser::actParam(std::set<Symbol> stop) {
 
 // Selector Rules //////////////////////////////////////////////////////////////
 
-void Parser::selec(std::set<Symbol> stop) {
+Type Parser::selec(std::set<Symbol> stop, TableEntry entry) {
   admin.debugInfo("selec");
   Type type = Type::UNIVERSAL;
 
   if(look.getSymbol() == Symbol::LHSQR) {
-    TableEntry entry = blocks.find(look.getVal());
     type = idxSelect(stop, entry);
   } else if (look.getSymbol() == Symbol::DOT) {
-    TableEntry entry = blocks.find(look.getVal());
     type = fieldSelec(stop, entry);
   } else {
     syntaxError(stop);
@@ -769,6 +785,7 @@ Type Parser::fieldSelec(std::set<Symbol> stop, TableEntry entry) {
   admin.debugInfo("fieldSelec");
 
   match(Symbol::DOT, munion({stop, {Symbol::ID}}));
+  int idx = look.getVal();
   match(Symbol::ID, stop);
 
   if (entry.tkind != Kind::K_RECORD) {
@@ -776,6 +793,7 @@ Type Parser::fieldSelec(std::set<Symbol> stop, TableEntry entry) {
     return Type::UNIVERSAL;
   }
 
+  
   bool err;
   TableEntry field = entry.fields.find(idx, err);
   if (err) {
