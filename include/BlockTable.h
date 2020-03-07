@@ -6,17 +6,7 @@
 
 #define MAXBLOCK 10
 
-struct TableEntry {
-  TableEntry() : id(0), tkind(Kind::UNDEFINED), ttype(Type::UNIVERSAL),
-                  size(0), val(0) {}
-  TableEntry(int nid, Kind nkind, Type ntype, int nsize, int nval) :
-              id(nid), tkind(nkind), ttype(ntype), size(nsize), val(nval) {}
-  int id;
-  Kind tkind;
-  Type ttype;
-  int size;
-  int val;
-};
+struct TableEntry;
 
 class BlockTable {
 public:
@@ -29,6 +19,19 @@ public:
 private:
   std::vector<std::map<int, TableEntry>> table;
   int blockLevel;
+};
+
+struct TableEntry {
+  TableEntry() : id(0), tkind(Kind::UNDEFINED), ttype(Type::UNIVERSAL),
+                  size(0), val(0) {}
+  TableEntry(int nid, Kind nkind, Type ntype, int nsize, int nval) :
+              id(nid), tkind(nkind), ttype(ntype), size(nsize), val(nval) {}
+  int id;
+  Kind tkind;
+  Type ttype;
+  int size;
+  int val;
+  BlockTable fields;
 };
 
 #endif
