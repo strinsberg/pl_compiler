@@ -310,7 +310,6 @@ void Parser::vPrime(std::set<Symbol> stop, Type type) {
         size = 10;  // get size from constant???
       }
 
-      idxs = varList(stop);
       for (auto i : idxs) {
         blocks.define(i, Kind::K_ARRAY, type, size, 0);
       }
@@ -340,11 +339,11 @@ std::vector<int> Parser::varList(std::set<Symbol> stop) {
 Type Parser::varAccess(std::set<Symbol> stop) {
   admin.debugInfo("varAccess");
 
+  bool err;
+  TableEntry entry = blocks.find(look.getVal(), err);  
   std::string name = look.getLexeme();
   match(Symbol::ID, munion({stop, First.at(NT::SELECT)}));
 
-  bool err;
-  TableEntry entry = blocks.find(look.getVal(), err);  
   if (err)
     admin.error(name + " is undeclared");
 
@@ -419,6 +418,8 @@ Type Parser::primeExpr(std::set<Symbol> stop) {
     if(type != type2) {
       type = Type::UNIVERSAL;
       admin.error("Type Mismatch");
+    } else {
+      type = Type::BOOLEAN;
     }
   }
 
