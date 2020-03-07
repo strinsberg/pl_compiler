@@ -1,13 +1,12 @@
 #include <set>
 #include "Parser.h"
 #include "Administration.h"
+#include "BlockTable.h"
 #include "Symbol.h"
 #include "Grammar.h"
 
 
-Parser::Parser(Administration& a) : admin(a) {
-  BlockTable = {};
-}
+Parser::Parser(Administration& a) : admin(a) {}
 
 
 void Parser::parse() {
@@ -51,28 +50,23 @@ void Parser::syntaxCheck(std::set<Symbol> stop) {
 void Parser::program(std::set<Symbol> stop) {
   admin.debugInfo("program");
 
-  SymbolTable blocksym = {};
-  BlockTable.puch_back(blocksym);
-
+  blocks.pushBlock();
   block(munion({stop, {Symbol::DOT}}));
-  BlockTable.pop();
+  blocks.popBlock();
   match(Symbol::DOT, stop);
-  // Add a symbol table for the whole program.
 }
 
 
 void Parser::block(std::set<Symbol> stop) {
   admin.debugInfo("block");
 
-  SymbolTable blocksym = {};
-  BlockTable.puch_back(blocksym);
+  blocks.pushBlock();
 
   match(Symbol::BEGIN, munion({stop, First.at(NT::DEF_PART), First.at(NT::STMT_PART), {Symbol::END}}));
   defPart(munion({stop, First.at(NT::STMT_PART), {Symbol::END}}));
   stmtPart(munion({stop, {Symbol::END}}));
-  BlockTable.pop();
+  blocks.popBlock();
   match(Symbol::END, stop);
-  // Add a symbol table for each new block
 }
 
 
@@ -115,18 +109,16 @@ void Parser::def(std::set<Symbol> stop) {
 
 void Parser::constDef(std::set<Symbol> stop) {
    admin.debugInfo("constDef");
-/*
-   SymbolTable consttab = BlockTable.back();
-   Token& consttoken = constab.insert(look.getSymbol().getlexeme());
 
-   constoken.setIdType(Symbol::CONST);
-*/  
    match(Symbol::CONST, munion({stop, {Symbol::ID}, {Symbol::EQUAL}, First.at(NT::CONST_NT)}));
+   int idx = look.getVal();
    match(Symbol::ID, munion({stop, {Symbol::EQUAL}, First.at(NT::CONST_NT)}));
    match(Symbol::EQUAL, munion({stop, First.at(NT::CONST_NT)}));
-   constant(stop);
-   // should add token information to the ID token in the symbol table
-   // const should return some info in token form
+   Type type = constant(stop);
+
+   // May need to deal with the idx if there is a syntax error and the
+   // look token is not an ID token at all
+   blocks.define(idx, Kind::CONSTANT, type, 0, 0);  // Set val properly later
 }
 
 
@@ -537,53 +529,66 @@ void Parser::multOp(std::set<Symbol> stop) {
 
 // Symbol Rules //////////////////////////////////////////////////////////////
 
-void Parser::constant(std::set<Symbol> stop) {
+Type Parser::constant(std::set<Symbol> stop) {
   admin.debugInfo("constant");
+  Type type = Type::UNIVERSAL;
 
   if (look.getSymbol() == Symbol::NUM) {
     match(Symbol::NUM, munion({stop, First.at(NT::CPRIME)}));
-    cPrime(stop);
-  } else if (First.at(NT::BOOL_SYM).count(look.getSymbol()))
+    type = cPrime(stop);
+  } else if (First.at(NT::BOOL_SYM).count(look.getSymbol())) {
     boolSym(stop);
-  else if (look.getSymbol() == Symbol::ID)
+    type = Type::BOOLEAN;
+  } else if (look.getSymbol() == Symbol::ID) {
+    bool err = false;
+    TableEntry ent = blocks.find(look.getVal(), err);
+    if (err) {
+      admin.error(look.getLexeme() + " not declared");
+    } else {
+      type = ent.ttype;
+    }
     match(Symbol::ID, stop);
-  else {
+  } else {
     syntaxError(stop);  // epsilon is guaranteed not in any of these
   }
   syntaxCheck(stop);
-  // May need to return token info with data type for checking
+  return type;
 }
 
 
-void Parser::cPrime(std::set<Symbol> stop) {
+Type Parser::cPrime(std::set<Symbol> stop) {
   admin.debugInfo("cPrime");
+  Type type = Type::INTEGER;
 
   if(look.getSymbol() == Symbol::DOT){
     match(Symbol::DOT, munion({stop, {Symbol::NUM}}));
     match(Symbol::NUM, stop);
+    type = Type::T_FLOAT;
   }
   syntaxCheck(stop);
-  // May need to return token info with data type for checking
-  // May also need to do a little extra work to collect all the tokens
-  // needed for building a float number
+  return type;
 }
 
 
-void Parser::typeSym(std::set<Symbol> stop) {
+Type Parser::typeSym(std::set<Symbol> stop) {
   admin.debugInfo("typeSym");
+  Type type = Type::UNIVERSAL;
 
   Symbol next = look.getSymbol();
   if(next == Symbol::INT) {
     match(Symbol::INT, stop);
+    type = Type::INTEGER;
   } else if (next == Symbol::BOOL){
     match(Symbol::BOOL, stop);
+    type = Type::BOOLEAN;
   } else if (next == Symbol::FLOAT) {
     match(Symbol::FLOAT, stop);
+    type = Type::T_FLOAT;
   } else {
     syntaxError(stop);
   }
   syntaxCheck(stop);
-  // Should return the type symbol
+  return type;
 }
 
 

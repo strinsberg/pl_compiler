@@ -21,7 +21,6 @@ struct TableEntry {
 class BlockTable {
 public:
   BlockTable();
-  ~BlockTable();
   bool search(int lookId);
   bool define(int nid, Kind nkind, Type ntype, int nsize, int nval);
   TableEntry find(int lookId, bool& error);

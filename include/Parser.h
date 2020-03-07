@@ -6,6 +6,7 @@
 #include "Symbol.h"
 #include "Token.h"
 #include "Administration.h"
+#include "BlockTable.h"
 
 
 class Parser {
@@ -33,6 +34,8 @@ class Parser {
    * The look ahead token.
    */
   Token look;
+
+  BlockTable blocks;
 
   /**
    * Match a Token and move to the next one.
@@ -221,17 +224,17 @@ class Parser {
   /**
    * Parses a const non-terminal
    */
-  void constant(std::set<Symbol> stop);
+  Type constant(std::set<Symbol> stop);
 
   /**
    * Parses a const num non-terminal
    */
-  void cPrime(std::set<Symbol> stop);
+  Type cPrime(std::set<Symbol> stop);
 
   /**
    * Parses a definition type from the stream of tokens.
    */
-  void typeSym(std::set<Symbol> stop);
+  Type typeSym(std::set<Symbol> stop);
 
   /**
    * Parses a true or false from the stream of tokens.
@@ -255,8 +258,6 @@ class Parser {
   void selec(std::set<Symbol> stop);
 
   void fieldSelec(std::set<Symbol> stop);
-
-  std::vector<SymbolTable> BlockTable;
 };
 
 #endif

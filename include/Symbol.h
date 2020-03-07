@@ -15,7 +15,7 @@ enum Symbol {
 
   ID, KEY, ENDFILE, EMPTY, EPSILON, NEWLINE, NUM, RECORD, FLOAT, VAR,
 
-  NAME_ERR, NUM_ERR, CHAR_ERR, FULL_TAB, UNDEF
+  NAME_ERR, NUM_ERR, CHAR_ERR
 };
 
 
@@ -58,7 +58,6 @@ const std::map<Symbol, std::string> SymbolToString {
   {NAME_ERR, "NameErr"},
   {NUM_ERR, "NumErr"},
   {CHAR_ERR, "CharErr"},
-  {FULL_TAB, "FullTableErr"},
   {BEGIN, "begin"},
   {END, "end"},
   {CONST, "const"},
@@ -75,7 +74,6 @@ const std::map<Symbol, std::string> SymbolToString {
   {VAR, "var"},
   {RECORD, "record"},
   {FLOAT, "float"},
-  {UNDEF, "Undefined"}
 };
 
 
@@ -132,4 +130,5 @@ const std::map<std::string, Symbol> WordSym {
   {"var", Symbol::VAR},
   {"float", Symbol::FLOAT}
 };
+
 #endif
