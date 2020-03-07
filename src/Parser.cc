@@ -305,30 +305,20 @@ void Parser::vPrime(std::set<Symbol> stop) {
 }
 
 
-std::vector<TableEntry&> Parser::varList(std::set<Symbol> stop) {
+std::vector<int> Parser::varList(std::set<Symbol> stop) {
   admin.debugInfo("varList");
 
-  std::vector<TableEntry&> entries;
-  bool err = false;
+  std::vector<int> indices;
   int idx = look.getVal();
-  bool check = blocks.define(idx, Kind::UNDEFINED, Type::UNIVERSAL, 0, 0);
-  if(check)
-    entries.push_back(blocks.find(idx, err));
-  else
-     admin.error("Redeclaration of Variable");
-
+  indices.push_back(idx);
   match(Symbol::ID, munion({stop, {Symbol::COMMA}}));
   while(look.getSymbol() == Symbol::COMMA) {
       match(Symbol::COMMA, munion({stop, {Symbol::ID}}));
       idx = look.getVal();
-      bool check = blocks.define(idx, Kind::UNDEFINED, Type::UNIVERSAL, 0, 0);
-      if(check)
-        entries.push_back(blocks.find(idx, err));
-      else
-         admin.error("Redeclaration of Variable");
+      indices.push_back(idx);
       match(Symbol::ID, munion({stop, {Symbol::COMMA}}));
   }
-  return entries;
+  return indices;
 }
 
 
