@@ -1,34 +1,11 @@
 #include "Scanner.h"
+#include "SymbolTable.h"
 #include <stdexcept>
 #include <string>
 #include <fstream>
 
-Scanner::Scanner(std::istream &ifs, SymbolTable &symboltable) : fin(ifs),
-                      symtable(symboltable), line(""), pos(0) {
-  // Load all symbol types into the symbol map for easy identification from
-  // their characters
-  symmap["."] = Symbol::DOT;
-  symmap[","] = Symbol::COMMA;
-  symmap[";"] = Symbol::SEMI;
-  symmap["["] = Symbol::LHSQR;
-  symmap["]"] = Symbol::RHSQR;
-  symmap["&"] = Symbol::AMP;
-  symmap["|"] = Symbol::BAR;
-  symmap["~"] = Symbol::TILD;
-  symmap["<"] = Symbol::LESS;
-  symmap["="] = Symbol::EQUAL;
-  symmap[">"] = Symbol::GREAT;
-  symmap["+"] = Symbol::PLUS;
-  symmap["-"] = Symbol::MINUS;
-  symmap["*"] = Symbol::TIMES;
-  symmap["/"] = Symbol::FSLASH;
-  symmap["\\"] = Symbol::BSLASH;
-  symmap["("] = Symbol::LHRND;
-  symmap[")"] = Symbol::RHRND;
-  symmap[":="] = Symbol::INIT;
-  symmap["[]"] = Symbol::GUARD;
-  symmap["->"] = Symbol::ARROW;
-}
+Scanner::Scanner(std::istream &ifs, SymbolTable& st)
+    : fin(ifs), symTab(st), line(""), pos(0) {}
 
 
 Token Scanner::getToken() {
@@ -109,13 +86,16 @@ Token Scanner::recognizeName() {
     lexeme+=(line[pos++]);
   }
 
-  // If the lexeme is in the symbol table return the token
-  // otherwise insert the lexeme into the table and return the resulting token
-  Token token = symtable.search(lexeme);
-  if (token.getSymbol() == Symbol::EMPTY)
-    return symtable.insert(lexeme);
-  else
-    return token;
+  // If the lexeme is not in the symbol table insert it and return an ID token.
+  // Otherwise return the token in the symbol table.
+  int idx = symTab.search(lexeme);
+  if (idx == -1) {
+    idx = symTab.insert(lexeme);
+    return Token(Symbol::ID, lexeme, idx);
+  } else {
+    bool found = true;
+    return symTab.getToken(idx, found);
+  }
 }
 
 
@@ -127,18 +107,18 @@ Token Scanner::recognizeSpecial() {
   if (pos < line.size()) {
     std::string checkmap = lexeme + line[pos];
    
-    if(symmap.find(checkmap) != symmap.end()) {
+    if(SpecialSym.find(checkmap) != SpecialSym.end()) {
       pos++;
-      return Token(symmap[checkmap], checkmap);
+      return Token(SpecialSym.at(checkmap), checkmap);
     }
   }
 
   // If character is not a symbol return a char_err token
   // otherwise return the proper symbol token
-  if(symmap.find(lexeme) == symmap.end()) {
+  if(SpecialSym.find(lexeme) == SpecialSym.end()) {
     return Token(Symbol::CHAR_ERR, lexeme);
   } else {
-    return Token(symmap[lexeme], lexeme);
+    return Token(SpecialSym.at(lexeme), lexeme);
   }
 }
 

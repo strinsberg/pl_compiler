@@ -22,20 +22,22 @@ class Token {
    */
   Token(Symbol sym, std::string lexeme = "", int val = -1);
 
+  Token(const Token& tok);
+
   /**
    * Returns the symbol.
    */ 
-  Symbol getSymbol();
+  Symbol getSymbol() const;
   
   /**
    * Returns the lexeme.
    */
-  std::string getLexeme();
+  std::string getLexeme() const;
   
   /**
    * Returns the value.
    */
-  int getVal();
+  int getVal() const;
 
   /**
    * Sets the symbol.
@@ -72,7 +74,7 @@ class Token {
   std::string lexeme;
 
   /**
-   * The numeric value of the token or it's position in the symbol table.
+   * The numeric value of the token.
    */
   int val;
 };

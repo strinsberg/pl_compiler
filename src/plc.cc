@@ -51,8 +51,8 @@ int main(int argc, char** argv) {
   std::ofstream ofs(outfile);
 
   // Create necessary components
-  SymbolTable sym;
-  Scanner scanner(fs, sym);
+  SymbolTable symTab;
+  Scanner scanner(fs, symTab);
   Administration admin(ofs, scanner, verbose);
   Parser parser(admin);
 

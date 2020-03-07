@@ -11,17 +11,21 @@ Token::Token(Symbol sym, std::string lex, int v)
     : sname(sym), lexeme(lex), val(v) {}
 
 
-Symbol Token::getSymbol() {
+Token::Token(const Token& tok) : sname(tok.getSymbol()), lexeme(tok.getLexeme()),
+    val(tok.getVal()) {}
+
+
+Symbol Token::getSymbol() const {
   return sname;
 }
 
 
-std::string Token::getLexeme() {
+std::string Token::getLexeme() const {
   return lexeme;
 }
 
 
-int Token::getVal() {
+int Token::getVal() const {
   return val;
 }
 

@@ -1,32 +1,49 @@
 #include "SymbolTable.h"
 #include <string>
+#include <stdexcept>
 
 
 SymbolTable::SymbolTable() : table(MOD), load(0) {
   loadKeywords();
 }
 
-Token SymbolTable::search(const std::string& str) {
+
+int SymbolTable::search(const std::string& str) {
   int pos = hash(str);
-  return probe(pos, str).second;
+  auto item = probe(pos, str);
+
+  if (item.second.getSymbol() == Symbol::EMPTY)
+    return -1;
+  else
+    return item.first;
 }
 
 
-Token SymbolTable::insert(const std::string& str) {
+int SymbolTable::insert(const std::string& str) {
   if (full())
-    return Token(Symbol::FULL_TAB, str);
+    throw std::length_error("Symbol table is full");
 
   // Hash the string and find the right position in the table
   int pos = hash(str);
-  std::pair<int, Token> item = probe(pos, str);
+  std::pair<int, Token&> item = probe(pos, str);
 
   // If the string is not already in the table add it
   if (item.second.getSymbol() == Symbol::EMPTY)
     table[item.first] = Token(Symbol::ID, str, item.first);
+  else
+    return -1;
 
   // Increase load and return token
   load++;
-  return table[item.first];
+  return item.first;
+}
+
+
+Token& SymbolTable::getToken(int idx, bool& found) {
+  Token& item = table.at(idx);
+  if (item.getSymbol() == Symbol::EMPTY)
+    found = false;
+  return item;
 }
 
 
@@ -60,7 +77,7 @@ std::string SymbolTable::toString() {
 }
 
 
-std::pair<int, Token> SymbolTable::probe(int pos, std::string lexeme) {
+std::pair<int, Token&> SymbolTable::probe(int pos, std::string lexeme) {
   Token current = table[pos];
 
   // linear probe for the lexeme or an empty token return a pair with
@@ -87,24 +104,7 @@ void SymbolTable::loadKey(Symbol sym, const std::string& lexeme) {
 
 
 void SymbolTable::loadKeywords() {
-  loadKey(Symbol::BEGIN, "begin");
-  loadKey(Symbol::END, "end");
-  loadKey(Symbol::CONST, "const");
-  loadKey(Symbol::ARRAY, "array");
-  loadKey(Symbol::PROC, "proc");
-  loadKey(Symbol::SKIP, "skip");
-  loadKey(Symbol::READ, "read");
-  loadKey(Symbol::WRITE, "write");
-  loadKey(Symbol::CALL, "call");
-  loadKey(Symbol::IF, "if");
-  loadKey(Symbol::FI, "fi");
-  loadKey(Symbol::DO, "do");
-  loadKey(Symbol::OD, "od");
-  loadKey(Symbol::INT, "integer");
-  loadKey(Symbol::BOOL, "Boolean");
-  loadKey(Symbol::TRUE, "true");
-  loadKey(Symbol::FALSE, "false");
-  loadKey(Symbol::RECORD, "record");
-  loadKey(Symbol::VAR, "var");
-  loadKey(Symbol::FLOAT, "float");
+  for (auto& it : WordSym) {
+    loadKey(it.second, it.first);
+  }
 }
