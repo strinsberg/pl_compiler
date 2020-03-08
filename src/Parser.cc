@@ -57,10 +57,15 @@ void Parser::program(std::set<Symbol> stop) {
 }
 
 
-void Parser::block(std::set<Symbol> stop) {
+void Parser::block(std::set<Symbol> stop, std::vector<TableEntry> entries) {
   admin.debugInfo("block");
 
   blocks.pushBlock();
+  for(auto s: entries) {
+    if(!blocks.define(s.id, s.tkind, s.ttype, s.size, s.val)) {
+      admin.error("Mutiple definitions of the same varaible");
+    }
+  }
 
   match(Symbol::BEGIN, munion({stop, First.at(NT::DEF_PART), First.at(NT::STMT_PART), {Symbol::END}}));
   defPart(munion({stop, First.at(NT::STMT_PART), {Symbol::END}}));
@@ -141,9 +146,15 @@ void Parser::varDef(std::set<Symbol> stop) {
 void Parser::procDef(std::set<Symbol> stop){
   admin.debugInfo("procDef");
 
+  int idx  = look.getVal();
+  if(!blocks.define(idx, Kind::PROCEDURE, Type::UNIVERSAL, 0, 0)) {
+    admin.error("Redeclaration of Procedure");
+  }
+
   match(Symbol::PROC, munion({stop, {Symbol::ID}, First.at(NT::PROC_BLOCK)}));
   match(Symbol::ID, munion({stop, First.at(NT::PROC_BLOCK)}));
   procBlock(stop);
+
   // Also add type info to the ID in symbol table
 }
 
@@ -305,7 +316,7 @@ void Parser::vPrime(std::set<Symbol> stop, Type type) {
       Type type = constant(munion({stop, {Symbol::RHSQR}}));
       if (type != Type::INTEGER) {
         admin.error("Array size must be an integer");
-        size = 0; 
+        size = 0;
       } else {
         size = 10;  // get size from constant???
       }
@@ -340,7 +351,7 @@ Type Parser::varAccess(std::set<Symbol> stop) {
   admin.debugInfo("varAccess");
 
   bool err;
-  TableEntry entry = blocks.find(look.getVal(), err);  
+  TableEntry entry = blocks.find(look.getVal(), err);
   std::string name = look.getLexeme();
   match(Symbol::ID, munion({stop, First.at(NT::SELECT)}));
 
@@ -714,35 +725,49 @@ void Parser::recordSection(std::set<Symbol> stop) {
 void Parser::procBlock(std::set<Symbol> stop) {
   admin.debugInfo("procBlock");
 
+  std::vector<TableEntry> entries;
+
   if(look.getSymbol() == Symbol::LHRND){
     match(Symbol::LHRND, munion({stop, First.at(NT::FORM_PLIST),
       {Symbol::RHRND}, First.at(NT::BLOCK)}));
-    formParamList(munion({stop, {Symbol::RHRND}, First.at(NT::BLOCK)}));
+    entries = formParamList(munion({stop, {Symbol::RHRND}, First.at(NT::BLOCK)}));
     match(Symbol::RHRND, munion({stop, First.at(NT::BLOCK)}));
   }
-  block(stop);
+  block(stop, entries);
 }
 
-void Parser::formParamList(std::set<Symbol> stop) {
+std::vector<TableEntry> Parser::formParamList(std::set<Symbol> stop) {
   admin.debugInfo("formParamList");
 
-  paramDef(munion({stop, {Symbol::SEMI},  First.at(NT::PARAM_DEF)}));
+  std::vector<TableEntry> entries = paramDef(munion({stop, {Symbol::SEMI},  First.at(NT::PARAM_DEF)}));
   while(look.getSymbol() == Symbol::SEMI){
     match(Symbol::SEMI, munion({stop, First.at(NT::PARAM_DEF)}));
-    paramDef(munion({stop, {Symbol::SEMI}}));
+    std::vector<TableEntry> newentries = paramDef(munion({stop, {Symbol::SEMI}}));
+    for(auto s: newentries) {
+      entries.push_back(s);
+    }
   }
+  return entries;
 }
 
-void Parser::paramDef(std::set<Symbol> stop) {
+std::vector<TableEntry> Parser::paramDef(std::set<Symbol> stop) {
   admin.debugInfo("paramDef");
+  Kind kind = Kind::CONSTANT;
+  std::vector<TableEntry> entries;
 
   if(look.getSymbol() == Symbol::VAR){
     match(Symbol::VAR, munion({stop, First.at(NT::TYPE_SYM),
     First.at(NT::VAR_LIST)}));
+    kind = Kind::VARIABLE;
   }
 
-  typeSym(munion({stop, First.at(NT::VAR_LIST)}));
-  varList(stop);
+  Type type = typeSym(munion({stop, First.at(NT::VAR_LIST)}));
+  std::vector<int> idxs = varList(stop);
+  for (auto i : idxs) {
+    TableEntry temp(i, kind, type, 0, 0);
+    entries.push_back(temp);
+  }
+  return entries;
 }
 
 void Parser::actParamList(std::set<Symbol> stop) {
@@ -796,7 +821,7 @@ Type Parser::fieldSelec(std::set<Symbol> stop, TableEntry entry) {
     return Type::UNIVERSAL;
   }
 
-  
+
   bool err;
   TableEntry field = entry.fields.find(idx, err);
   if (err) {
