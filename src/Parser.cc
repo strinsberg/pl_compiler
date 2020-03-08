@@ -218,15 +218,16 @@ void Parser::writeStmt(std::set<Symbol> stop) {
 void Parser::assignStmt(std::set<Symbol> stop) {
   admin.debugInfo("assignStmt");
 
-  std::vector<TableEntry> vars = vacsList(munion({stop, First.at(NT::EXP_LIST), {Symbol::INIT}}));
+  std::vector<Type> vars = vacsList(munion({stop, First.at(NT::EXP_LIST), {Symbol::INIT}}));
   match(Symbol::INIT, munion({stop, First.at(NT::EXP_LIST)}));
-  std::vector<TableEntry> exprs = exprList(stop);
+  std::vector<Type> exprs = exprList(stop);
 
   if (vars.size() != exprs.size()) {
     admin.error("Number of variables does not match number of expressions");
   } else {
     for (size_t i = 0; i < vars.size(); i++) {
-      if (vars[i].ttype != exprs[i].ttype)
+      admin.debugInfo(TypeToString.at(vars[i]) + " " + TypeToString.at(exprs[i]));
+      if (vars[i] != exprs[i])
         admin.error("Type mismatch in assignment position " + std::to_string(i+1));
     }
   }
@@ -272,14 +273,14 @@ void Parser::doStmt(std::set<Symbol> stop) {
 
 // Variable Rules ////////////////////////////////////////////////////////////
 
-std::vector<TableEntry> Parser::vacsList(std::set<Symbol> stop) {
+std::vector<Type> Parser::vacsList(std::set<Symbol> stop) {
   admin.debugInfo("vacsList");
-  std::vector<TableEntry> types;
+  std::vector<Type> types;
 
-  varAccess(munion({stop, {Symbol::COMMA}}));
+  types.push_back(varAccess(munion({stop, {Symbol::COMMA}})));
   while (look.getSymbol() == Symbol::COMMA) {
     match(Symbol::COMMA, munion({stop, First.at(NT::VACS_LIST)}));
-    varAccess(munion({stop, {Symbol::COMMA}}));
+    types.push_back(varAccess(munion({stop, {Symbol::COMMA}})));
   }
   return types;
 }
@@ -311,7 +312,8 @@ void Parser::vPrime(std::set<Symbol> stop, Type type) {
       }
 
       for (auto i : idxs) {
-        blocks.define(i, Kind::K_ARRAY, type, size, 0);
+        if(!blocks.define(i, Kind::K_ARRAY, type, size, 0))
+          admin.error("Multiple definitions of the same variable.");
       }
 
       match(Symbol::RHSQR, stop);
@@ -371,15 +373,15 @@ Type Parser::idxSelect(std::set<Symbol> stop, TableEntry entry) {
 
 // Expression Rules //////////////////////////////////////////////////////////
 
-std::vector<TableEntry> Parser::exprList(std::set<Symbol> stop) {
+std::vector<Type> Parser::exprList(std::set<Symbol> stop) {
   admin.debugInfo("Expression List");
-  std::vector<TableEntry> types;
+  std::vector<Type> types;
 
-  expr(munion({stop, First.at(NT::EXP), {Symbol::COMMA}}));
+  types.push_back(expr(munion({stop, First.at(NT::EXP), {Symbol::COMMA}})));
 
   while(look.getSymbol() == Symbol::COMMA) {
     match(Symbol::COMMA, munion({stop, First.at(NT::EXP)}));
-    expr(munion({stop, {Symbol::COMMA}}));
+    types.push_back(expr(munion({stop, {Symbol::COMMA}})));
   }
 
   return types;

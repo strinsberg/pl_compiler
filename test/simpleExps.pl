@@ -1,4 +1,6 @@
 begin
+  integer a;
+  integer array A[6];
   write false,                           $ Tests single expression
   true & (20 + 1 = 30),
   false | (false & true) | false,
