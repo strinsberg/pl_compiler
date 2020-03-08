@@ -146,12 +146,12 @@ void Parser::varDef(std::set<Symbol> stop) {
 void Parser::procDef(std::set<Symbol> stop){
   admin.debugInfo("procDef");
 
+  match(Symbol::PROC, munion({stop, {Symbol::ID}, First.at(NT::PROC_BLOCK)}));
   int idx  = look.getVal();
   if(!blocks.define(idx, Kind::PROCEDURE, Type::UNIVERSAL, 0, 0)) {
     admin.error("Redeclaration of Procedure");
   }
 
-  match(Symbol::PROC, munion({stop, {Symbol::ID}, First.at(NT::PROC_BLOCK)}));
   match(Symbol::ID, munion({stop, First.at(NT::PROC_BLOCK)}));
   procBlock(stop);
 

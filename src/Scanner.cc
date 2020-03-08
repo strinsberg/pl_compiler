@@ -82,7 +82,7 @@ Token Scanner::recognizeName() {
   while(!isWhitespace(line[pos]) &&!isSpecial(line[pos]) && pos < line.length()) {
     if(!std::isalpha(line[pos]) && !std::isdigit(line[pos]) && line[pos] != '_')
       break;
-  
+
     lexeme+=(line[pos++]);
   }
 
@@ -102,11 +102,11 @@ Token Scanner::recognizeName() {
 Token Scanner::recognizeSpecial() {
   std::string lexeme = "";
 
-  // If we can make a lexeme of size 2 do it 
+  // If we can make a lexeme of size 2 do it
   lexeme+=(line[pos++]);
   if (pos < line.size()) {
     std::string checkmap = lexeme + line[pos];
-   
+
     if(SpecialSym.find(checkmap) != SpecialSym.end()) {
       pos++;
       return Token(SpecialSym.at(checkmap), checkmap);
@@ -147,4 +147,3 @@ Token Scanner::recognizeNumeral() {
 
   return Token(Symbol::NUM, lexeme, num);
 }
-
