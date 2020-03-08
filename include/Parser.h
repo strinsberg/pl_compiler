@@ -133,7 +133,7 @@ class Parser {
   /**
    * Parses a variable access list.
    */
-  std::vector<TableEntry> vacsList(std::set<Symbol> stop);
+  std::vector<Type> vacsList(std::set<Symbol> stop);
 
   /**
    * Parses variable access.
@@ -163,7 +163,7 @@ class Parser {
   /**
    * Parses a expression list from the stream of tokens.
    */
-  std::vector<TableEntry> exprList(std::set<Symbol> stop);
+  std::vector<Type> exprList(std::set<Symbol> stop);
 
   /**
    * Parses a expression from the stream of tokens.

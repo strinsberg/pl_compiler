@@ -2,7 +2,7 @@ begin
   const a = true;
   Boolean b, c;
   integer d;
-  integer array A,B,C[n];
+  integer array A,B,C[d];
   
   proc steveIsGreat
   begin
