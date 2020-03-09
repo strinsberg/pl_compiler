@@ -49,3 +49,16 @@ bool BlockTable::pushBlock() {
 void BlockTable::popBlock() {
   table.pop_back();
 }
+
+bool BlockTable::addFields(int idx, std::vector<TableEntry> field) {
+  bool err = false;
+  for(auto s : field) {
+    auto it = table.back().find(idx);
+    if(it != table.back().end())
+      it->second.fields.define(s.id, s.tkind, s.ttype, s.size, s.val);
+    else {
+      err = true;
+    }
+  }
+  return err;
+}

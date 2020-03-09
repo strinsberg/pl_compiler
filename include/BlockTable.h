@@ -14,6 +14,7 @@ public:
   bool search(int lookId);
   bool define(int nid, Kind nkind, Type ntype, int nsize, int nval);
   TableEntry find(int lookId, bool& error);
+  bool addFields(int idx, std::vector<TableEntry> fields);
   bool pushBlock();
   void popBlock();
 private:

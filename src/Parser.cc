@@ -50,9 +50,7 @@ void Parser::syntaxCheck(std::set<Symbol> stop) {
 void Parser::program(std::set<Symbol> stop) {
   admin.debugInfo("program");
 
-  blocks.pushBlock();
   block(munion({stop, {Symbol::DOT}}));
-  blocks.popBlock();
   match(Symbol::DOT, stop);
 }
 
