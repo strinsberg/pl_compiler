@@ -98,7 +98,7 @@ void SymbolTable::loadKey(Symbol sym, const std::string& lexeme) {
   int hs = hash(lexeme);
   auto place = probe(hs, lexeme);
 
-  table[place.first] = Token(sym, lexeme);
+  table[place.first] = Token(sym, lexeme, place.first);
   load++;
 }
 

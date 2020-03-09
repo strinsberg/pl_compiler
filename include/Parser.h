@@ -63,7 +63,7 @@ class Parser {
   /**
    * Parses a block from the stream of tokens.
    */
-  void block(std::set<Symbol> stop);
+  void block(std::set<Symbol> stop, std::vector<TableEntry> entries = {});
 
   /**
    * Parses a definition part from the stream of tokens.
@@ -247,9 +247,9 @@ class Parser {
 
   void procBlock(std::set<Symbol> stop);
 
-  void formParamList(std::set<Symbol> stop);
+  std::vector<TableEntry> formParamList(std::set<Symbol> stop);
 
-  void paramDef(std::set<Symbol> stop);
+  std::vector<TableEntry> paramDef(std::set<Symbol> stop);
 
   void actParamList(std::set<Symbol> stop);
 
