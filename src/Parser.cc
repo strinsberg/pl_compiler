@@ -692,29 +692,45 @@ void Parser::boolSym(std::set<Symbol> stop) {
 
 
 // Records Rules ///////////////////////////////////////////////////////////////
-void Parser::fieldList (std::set<Symbol> stop) {
+void Parser::fieldList (std::set<Symbol> stop, std::vector<int> recordIds) {
   admin.debugInfo("fieldList");
 
-  recordSection(munion({stop, {Symbol::SEMI},  First.at(NT::REC_SEC)}));
+  std::vector<TableEntry> entries;
+
+  entries = recordSection(munion({stop, {Symbol::SEMI},  First.at(NT::REC_SEC)}));
+  // Add all entries to the records block table
+  for (auto idx : recordIds) {
+    block.addFields(idx, entries);
+  }
+
   while(look.getSymbol() == Symbol::SEMI){
     match(Symbol::SEMI, munion({stop, First.at(NT::REC_SEC)}));
-    recordSection(munion({stop, {Symbol::SEMI}}));
+    entries = recordSection(munion({stop, {Symbol::SEMI}}));
+
+    for (auto idx : recordIds) {
+      block.addFields(idx, entries);
+    }
   }
-  // need to deal with fields here by adding them to the appropriate record
-  // named token. This may mean returning a map with these in it so that they
-  // can be added to the record token
 }
 
-void Parser::recordSection(std::set<Symbol> stop) {
+std::vector<TableEntry> Parser::recordSection(std::set<Symbol> stop) {
   admin.debugInfo("recordSection");
 
-  typeSym(munion({stop, {Symbol::ID, Symbol::COMMA}}));
+  std::vector<TableEntry> entries;
+
+  Type type = typeSym(munion({stop, {Symbol::ID, Symbol::COMMA}}));
+  int id = look.getVal();
+  entries.emplace_back(id, Kind::VARIABLE, type, 0, 0);
+
   match(Symbol::ID, munion({stop, {Symbol::ID, Symbol::COMMA}}));
   while(look.getSymbol() == Symbol::COMMA) {
     match(Symbol::COMMA, munion({stop, {Symbol::ID}}));
+    id = look.getVal();
+    entries.emplace_back(id, Kind::VARIABLE, type, 0, 0);
     match(Symbol::ID, munion({stop, {Symbol::COMMA}}));
   }
-  // May need to return a list of ids and types
+
+  return entries;
 }
 
 // Parameter Rules /////////////////////////////////////////////////////////////
