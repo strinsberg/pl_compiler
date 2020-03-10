@@ -6,6 +6,7 @@
 #include "Symbol.h"
 #include "Token.h"
 #include "Administration.h"
+#include "BlockTable.h"
 
 
 class Parser {
@@ -34,6 +35,8 @@ class Parser {
    */
   Token look;
 
+  BlockTable blocks;
+
   /**
    * Match a Token and move to the next one.
    * @param stop The stopsets used to recover from the error.
@@ -60,7 +63,7 @@ class Parser {
   /**
    * Parses a block from the stream of tokens.
    */
-  void block(std::set<Symbol> stop);
+  void block(std::set<Symbol> stop, std::vector<TableEntry> entries = {});
 
   /**
    * Parses a definition part from the stream of tokens.
@@ -130,12 +133,12 @@ class Parser {
   /**
    * Parses a variable access list.
    */
-  void vacsList(std::set<Symbol> stop);
+  std::vector<Type> vacsList(std::set<Symbol> stop);
 
   /**
    * Parses variable access.
    */
-  void varAccess(std::set<Symbol> stop);
+  Type varAccess(std::set<Symbol> stop);
 
   /**
    * Parses a varaible definition from the stream of tokens.
@@ -145,37 +148,37 @@ class Parser {
   /**
    * Parses a varaible vs array from the stream of tokens.
    */
-  void vPrime(std::set<Symbol> stop);
+  void vPrime(std::set<Symbol> stop, Type type);
 
   /**
    * Parses a varaible list from the stream of tokens.
    */
-  void varList(std::set<Symbol> stop);
+  std::vector<int> varList(std::set<Symbol> stop);
 
   /**
    * Parses an index selector. ie) A[i].
    */
-  void idxSelect(std::set<Symbol> stop);
+  Type idxSelect(std::set<Symbol> stop, TableEntry entry);
 
   /**
    * Parses a expression list from the stream of tokens.
    */
-  void exprList(std::set<Symbol> stop);
+  std::vector<Type> exprList(std::set<Symbol> stop);
 
   /**
    * Parses a expression from the stream of tokens.
    */
-  void expr(std::set<Symbol> stop);
+  Type expr(std::set<Symbol> stop);
 
   /**
    * Parses a primary expression from the stream of tokens.
    */
-  void primeExpr(std::set<Symbol> stop);
+  Type primeExpr(std::set<Symbol> stop);
 
   /**
    * Parses a simple expression from the stream of tokens.
    */
-  void simpleExpr(std::set<Symbol> stop);
+  Type simpleExpr(std::set<Symbol> stop);
 
   /**
    * Parses a list of guarded commands.
@@ -190,12 +193,12 @@ class Parser {
   /**
    * Parses a term from the stream of tokens.
    */
-  void term(std::set<Symbol> stop);
+  Type term(std::set<Symbol> stop);
 
   /**
    * Parses a factor from the stream of tokens.
    */
-  void factor(std::set<Symbol> stop);
+  Type factor(std::set<Symbol> stop);
 
   /**
    * Parses a primary operator from the stream of tokens.
@@ -221,17 +224,17 @@ class Parser {
   /**
    * Parses a const non-terminal
    */
-  void constant(std::set<Symbol> stop);
+  Type constant(std::set<Symbol> stop);
 
   /**
    * Parses a const num non-terminal
    */
-  void cPrime(std::set<Symbol> stop);
+  Type cPrime(std::set<Symbol> stop);
 
   /**
    * Parses a definition type from the stream of tokens.
    */
-  void typeSym(std::set<Symbol> stop);
+  Type typeSym(std::set<Symbol> stop);
 
   /**
    * Parses a true or false from the stream of tokens.
@@ -244,17 +247,17 @@ class Parser {
 
   void procBlock(std::set<Symbol> stop);
 
-  void formParamList(std::set<Symbol> stop);
+  std::vector<TableEntry> formParamList(std::set<Symbol> stop);
 
-  void paramDef(std::set<Symbol> stop);
+  std::vector<TableEntry> paramDef(std::set<Symbol> stop);
 
   void actParamList(std::set<Symbol> stop);
 
   void actParam(std::set<Symbol> stop);
 
-  void selec(std::set<Symbol> stop);
+  Type selec(std::set<Symbol> stop, TableEntry entry);
 
-  void fieldSelec(std::set<Symbol> stop);
+  Type fieldSelec(std::set<Symbol> stop, TableEntry entry);
 };
 
 #endif

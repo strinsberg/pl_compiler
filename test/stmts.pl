@@ -1,4 +1,5 @@
 begin
+  $ fails as many things are undeclared
   skip;
   read a, b, c;
   write 10 + 4 < 30;

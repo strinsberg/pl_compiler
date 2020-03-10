@@ -8,13 +8,18 @@ SymbolTable::SymbolTable() : table(MOD), load(0) {
 }
 
 
-Token& SymbolTable::search(const std::string& str) {
+int SymbolTable::search(const std::string& str) {
   int pos = hash(str);
-  return probe(pos, str).second;
+  auto item = probe(pos, str);
+
+  if (item.second.getSymbol() == Symbol::EMPTY)
+    return -1;
+  else
+    return item.first;
 }
 
 
-Token& SymbolTable::insert(const std::string& str) {
+int SymbolTable::insert(const std::string& str) {
   if (full())
     throw std::length_error("Symbol table is full");
 
@@ -25,10 +30,20 @@ Token& SymbolTable::insert(const std::string& str) {
   // If the string is not already in the table add it
   if (item.second.getSymbol() == Symbol::EMPTY)
     table[item.first] = Token(Symbol::ID, str, item.first);
+  else
+    return -1;
 
   // Increase load and return token
   load++;
-  return table[item.first];
+  return item.first;
+}
+
+
+Token& SymbolTable::getToken(int idx, bool& found) {
+  Token& item = table.at(idx);
+  if (item.getSymbol() == Symbol::EMPTY)
+    found = false;
+  return item;
 }
 
 
@@ -83,7 +98,7 @@ void SymbolTable::loadKey(Symbol sym, const std::string& lexeme) {
   int hs = hash(lexeme);
   auto place = probe(hs, lexeme);
 
-  table[place.first] = Token(sym, lexeme);
+  table[place.first] = Token(sym, lexeme, place.first);
   load++;
 }
 

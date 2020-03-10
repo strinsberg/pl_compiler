@@ -1,6 +1,7 @@
 #include <set>
 #include "Parser.h"
 #include "Administration.h"
+#include "BlockTable.h"
 #include "Symbol.h"
 #include "Grammar.h"
 
@@ -48,20 +49,27 @@ void Parser::syntaxCheck(std::set<Symbol> stop) {
 
 void Parser::program(std::set<Symbol> stop) {
   admin.debugInfo("program");
+
   block(munion({stop, {Symbol::DOT}}));
   match(Symbol::DOT, stop);
-  // Add a symbol table for the whole program.
 }
 
 
-void Parser::block(std::set<Symbol> stop) {
+void Parser::block(std::set<Symbol> stop, std::vector<TableEntry> entries) {
   admin.debugInfo("block");
+
+  blocks.pushBlock();
+  for(auto s: entries) {
+    if(!blocks.define(s.id, s.tkind, s.ttype, s.size, s.val)) {
+      admin.error("Mutiple definitions of the same varaible");
+    }
+  }
 
   match(Symbol::BEGIN, munion({stop, First.at(NT::DEF_PART), First.at(NT::STMT_PART), {Symbol::END}}));
   defPart(munion({stop, First.at(NT::STMT_PART), {Symbol::END}}));
   stmtPart(munion({stop, {Symbol::END}}));
+  blocks.popBlock();
   match(Symbol::END, stop);
-  // Add a symbol table for each new block
 }
 
 
@@ -106,11 +114,14 @@ void Parser::constDef(std::set<Symbol> stop) {
    admin.debugInfo("constDef");
 
    match(Symbol::CONST, munion({stop, {Symbol::ID}, {Symbol::EQUAL}, First.at(NT::CONST_NT)}));
+   int idx = look.getVal();
    match(Symbol::ID, munion({stop, {Symbol::EQUAL}, First.at(NT::CONST_NT)}));
    match(Symbol::EQUAL, munion({stop, First.at(NT::CONST_NT)}));
-   constant(stop);
-   // should add token information to the ID token in the symbol table
-   // const should return some info in token form
+   Type type = constant(stop);
+
+   // May need to deal with the idx if there is a syntax error and the
+   // look token is not an ID token at all
+   blocks.define(idx, Kind::CONSTANT, type, 0, 0);  // Set val properly later
 }
 
 
@@ -124,11 +135,9 @@ void Parser::varDef(std::set<Symbol> stop) {
     fieldList(munion({stop, {Symbol::END}}));
     match(Symbol::END, stop);
   } else {
-    typeSym(munion({stop, First.at(NT::VPRIME)}));
-    vPrime(stop);
+    Type type = typeSym(munion({stop, First.at(NT::VPRIME)}));
+    vPrime(stop, type);
   }
-  // Add type information to IDs in the symbol table
-  // Type sym will have to return this info
 }
 
 
@@ -136,8 +145,14 @@ void Parser::procDef(std::set<Symbol> stop){
   admin.debugInfo("procDef");
 
   match(Symbol::PROC, munion({stop, {Symbol::ID}, First.at(NT::PROC_BLOCK)}));
+  int idx  = look.getVal();
+  if(!blocks.define(idx, Kind::PROCEDURE, Type::UNIVERSAL, 0, 0)) {
+    admin.error("Redeclaration of Procedure");
+  }
+
   match(Symbol::ID, munion({stop, First.at(NT::PROC_BLOCK)}));
   procBlock(stop);
+
   // Also add type info to the ID in symbol table
 }
 
@@ -212,13 +227,19 @@ void Parser::writeStmt(std::set<Symbol> stop) {
 void Parser::assignStmt(std::set<Symbol> stop) {
   admin.debugInfo("assignStmt");
 
-  vacsList(munion({stop, First.at(NT::EXP_LIST), {Symbol::INIT}}));
+  std::vector<Type> vars = vacsList(munion({stop, First.at(NT::EXP_LIST), {Symbol::INIT}}));
   match(Symbol::INIT, munion({stop, First.at(NT::EXP_LIST)}));
-  exprList(stop);
-  // Probably have to pass token info back from vacs list and some
-  // constructed tokens holding values from expr list to update
-  // ID values or at least to check them for proper types with
-  // assignments
+  std::vector<Type> exprs = exprList(stop);
+
+  if (vars.size() != exprs.size()) {
+    admin.error("Number of variables does not match number of expressions");
+  } else {
+    for (size_t i = 0; i < vars.size(); i++) {
+      admin.debugInfo(TypeToString.at(vars[i]) + " " + TypeToString.at(exprs[i]));
+      if (vars[i] != exprs[i])
+        admin.error("Type mismatch in assignment position " + std::to_string(i+1));
+    }
+  }
 }
 
 
@@ -261,119 +282,171 @@ void Parser::doStmt(std::set<Symbol> stop) {
 
 // Variable Rules ////////////////////////////////////////////////////////////
 
-void Parser::vacsList(std::set<Symbol> stop) {
+std::vector<Type> Parser::vacsList(std::set<Symbol> stop) {
   admin.debugInfo("vacsList");
+  std::vector<Type> types;
 
-  varAccess(munion({stop, {Symbol::COMMA}}));
+  types.push_back(varAccess(munion({stop, {Symbol::COMMA}})));
   while (look.getSymbol() == Symbol::COMMA) {
     match(Symbol::COMMA, munion({stop, First.at(NT::VACS_LIST)}));
-    varAccess(munion({stop, {Symbol::COMMA}}));
+    types.push_back(varAccess(munion({stop, {Symbol::COMMA}})));
   }
-  // May need to return a list of token references so semantic checks and
-  // assignments or access can be done.
+  return types;
 }
 
 
-void Parser::vPrime(std::set<Symbol> stop) {
+void Parser::vPrime(std::set<Symbol> stop, Type type) {
   admin.debugInfo("vPrime");
+  std::vector<int> idxs;
 
   if (look.getSymbol() == Symbol::ID) {
-    varList(stop);
+    idxs = varList(stop);
+    for (auto i : idxs) {
+      if (!blocks.define(i, Kind::VARIABLE, type, 0, 0))
+        admin.error("Multiple definitions of the same variable.");
+    }
+
   } else {
       match(Symbol::ARRAY, munion({stop, First.at(NT::VAR_LIST), {Symbol::LHSQR}, First.at(NT::CONST_NT), {Symbol::RHSQR}}));
-      varList(munion({stop, {Symbol::LHSQR}, First.at(NT::CONST_NT), {Symbol::RHSQR}}));
+      idxs = varList(munion({stop, {Symbol::LHSQR}, First.at(NT::CONST_NT), {Symbol::RHSQR}}));
       match(Symbol::LHSQR, munion({stop, First.at(NT::CONST_NT), {Symbol::RHSQR}}));
-      constant(munion({stop, {Symbol::RHSQR}}));
+
+      int size;
+      Type type = constant(munion({stop, {Symbol::RHSQR}}));
+      if (type != Type::INTEGER) {
+        admin.error("Array size must be an integer");
+        size = 0;
+      } else {
+        size = 10;  // get size from constant???
+      }
+
+      for (auto i : idxs) {
+        if(!blocks.define(i, Kind::K_ARRAY, type, size, 0))
+          admin.error("Multiple definitions of the same variable.");
+      }
+
       match(Symbol::RHSQR, stop);
   }
-  // May need to return some info
 }
 
 
-void Parser::varList(std::set<Symbol> stop) {
+std::vector<int> Parser::varList(std::set<Symbol> stop) {
   admin.debugInfo("varList");
 
+  std::vector<int> indices;
+  int idx = look.getVal();
+  indices.push_back(idx);
   match(Symbol::ID, munion({stop, {Symbol::COMMA}}));
   while(look.getSymbol() == Symbol::COMMA) {
       match(Symbol::COMMA, munion({stop, {Symbol::ID}}));
+      idx = look.getVal();
+      indices.push_back(idx);
       match(Symbol::ID, munion({stop, {Symbol::COMMA}}));
   }
-  // May need to return a list of token references for the variables
+  return indices;
 }
 
 
-void Parser::varAccess(std::set<Symbol> stop) {
+Type Parser::varAccess(std::set<Symbol> stop) {
   admin.debugInfo("varAccess");
 
+  bool err;
+  TableEntry entry = blocks.find(look.getVal(), err);
+  std::string name = look.getLexeme();
   match(Symbol::ID, munion({stop, First.at(NT::SELECT)}));
-  if (First.at(NT::SELECT).count(look.getSymbol()))
-    selec(stop);
-  // may need to return the token for the variable being accessed so that
-  // it can be accessed. How to identify record types and thier fields?
+
+  if (err)
+    admin.error(name + " is undeclared");
+
+  if (First.at(NT::SELECT).count(look.getSymbol())) {
+    return selec(stop, entry);
+  } else {
+    return entry.ttype;
+  }
 }
 
 
-void Parser::idxSelect(std::set<Symbol> stop) {
+Type Parser::idxSelect(std::set<Symbol> stop, TableEntry entry) {
   admin.debugInfo("idxSelect");
 
   match(Symbol::LHSQR, munion({stop, First.at(NT::EXP), {Symbol::RHSQR}}));
-  expr(munion({stop, {Symbol::RHSQR}}));
+  Type type = expr(munion({stop, {Symbol::RHSQR}}));
+  if (type != Type::INTEGER)
+    admin.error("Index must be an integer");
+
+  // need to bounds check once expressions return proper values
   match(Symbol::RHSQR, stop);
-  // May need to return token info
+  return entry.ttype;
 }
 
 
 // Expression Rules //////////////////////////////////////////////////////////
 
-void Parser::exprList(std::set<Symbol> stop) {
+std::vector<Type> Parser::exprList(std::set<Symbol> stop) {
   admin.debugInfo("Expression List");
+  std::vector<Type> types;
 
-  expr(munion({stop, First.at(NT::EXP), {Symbol::COMMA}}));
+  types.push_back(expr(munion({stop, First.at(NT::EXP), {Symbol::COMMA}})));
 
   while(look.getSymbol() == Symbol::COMMA) {
     match(Symbol::COMMA, munion({stop, First.at(NT::EXP)}));
-    expr(munion({stop, {Symbol::COMMA}}));
+    types.push_back(expr(munion({stop, {Symbol::COMMA}})));
   }
-  // May need to return token information so that the values or their
-  // types can be used in other rules.
+
+  return types;
 }
 
 
-void Parser::expr(std::set<Symbol> stop) {
+Type Parser::expr(std::set<Symbol> stop) {
   admin.debugInfo("expr");
 
-  primeExpr(munion({stop, First.at(NT::PRIM_OP), First.at(NT::PRIM_EXP)}));
+  Type type = primeExpr(munion({stop, First.at(NT::PRIM_OP), First.at(NT::PRIM_EXP)}));
 
   while (look.getSymbol() == Symbol::AMP or
       look.getSymbol() == Symbol::BAR) {
     primeOp(munion({stop, First.at(NT::PRIM_EXP)}));
-    primeExpr(munion({stop, First.at(NT::PRIM_OP)}));
+    Type type2 = primeExpr(munion({stop, First.at(NT::PRIM_OP)}));
+    if(type2 != Type::BOOLEAN) {
+      type = Type::UNIVERSAL;
+      admin.error("Cannot use & or | with non Boolean types");
+    }
   }
+
+  return type;
+
   // May need to return token info so the results of the expression can be used
 }
 
 
-void Parser::primeExpr(std::set<Symbol> stop) {
+Type Parser::primeExpr(std::set<Symbol> stop) {
   admin.debugInfo("prime-Expr");
 
-  simpleExpr(munion({stop, First.at(NT::REL_OP), First.at(NT::SIMP_EXP)}));
+  Type type = simpleExpr(munion({stop, First.at(NT::REL_OP), First.at(NT::SIMP_EXP)}));
 
   if (First.at(NT::REL_OP).count(look.getSymbol())) {
     relOp(munion({stop, First.at(NT::SIMP_EXP)}));
-    simpleExpr(munion({stop, First.at(NT::REL_OP)}));
+    Type type2 = simpleExpr(munion({stop, First.at(NT::REL_OP)}));
+    if(type != type2) {
+      type = Type::UNIVERSAL;
+      admin.error("Type Mismatch");
+    } else {
+      type = Type::BOOLEAN;
+    }
   }
+
+  return type;
   // May need to return token info so the results of the expression can be used
 }
 
 
-void Parser::simpleExpr(std::set<Symbol> stop) {
+Type Parser::simpleExpr(std::set<Symbol> stop) {
   admin.debugInfo("simpleExpr");
 
   syntaxCheck(munion({stop, {Symbol::MINUS}}));
   if (look.getSymbol() == Symbol::MINUS)
     match(Symbol::MINUS, munion({stop, First.at(NT::TERM)}));
 
-  term(munion({stop, First.at(NT::ADD_OP)}));
+  Type type = term(munion({stop, First.at(NT::ADD_OP)}));
 
   while (look.getSymbol() == Symbol::PLUS
       or look.getSymbol() == Symbol::MINUS) {
@@ -383,8 +456,13 @@ void Parser::simpleExpr(std::set<Symbol> stop) {
     if (look.getSymbol() == Symbol::MINUS)
       match(Symbol::MINUS, munion({stop, First.at(NT::TERM)}));
 
-    term(munion({stop, First.at(NT::ADD_OP)}));
+    Type type2 = term(munion({stop, First.at(NT::ADD_OP)}));
+    if(type != type2) {
+      type = Type::UNIVERSAL;
+      admin.error("Type Mismatch");
+    }
   }
+  return type;
   // May need to return token info so the results of the expression can be used
 }
 
@@ -404,45 +482,57 @@ void Parser::guardedList(std::set<Symbol> stop) {
 void Parser::guardedComm(std::set<Symbol> stop) {
   admin.debugInfo("guardedComm");
 
-  expr(munion({stop, {Symbol::ARROW}, First.at(NT::STMT_PART)}));
+  Type type = expr(munion({stop, {Symbol::ARROW}, First.at(NT::STMT_PART)}));
   match(Symbol::ARROW, munion({stop, First.at(NT::STMT_PART)}));
   stmtPart(stop);
+
+  if(type != Type::BOOLEAN) {
+    type = Type::UNIVERSAL;
+    admin.error("Expression before \"->\" must be of the type BOOLEAN");
+  }
 }
 
 
 // Term and Factor Rules /////////////////////////////////////////////////////
 
-void Parser::term(std::set<Symbol> stop) {
+Type Parser::term(std::set<Symbol> stop) {
   admin.debugInfo("Term");
 
-  factor(munion({stop, First.at(NT::MULT_OP)}));
+  Type type = factor(munion({stop, First.at(NT::MULT_OP)}));
 
   while (First.at(NT::MULT_OP).count(look.getSymbol())) {
     multOp(munion({stop, First.at(NT::FACTOR)}));
-    factor(munion({stop, First.at(NT::MULT_OP)}));
+    Type type2 = factor(munion({stop, First.at(NT::MULT_OP)}));
+    if(type != type2) {
+      type = Type::UNIVERSAL;
+      admin.error("Type Mismatch");
+    }
   }
   // May need to return token info so the results of the expression can be used
+  return type;
 }
 
 
-void Parser::factor(std::set<Symbol> stop) {
+Type Parser::factor(std::set<Symbol> stop) {
   admin.debugInfo("Factor");
+  Type type = Type::UNIVERSAL;
 
   bool err = false;
   if(look.getSymbol() == Symbol::NUM) {
-    constant(stop);
+    type = constant(stop);
   } else if (look.getSymbol() == Symbol::TRUE
       or look.getSymbol() == Symbol::FALSE) {
     boolSym(stop);
+    type  = Type::BOOLEAN;
   } else if (look.getSymbol() == Symbol::LHRND) {
     match(Symbol::LHRND, munion({stop, First.at(NT::EXP), {Symbol::RHRND}}));
-    expr(munion({stop, {Symbol::RHRND}}));
+    type = expr(munion({stop, {Symbol::RHRND}}));
     match(Symbol::RHRND, stop);
   } else if (look.getSymbol() == Symbol::TILD) {
     match(Symbol::TILD, munion({stop, First.at(NT::FACTOR)}));
-    factor(stop);
+    type = factor(stop);
   } else if (First.at(NT::VACS).count(look.getSymbol())) {
-    varAccess(stop);
+    type = varAccess(stop);
   } else {
     err = true;
   }
@@ -456,6 +546,7 @@ void Parser::factor(std::set<Symbol> stop) {
   else
     syntaxCheck(stop);
   // May need to return token info so the results of the expression can be used
+  return type;
 }
 
 
@@ -521,53 +612,66 @@ void Parser::multOp(std::set<Symbol> stop) {
 
 // Symbol Rules //////////////////////////////////////////////////////////////
 
-void Parser::constant(std::set<Symbol> stop) {
+Type Parser::constant(std::set<Symbol> stop) {
   admin.debugInfo("constant");
+  Type type = Type::UNIVERSAL;
 
   if (look.getSymbol() == Symbol::NUM) {
     match(Symbol::NUM, munion({stop, First.at(NT::CPRIME)}));
-    cPrime(stop);
-  } else if (First.at(NT::BOOL_SYM).count(look.getSymbol()))
+    type = cPrime(stop);
+  } else if (First.at(NT::BOOL_SYM).count(look.getSymbol())) {
     boolSym(stop);
-  else if (look.getSymbol() == Symbol::ID)
+    type = Type::BOOLEAN;
+  } else if (look.getSymbol() == Symbol::ID) {
+    bool err = false;
+    TableEntry ent = blocks.find(look.getVal(), err);
+    if (err) {
+      admin.error(look.getLexeme() + " not declared");
+    } else {
+      type = ent.ttype;
+    }
     match(Symbol::ID, stop);
-  else {
+  } else {
     syntaxError(stop);  // epsilon is guaranteed not in any of these
   }
   syntaxCheck(stop);
-  // May need to return token info with data type for checking
+  return type;
 }
 
 
-void Parser::cPrime(std::set<Symbol> stop) {
+Type Parser::cPrime(std::set<Symbol> stop) {
   admin.debugInfo("cPrime");
+  Type type = Type::INTEGER;
 
   if(look.getSymbol() == Symbol::DOT){
     match(Symbol::DOT, munion({stop, {Symbol::NUM}}));
     match(Symbol::NUM, stop);
+    type = Type::T_FLOAT;
   }
   syntaxCheck(stop);
-  // May need to return token info with data type for checking
-  // May also need to do a little extra work to collect all the tokens
-  // needed for building a float number
+  return type;
 }
 
 
-void Parser::typeSym(std::set<Symbol> stop) {
+Type Parser::typeSym(std::set<Symbol> stop) {
   admin.debugInfo("typeSym");
+  Type type = Type::UNIVERSAL;
 
   Symbol next = look.getSymbol();
   if(next == Symbol::INT) {
     match(Symbol::INT, stop);
+    type = Type::INTEGER;
   } else if (next == Symbol::BOOL){
     match(Symbol::BOOL, stop);
+    type = Type::BOOLEAN;
   } else if (next == Symbol::FLOAT) {
     match(Symbol::FLOAT, stop);
+    type = Type::T_FLOAT;
   } else {
     syntaxError(stop);
   }
   syntaxCheck(stop);
-  // Should return the type symbol
+  return type;
 }
 
 
@@ -588,29 +692,45 @@ void Parser::boolSym(std::set<Symbol> stop) {
 
 
 // Records Rules ///////////////////////////////////////////////////////////////
-void Parser::fieldList (std::set<Symbol> stop) {
+void Parser::fieldList (std::set<Symbol> stop, std::vector<int> recordIds) {
   admin.debugInfo("fieldList");
 
-  recordSection(munion({stop, {Symbol::SEMI},  First.at(NT::REC_SEC)}));
+  std::vector<TableEntry> entries;
+
+  entries = recordSection(munion({stop, {Symbol::SEMI},  First.at(NT::REC_SEC)}));
+  // Add all entries to the records block table
+  for (auto idx : recordIds) {
+    block.addFields(idx, entries);
+  }
+
   while(look.getSymbol() == Symbol::SEMI){
     match(Symbol::SEMI, munion({stop, First.at(NT::REC_SEC)}));
-    recordSection(munion({stop, {Symbol::SEMI}}));
+    entries = recordSection(munion({stop, {Symbol::SEMI}}));
+
+    for (auto idx : recordIds) {
+      block.addFields(idx, entries);
+    }
   }
-  // need to deal with fields here by adding them to the appropriate record
-  // named token. This may mean returning a map with these in it so that they
-  // can be added to the record token
 }
 
-void Parser::recordSection(std::set<Symbol> stop) {
+std::vector<TableEntry> Parser::recordSection(std::set<Symbol> stop) {
   admin.debugInfo("recordSection");
 
-  typeSym(munion({stop, {Symbol::ID, Symbol::COMMA}}));
+  std::vector<TableEntry> entries;
+
+  Type type = typeSym(munion({stop, {Symbol::ID, Symbol::COMMA}}));
+  int id = look.getVal();
+  entries.emplace_back(id, Kind::VARIABLE, type, 0, 0);
+
   match(Symbol::ID, munion({stop, {Symbol::ID, Symbol::COMMA}}));
   while(look.getSymbol() == Symbol::COMMA) {
     match(Symbol::COMMA, munion({stop, {Symbol::ID}}));
+    id = look.getVal();
+    entries.emplace_back(id, Kind::VARIABLE, type, 0, 0);
     match(Symbol::ID, munion({stop, {Symbol::COMMA}}));
   }
-  // May need to return a list of ids and types
+
+  return entries;
 }
 
 // Parameter Rules /////////////////////////////////////////////////////////////
@@ -621,35 +741,49 @@ void Parser::recordSection(std::set<Symbol> stop) {
 void Parser::procBlock(std::set<Symbol> stop) {
   admin.debugInfo("procBlock");
 
+  std::vector<TableEntry> entries;
+
   if(look.getSymbol() == Symbol::LHRND){
     match(Symbol::LHRND, munion({stop, First.at(NT::FORM_PLIST),
       {Symbol::RHRND}, First.at(NT::BLOCK)}));
-    formParamList(munion({stop, {Symbol::RHRND}, First.at(NT::BLOCK)}));
+    entries = formParamList(munion({stop, {Symbol::RHRND}, First.at(NT::BLOCK)}));
     match(Symbol::RHRND, munion({stop, First.at(NT::BLOCK)}));
   }
-  block(stop);
+  block(stop, entries);
 }
 
-void Parser::formParamList(std::set<Symbol> stop) {
+std::vector<TableEntry> Parser::formParamList(std::set<Symbol> stop) {
   admin.debugInfo("formParamList");
 
-  paramDef(munion({stop, {Symbol::SEMI},  First.at(NT::PARAM_DEF)}));
+  std::vector<TableEntry> entries = paramDef(munion({stop, {Symbol::SEMI},  First.at(NT::PARAM_DEF)}));
   while(look.getSymbol() == Symbol::SEMI){
     match(Symbol::SEMI, munion({stop, First.at(NT::PARAM_DEF)}));
-    paramDef(munion({stop, {Symbol::SEMI}}));
+    std::vector<TableEntry> newentries = paramDef(munion({stop, {Symbol::SEMI}}));
+    for(auto s: newentries) {
+      entries.push_back(s);
+    }
   }
+  return entries;
 }
 
-void Parser::paramDef(std::set<Symbol> stop) {
+std::vector<TableEntry> Parser::paramDef(std::set<Symbol> stop) {
   admin.debugInfo("paramDef");
+  Kind kind = Kind::CONSTANT;
+  std::vector<TableEntry> entries;
 
   if(look.getSymbol() == Symbol::VAR){
     match(Symbol::VAR, munion({stop, First.at(NT::TYPE_SYM),
     First.at(NT::VAR_LIST)}));
+    kind = Kind::VARIABLE;
   }
 
-  typeSym(munion({stop, First.at(NT::VAR_LIST)}));
-  varList(stop);
+  Type type = typeSym(munion({stop, First.at(NT::VAR_LIST)}));
+  std::vector<int> idxs = varList(stop);
+  for (auto i : idxs) {
+    TableEntry temp(i, kind, type, 0, 0);
+    entries.push_back(temp);
+  }
+  return entries;
 }
 
 void Parser::actParamList(std::set<Symbol> stop) {
@@ -676,23 +810,40 @@ void Parser::actParam(std::set<Symbol> stop) {
 
 // Selector Rules //////////////////////////////////////////////////////////////
 
-void Parser::selec(std::set<Symbol> stop) {
+Type Parser::selec(std::set<Symbol> stop, TableEntry entry) {
   admin.debugInfo("selec");
+  Type type = Type::UNIVERSAL;
 
-  if(look.getSymbol() == Symbol::LHSQR)
-    idxSelect(stop);
-  else if (look.getSymbol() == Symbol::DOT)
-    fieldSelec(stop);
-  else
+  if(look.getSymbol() == Symbol::LHSQR) {
+    type = idxSelect(stop, entry);
+  } else if (look.getSymbol() == Symbol::DOT) {
+    type = fieldSelec(stop, entry);
+  } else {
     syntaxError(stop);
+  }
   syntaxCheck(stop);
-  // May need to return info for the selection
+  return type;
 }
 
-void Parser::fieldSelec(std::set<Symbol> stop) {
+Type Parser::fieldSelec(std::set<Symbol> stop, TableEntry entry) {
   admin.debugInfo("fieldSelec");
 
   match(Symbol::DOT, munion({stop, {Symbol::ID}}));
+  int idx = look.getVal();
   match(Symbol::ID, stop);
-  // May need to return info for the selection
+
+  if (entry.tkind != Kind::K_RECORD) {
+    admin.error("Not a record");
+    return Type::UNIVERSAL;
+  }
+
+
+  bool err;
+  TableEntry field = entry.fields.find(idx, err);
+  if (err) {
+    admin.error("Not a valid field");
+    return Type::UNIVERSAL;
+  } else {
+    return field.ttype;
+  }
 }

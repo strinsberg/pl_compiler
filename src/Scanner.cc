@@ -1,9 +1,11 @@
 #include "Scanner.h"
+#include "SymbolTable.h"
 #include <stdexcept>
 #include <string>
 #include <fstream>
 
-Scanner::Scanner(std::istream &ifs) : fin(ifs), line(""), pos(0) {}
+Scanner::Scanner(std::istream &ifs, SymbolTable& st)
+    : fin(ifs), symTab(st), line(""), pos(0) {}
 
 
 Token Scanner::getToken() {
@@ -80,28 +82,31 @@ Token Scanner::recognizeName() {
   while(!isWhitespace(line[pos]) &&!isSpecial(line[pos]) && pos < line.length()) {
     if(!std::isalpha(line[pos]) && !std::isdigit(line[pos]) && line[pos] != '_')
       break;
-  
+
     lexeme+=(line[pos++]);
   }
 
-  // If the lexeme is not a keyword return an ID token
-  // Otherwise return the token for the keyword.
-  auto found = WordSym.find(lexeme);
-  if (found == WordSym.end())
-    return Token(Symbol::ID, lexeme);
-  else
-    return Token(found->second, lexeme);
+  // If the lexeme is not in the symbol table insert it and return an ID token.
+  // Otherwise return the token in the symbol table.
+  int idx = symTab.search(lexeme);
+  if (idx == -1) {
+    idx = symTab.insert(lexeme);
+    return Token(Symbol::ID, lexeme, idx);
+  } else {
+    bool found = true;
+    return symTab.getToken(idx, found);
+  }
 }
 
 
 Token Scanner::recognizeSpecial() {
   std::string lexeme = "";
 
-  // If we can make a lexeme of size 2 do it 
+  // If we can make a lexeme of size 2 do it
   lexeme+=(line[pos++]);
   if (pos < line.size()) {
     std::string checkmap = lexeme + line[pos];
-   
+
     if(SpecialSym.find(checkmap) != SpecialSym.end()) {
       pos++;
       return Token(SpecialSym.at(checkmap), checkmap);
@@ -142,4 +147,3 @@ Token Scanner::recognizeNumeral() {
 
   return Token(Symbol::NUM, lexeme, num);
 }
-

@@ -13,8 +13,9 @@ class Scanner {
    * Constructor for the scanner, initializes the private varaibles to
    * appropriate values.
    * @param ifs The file stream.
+   * @param symTab The symbol table
    */
-  Scanner(std::istream &ifs);
+  Scanner(std::istream &ifs, SymbolTable& symTab);
 
   /**
    * Destructor of rthe scanner.
@@ -31,6 +32,11 @@ class Scanner {
    * The file stream.
    */
   std::istream &fin;
+
+  /**
+   * The symbol table.
+   */
+  SymbolTable& symTab;
 
   /**
    * The current line the scanner is reading.
