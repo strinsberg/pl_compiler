@@ -22,6 +22,16 @@ bool BlockTable::define(int nid, Kind nkind, Type ntype, int nsize, int nval) {
   return false;
 }
 
+bool BlockTable::define(TableEntry& entry) {
+  if (!search(entry.id)) {
+    table.back()[entry.id] = {entry.id, entry.tkind, entry.ttype, entry.size, entry.val};
+    table.back()[entry.id].fields = entry.fields;
+    return true;
+  } else {
+    return false;
+  }
+}
+
 
 TableEntry BlockTable::find(int lookId, bool& error) {
   for(auto it = table.rbegin(); it != table.rend(); it++) {

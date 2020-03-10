@@ -55,19 +55,15 @@ void Parser::program(std::set<Symbol> stop) {
 }
 
 
-void Parser::block(std::set<Symbol> stop, std::vector<TableEntry> entries) {
+void Parser::block(std::set<Symbol> stop) {
   admin.debugInfo("block");
 
   blocks.pushBlock();
-  for(auto s: entries) {
-    if(!blocks.define(s.id, s.tkind, s.ttype, s.size, s.val)) {
-      admin.error("Mutiple definitions of the same varaible");
-    }
-  }
 
   match(Symbol::BEGIN, munion({stop, First.at(NT::DEF_PART), First.at(NT::STMT_PART), {Symbol::END}}));
   defPart(munion({stop, First.at(NT::STMT_PART), {Symbol::END}}));
   stmtPart(munion({stop, {Symbol::END}}));
+
   blocks.popBlock();
   match(Symbol::END, stop);
 }
@@ -131,8 +127,20 @@ void Parser::varDef(std::set<Symbol> stop) {
   if (look.getSymbol() == Symbol::RECORD) {
     match(Symbol::RECORD,munion({stop, {Symbol::END},
           First.at(NT::FIELD_LIST), First.at(NT::VAR_LIST)}));
-    varList(munion({stop, {Symbol::END}, First.at(NT::FIELD_LIST)}));
-    fieldList(munion({stop, {Symbol::END}}));
+
+    std::vector<int> idxs = varList(munion({stop, {Symbol::END}, First.at(NT::FIELD_LIST)}));
+    std::vector<TableEntry> fields;
+    fieldList(munion({stop, {Symbol::END}}), fields);
+
+    for (auto i : idxs) {
+      TableEntry record = TableEntry(i, Kind::K_RECORD, Type::UNIVERSAL, fields.size(), 0);
+      record.fields.pushBlock();
+      for (auto & f : fields) {
+        record.fields.define(f);
+      }
+      blocks.define(record);
+    }
+
     match(Symbol::END, stop);
   } else {
     Type type = typeSym(munion({stop, First.at(NT::VPRIME)}));
@@ -146,14 +154,9 @@ void Parser::procDef(std::set<Symbol> stop){
 
   match(Symbol::PROC, munion({stop, {Symbol::ID}, First.at(NT::PROC_BLOCK)}));
   int idx  = look.getVal();
-  if(!blocks.define(idx, Kind::PROCEDURE, Type::UNIVERSAL, 0, 0)) {
-    admin.error("Redeclaration of Procedure");
-  }
-
   match(Symbol::ID, munion({stop, First.at(NT::PROC_BLOCK)}));
-  procBlock(stop);
 
-  // Also add type info to the ID in symbol table
+  procBlock(stop, idx);
 }
 
 
@@ -248,17 +251,23 @@ void Parser::procStmt(std::set<Symbol> stop) {
 
   match(Symbol::CALL, munion({stop, {Symbol::ID, Symbol::LHRND, Symbol::RHRND},
         First.at(NT::ACT_PLIST)}));
+
+  int id = look.getVal();
   match(Symbol::ID, munion({stop, {Symbol::LHRND, Symbol::RHRND},
         First.at(NT::ACT_PLIST)}));
 
+  std::vector<Type> types;
+
   if(look.getSymbol() == Symbol::LHRND) {
     match(Symbol::LHRND, munion({stop, {Symbol::RHRND}, First.at(NT::ACT_PLIST)}));
-    actParamList(munion({stop, {Symbol::RHRND}}));
+    types = actParamList(munion({stop, {Symbol::RHRND}}));
     match(Symbol::RHRND, stop);
   }
-  // May need a new block in here for dealing with optional function params
-  // Or some way of adding them to the procedure token so that they can be
-  // accessed later?
+
+  // need to loop through types and compare them to the params in the procedure
+  // fields. The problem right now is that they do not match up for order???
+  // Maybe there should be a vector instead of a block table? If we returned
+  // pairs of ids and types we could probably match them up with find.
 }
 
 
@@ -692,45 +701,32 @@ void Parser::boolSym(std::set<Symbol> stop) {
 
 
 // Records Rules ///////////////////////////////////////////////////////////////
-void Parser::fieldList (std::set<Symbol> stop, std::vector<int> recordIds) {
+void Parser::fieldList (std::set<Symbol> stop, std::vector<TableEntry>& fields) {
   admin.debugInfo("fieldList");
 
-  std::vector<TableEntry> entries;
-
-  entries = recordSection(munion({stop, {Symbol::SEMI},  First.at(NT::REC_SEC)}));
-  // Add all entries to the records block table
-  for (auto idx : recordIds) {
-    block.addFields(idx, entries);
-  }
+  recordSection(munion({stop, {Symbol::SEMI},  First.at(NT::REC_SEC)}), fields);
 
   while(look.getSymbol() == Symbol::SEMI){
     match(Symbol::SEMI, munion({stop, First.at(NT::REC_SEC)}));
-    entries = recordSection(munion({stop, {Symbol::SEMI}}));
-
-    for (auto idx : recordIds) {
-      block.addFields(idx, entries);
-    }
+    recordSection(munion({stop, {Symbol::SEMI}}), fields);
   }
 }
 
-std::vector<TableEntry> Parser::recordSection(std::set<Symbol> stop) {
-  admin.debugInfo("recordSection");
 
-  std::vector<TableEntry> entries;
+void Parser::recordSection(std::set<Symbol> stop, std::vector<TableEntry>& fields) {
+  admin.debugInfo("recordSection");
 
   Type type = typeSym(munion({stop, {Symbol::ID, Symbol::COMMA}}));
   int id = look.getVal();
-  entries.emplace_back(id, Kind::VARIABLE, type, 0, 0);
-
+  fields.emplace_back(id, Kind::VARIABLE, type, 0, 0);
   match(Symbol::ID, munion({stop, {Symbol::ID, Symbol::COMMA}}));
+
   while(look.getSymbol() == Symbol::COMMA) {
     match(Symbol::COMMA, munion({stop, {Symbol::ID}}));
     id = look.getVal();
-    entries.emplace_back(id, Kind::VARIABLE, type, 0, 0);
+    fields.emplace_back(id, Kind::VARIABLE, type, 0, 0);
     match(Symbol::ID, munion({stop, {Symbol::COMMA}}));
   }
-
-  return entries;
 }
 
 // Parameter Rules /////////////////////////////////////////////////////////////
@@ -738,38 +734,46 @@ std::vector<TableEntry> Parser::recordSection(std::set<Symbol> stop) {
 // Somewhere in these functions we will need to deal with the parameters and
 // adding them to a symtab or to a proc token as fields
 
-void Parser::procBlock(std::set<Symbol> stop) {
+void Parser::procBlock(std::set<Symbol> stop, int id) {
   admin.debugInfo("procBlock");
 
-  std::vector<TableEntry> entries;
+  std::vector<TableEntry> params;
 
   if(look.getSymbol() == Symbol::LHRND){
     match(Symbol::LHRND, munion({stop, First.at(NT::FORM_PLIST),
       {Symbol::RHRND}, First.at(NT::BLOCK)}));
-    entries = formParamList(munion({stop, {Symbol::RHRND}, First.at(NT::BLOCK)}));
+    
+    formParamList(munion({stop, {Symbol::RHRND}, First.at(NT::BLOCK)}), params);
+
+    TableEntry procedure = TableEntry(id, Kind::PROCEDURE, Type::UNIVERSAL, params.size(), 0);
+    procedure.fields.pushBlock();
+    for (auto & p : params) {
+      procedure.fields.define(p);
+    }
+
+    if (!blocks.define(procedure)) {
+      admin.error("Redeclaration of Procedure");
+    }
+
     match(Symbol::RHRND, munion({stop, First.at(NT::BLOCK)}));
   }
-  block(stop, entries);
+
+  block(stop);
 }
 
-std::vector<TableEntry> Parser::formParamList(std::set<Symbol> stop) {
+void Parser::formParamList(std::set<Symbol> stop, std::vector<TableEntry>& params) {
   admin.debugInfo("formParamList");
 
-  std::vector<TableEntry> entries = paramDef(munion({stop, {Symbol::SEMI},  First.at(NT::PARAM_DEF)}));
+  paramDef(munion({stop, {Symbol::SEMI},  First.at(NT::PARAM_DEF)}), params);
   while(look.getSymbol() == Symbol::SEMI){
     match(Symbol::SEMI, munion({stop, First.at(NT::PARAM_DEF)}));
-    std::vector<TableEntry> newentries = paramDef(munion({stop, {Symbol::SEMI}}));
-    for(auto s: newentries) {
-      entries.push_back(s);
-    }
+    paramDef(munion({stop, {Symbol::SEMI}}), params);
   }
-  return entries;
 }
 
-std::vector<TableEntry> Parser::paramDef(std::set<Symbol> stop) {
+void Parser::paramDef(std::set<Symbol> stop, std::vector<TableEntry>& params) {
   admin.debugInfo("paramDef");
   Kind kind = Kind::CONSTANT;
-  std::vector<TableEntry> entries;
 
   if(look.getSymbol() == Symbol::VAR){
     match(Symbol::VAR, munion({stop, First.at(NT::TYPE_SYM),
@@ -780,32 +784,42 @@ std::vector<TableEntry> Parser::paramDef(std::set<Symbol> stop) {
   Type type = typeSym(munion({stop, First.at(NT::VAR_LIST)}));
   std::vector<int> idxs = varList(stop);
   for (auto i : idxs) {
-    TableEntry temp(i, kind, type, 0, 0);
-    entries.push_back(temp);
+    params.emplace_back(i, kind, type, 0, 0);
   }
-  return entries;
 }
 
-void Parser::actParamList(std::set<Symbol> stop) {
+
+std::vector<Type> Parser::actParamList(std::set<Symbol> stop) {
   admin.debugInfo("actParamList");
 
-  actParam(munion({stop, {Symbol::COMMA}, First.at(ACT_PARAM)}));
+  std::vector<Type> types;
+  Type t;
+
+  t = actParam(munion({stop, {Symbol::COMMA}, First.at(ACT_PARAM)}));
+  types.push_back(t);
   while(look.getSymbol() == Symbol::COMMA){
     match(Symbol::COMMA, munion({stop, First.at(NT::ACT_PARAM)}));
-    actParam(munion({stop, {Symbol::COMMA}}));
+    t = actParam(munion({stop, {Symbol::COMMA}}));
+    types.push_back(t);
   }
+
+  return types;
 }
 
-void Parser::actParam(std::set<Symbol> stop) {
+Type Parser::actParam(std::set<Symbol> stop) {
   admin.debugInfo("actParam");
 
+  Type type;
+
   if(First.at(NT::EXP_LIST).count(look.getSymbol()))
-    exprList(stop);
+    type = expr(stop);
   else if (First.at(NT::VACS_LIST).count(look.getSymbol()))
-    varAccess(stop);
+    type = varAccess(stop);
   else
     syntaxError(stop);
   syntaxCheck(stop);
+
+  return type;
 }
 
 // Selector Rules //////////////////////////////////////////////////////////////
@@ -825,6 +839,7 @@ Type Parser::selec(std::set<Symbol> stop, TableEntry entry) {
   return type;
 }
 
+
 Type Parser::fieldSelec(std::set<Symbol> stop, TableEntry entry) {
   admin.debugInfo("fieldSelec");
 
@@ -836,7 +851,6 @@ Type Parser::fieldSelec(std::set<Symbol> stop, TableEntry entry) {
     admin.error("Not a record");
     return Type::UNIVERSAL;
   }
-
 
   bool err;
   TableEntry field = entry.fields.find(idx, err);

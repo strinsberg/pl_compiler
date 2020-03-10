@@ -22,7 +22,7 @@ begin
   call makeCell(2.0, 1.0 + 6.8);
   call inc(d);
 
-  cell.v := true;
+  cell1.v := true;
   write cell1.x, cell1.y, cell1.v;
 
 end .
