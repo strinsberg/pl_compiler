@@ -26,6 +26,8 @@ The entire class contributed equally on this project. We discussed the design an
 	\item Administration.h
   \item Parser.h
   \item Grammar.h
+  \item Types.h
+  \item BlockTable.h
 \end{itemize}
 
 \subsection{Source Files}
@@ -36,15 +38,18 @@ The entire class contributed equally on this project. We discussed the design an
 	\item Scanner.cc
 	\item Administration.cc
   \item Parser.cc
+  \item BlockTable.cc
 \end{itemize}
 
 \subsection{Test Files}
 \begin{itemize}
-	\item officialTest.pl - A full test program from the Brinch Hansen textbook.
-  \item stmts.pl - Tests all of the statement rules.
+	\item search.pl - A full test program from the Brinch Hansen textbook.
   \item defs.pl - Test all of the defenition rules.
   \item simpleExps.pl - Tests all of the expression rules.
   \item errorTest.pl - Tests a number of different errors. Tries to ensure that the parser catches all errors and recovers to a stable state.
+  \item fibDP.pl - A program to calculate fibonacci numbers from 0-10. Tests recursion and procedure parameters.
+  \item typeErrors.pl - Check a few of the possible type errors.
+  \item testNew.pl - Sets up some records and procedures with parameters.
 \end{itemize}
 
 \section{Compiling and Running}
@@ -67,5 +72,6 @@ None. That we know about.
 
 \section{Time Spent}
 Hours spent on this project combine all group member contributions. Scanner 30 hrs. Parser 40 hours.
+Rule additions and Scope and Type checking 30 hours.
 
 \end{document}

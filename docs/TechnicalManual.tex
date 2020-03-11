@@ -16,8 +16,10 @@
 \section{Purpose of Software}
 The software we are building is a PL compiler that will compile files in the PL
 language so that they can be run on a stack machine. The current phase is the
-implementation of the Parser with error checking and recovery.
+implementation of the Parser with scope and type checking. We also added some new rules
+to allow the use of record types and passing parameters to procedures.
 This program will take text files and parse them to see if they are syntactically correct
+and properly typed and scoped
 pl programs. Currently it outputs the tokens that were parsed to a file and identifies
 syntax errors. The scanner built in the previous portion of the project is used to
 collect tokens and pass them to the scanner. Current test files are available to
@@ -25,12 +27,15 @@ test each function in the recursive decent implementation of the parser. They al
 several different errors to ensure proper error recovery. Debugging output can also be
 enabled to see what recursive descent function has been called and when tokens are matched.
 
+This phase concludes the front end phase for the parser. In the next phase we will be moving on
+to the code generation so that our programs are actually compiled and can be run.
+
 
 \section{Design}
 This section decribes each class, its function, and how it connects to other classes.
 More detailed documentation of the specific functions and members of each class
 is available in the \textbf{ReferenceDoc.pdf}. The \textbf{New Additions} start in the
-Administration section.
+Parser section.
 
 \subsection{Scanner}
 The Scanner class is the main class for this part of the project. It is responsible
@@ -96,6 +101,55 @@ If the parser is free of errors there is currently no output. Debugging informat
 the parser functions that are called and what tokens are matched. When errors are encountered
 it is possible to see what rule was being parsed.
 
+\textbf{NEW} The parser now has rules for record types and parameters with procedures. Each of these
+required a few new rules to be added to the parser. Records need their own parsing to
+allow variables to be declared as a record type, as well as having the records fields
+specified. For record fields to be accessed we had to also make some changes to the
+way variables are accessed. Now if a variable is followed by a dot then it means the
+nest identifier is a field of that record. With scope and type checking this adds the need
+to ensure that a field is actually a member of the record being accessed. If it is not an
+error is thrown. There is more about this aspect of the parser below.
+
+Procedures now have parameters. They are able to take a list of variables of a given type
+and work a lot like variables in C/C++. If a parameter definition is preceded by "var" it
+means that the argument is passed by reference, otherwise it will be passed by copy.
+Parameter lists now need to be kept with the procedure name in some way for scope and
+type checking. This will ensure that the inside of the procedure can access the parameters
+and that when the procedure is called we can check the number and type of arguments passed.
+
+The scope and type checking phase adds the necessary code to ensure that variable types and
+scope are used properly. We implemented this with a data structure called a BlockTable.
+The BlockTable is a stack of maps that contain TableEntry objects. A Table entry object holds
+type information and symbol table ids for an identifier. Each level of the stack represents a
+level of scope. So when entering a new scope we push a new level and when leaving a scope
+we pop the top level. We have methods that search for an identifier id in the top level
+only. This will help us to see if a new variable is a redeclaration in the current scope.
+We have a method that searches the whole block table at every level from top to bottom to
+find the most recent defenition of a variable if it does not exist in the current scope.
+If the identifier is not found it was not declared and cannot be used.
+
+For type checking we ensure that no variable can be assigned a type that does not match it.
+So a float cannot take a boolean or integer value. In expressions types cannot be
+mixed and matched. For example trying to add a float and an integer. This type of
+testing can also be done in if and do statements to make sure that the expression
+given in the guard evaluates to a boolean. We do not convert numeric types into Booleans
+like in C/C++. Array access must be done with an integer. Parameter calls must have
+the appropriate number of arguments and each positional argument must be the correct.
+We also need to make sure that if an parameter is pass by reference that the given value
+is not a constant or a literal. However, with all the rule updates this phase was a bit
+more work that expected and we did not manage to implement this check. One of our error tests
+has a call to produce this error and we can add the implementation and verify its
+correctness at the beginning of the next phase.
+
+Type and scope errors do not need to be recovered from in the same way as syntax
+errors. If these errors are encountered they are identified to the user. Because
+there is only one error per line if there are multiple mistakes on a line only one
+will be identified. Also, often if a syntax error is present at the same point in the
+code it is usually the error printed.
+
+At this point the front end portion of the parser is finished and the next phase will be to
+add code generation.
+
 \subsection{Grammar}
 In order to properly perform error recovery the parser must know what terminal symbols are expected
 to put a the parser back in a stable state. The set of expected tokens is called a stopset.
@@ -107,5 +161,174 @@ This map allows us build stopsets easily by unioning these sets together and pas
 Along with this map there are some helper functions that allow easy union a set and easily check a set for membership.
 The membership function is not stricly necessary, and is not being used yet, but we hope it will
 improve the readability when checking to see if a symbol is in a stopset.
+
+\subsubsection{BNF}
+
+\begin{verbatim}
+# Names for rules are abbreviated #
+
+PROGRAM     := BLOCK .
+BLOCK       := begin DEF_PART STMT_PART end
+DEF_PART    := { DEF ; }
+DEF         := CONST_DEF |
+              VAR_DEF |
+              PROC_DEF
+CONST_DEF   := const CONST_NAME = CONST
+VAR_DEF     := TYPE_SYM VPRIME |
+        record ID FIELD_LIST end
+VPRIME      := VAR_LIST |
+              array VAR_LIST '[' CONST ']'
+FIELD_LIST  := REC_SEC { ; REC_SEC }
+REC_SEC     := TYPE_SYM FIELD_NAME { , FIELD_NAME }
+TYPE_SYM    := integer |
+              Boolean |
+              float
+VAR_LIST    := VAR_NAME { , VAR_NAME }
+PROC_DEF    := proc PROC_NAME PROC_BLOCK
+PROC_BLOCK  := [ ( FORM_PLIST ) ] BLOCK
+FORM_PLIST  := PARAM_DEF { ; PARAM_DEF }
+PARAM_DEF   := [ var ] TYPE_SYM VAR_LIST
+STMT_PART   := { STMT ; }
+STMT        := EMPTY_STMT |
+              READ_STMT |
+              WRITE_STMT |
+              ASSGN_STMT |
+              PROC_STMT |
+              IF_STMT |
+              DO_STMT |
+EMPTY_STMT  := skip
+READ_STMT   := read VACS_LIST
+VACS_LIST   := VACS { , VACS }
+WRITE_STMT  := write EXPR_LIST
+EXPR_LIST   := EXPR { , EXPR }
+ASGN_STMT   := VACS_LIST ':=' EXPR_LIST
+PROC_STMT   := call PROC_NAME [ ( ACT_PLIST ) ]
+ACT_PLIST   := ACT_PARAM { , ACT_PARAM }
+ACT_PARAM   := EXPR_LIST | VACS_LIST
+IF_STMT     := if GRCOM_LIST fi
+DO_STMT     := do GRCOM_LIST od
+GRCOM_LIST  := GRCOM { '[]' GRCOM }
+GRCOM       := EXPR -> STMT_PART
+EXPR        := PRIM_EXPR { PRIM_OP PRIM_EXPR }
+PRIM_OP     := & | '|'
+PRIM_EXPR   := SIMP_EXPR [ REL_OP SIMP_EXPR ]
+REL_OP      := < | = | >
+SIMP_EXPR   := [ - ] TERM { ADD_OP TERM }
+ADD_OP      := + | -
+TERM        := FACTOR { MULT_OP FACTOR }
+MULT_OP     := * | / | \
+FACTOR      := NUM | BOOL_SYM |
+              VACS |
+              ( EXPR ) |
+              ~ FACTOR
+VACS        := VAR_NAME SELECT
+SELECT      := IDX_SEL | FIELD_SEL
+IDX_SEL     := '[' EXPR ']'
+FIELD_SEL   := . FIELD_NAME
+CONST       := NUM CPRIME | BOOL_SYM | CONST_NAME
+CPRIME      := . NUM | epsilon
+NUM         := DIGIT { DIGIT }
+BOOL_SYM    := false | true
+NAME        := LETTER { LETTER | DIGIT | _ }   // ID
+LETTER      := a - z | A - Z
+DIGIT       := 0 - 9
+\end{verbatim}
+
+\subsubsection{First Sets}
+
+\begin{verbatim}
+NAME(ID)    [name]
+BOOL_SYM    [false, true]
+NUM         [num]
+CONST       [num, false, true, name]
+FIELD_SEL   [.]
+IDX_SEL     [ '[' ]
+SELECT      [ '[', .]
+VACS        [name]
+FACTOR      [name, false, true, num, '(', '~']
+MULT_OP     ['*', '/', '\']
+TERM        [num, false, true, name, '(', '~']
+ADD_OP      ['+', '-']
+SIMP_EXP    [num, name, false, true, '-', '(', '~']
+REL_OP      ['<', '=', '>']
+PRIM_EXP    [num, name, false, true, '-', '(', '~']
+PRIM_OP     ['&', '|']
+EXP         [num, name, false, true, '-', '(', '~']
+GRCOM       [num, name, false, true, '-', '(', '~']
+GRCOM_LIST  [num, name, false, true, '-', '(', '~']
+DO_STMT     [do]
+IF_STMT     [if]
+ACT_PARAM   [num, name, true, false, '=', '(', '~']
+ACT_PLIST   [num, name, true, false, '=', '(', '~']
+PROC_STMT   [call]
+VACS_LIST   [name]
+ASC_STMT    [name]
+EXP_LIST    [num, name, true, false, '=', '(', '~']
+WRITE       [write]
+READ        [read]
+EMPTY       [skip]
+STMT        [skip, read, write, call, if, do, name]
+STMT_PART   [epsilon, skip, read, write, call, if, do, name]
+PARAM_DEF   [var, integer, Boolean, float]
+FORM_PLIST  [var, integer, Boolean, float]
+PROC_BLOCK  [ '(' , begin]
+PROC_DEF    [proc]
+VAR_LIST    [name]
+TYPE_SYM    [integer, Boolean, float]
+REC_SEC     [integer, Boolean, float]
+CONST_DEF   [const]
+DEF         [const, proc, integer, Boolean, float, record]
+VAR_DEF     [integer, Boolean, float, record]
+DEF_PART    [epsilon, const, proc, integer, Boolean, float, record]
+BLOCK       [begin]
+PROGRAM     [begin]
+VPRIME      [name, array]
+\end{verbatim}
+
+\subsubsection{Follow Sets}
+\begin{verbatim}
+# Not fully updated for new rules #
+
+BLOCK       ['.']
+DEF_PART    [end, skip, read, write, name, call, if, do]
+STMT_PART   [end, fi, od, '[]']
+DEF         [';']
+CONST_DEF   [';']
+VAR_DEF     [';']
+PROC_DEF    [';']
+CONST_NAME  ['=']
+TYPE_SYM    [name, array]
+VAR_LIST    [';', ']']
+VAR_NAME    [';', '[', ',']
+PROC_NAME   [begin]
+STMT        [';']
+EMPTY_STMT  [';']
+READ_STMT   [';']
+WRITE_STMT  [';']
+ASSGN_STMT  [';']
+PROC_STMT   [';']
+IF_STMT     [';']
+DO_STMT     [';']
+VAC_LIST    [';', ':=']
+VACS        [',', ';', '->', ')', ']', '&', '|', '<', '=', '>', '+', '-', '*', '/', '\']
+EXP_LIST    [';']
+EXP         [',', ';', '->', ')', ']']
+PROC_NAME   [';']
+GRCOM_LIST  [fi, od]
+GRCOM       [fi, od, '[]']
+PRIM_EXP    [',', ';', '->', ')', ']', '&', '|']
+PRIME_OP    ['-', num, false, true, name, '(', '~']
+SIMP_EXP    [',', ';', '->', ')', ']', '&', '|', '<', '=', '>']
+REL_OP      ['-', num, false, true, name, '(', '~']
+TERM        [',', ';', '->', ')', ']', '&', '|', '<', '=', '>', '+', '-']
+ADD_OP      [num, name, false, true, '(', '~']
+FACTOR      [',', ';', '->', ')', ']', '&', '|', '<', '=', '>', '+', '-', '*', '/', '\']
+MULT_OP     [num, name, false, true, '(', '~']
+CONST       [';', ']']
+VARNAME     [',', ';', '->', ')', '[', ']', '&', '|', '<', '=', '>', '+', '-', '*', '/', '\']
+NUM         [',', ';', '->', ')', ']', '&', '|', '<', '=', '>', '+', '-', '*', '/', '\']
+BOOL_SYM    [',', ';', '->', ')', ']', '&', '|', '<', '=', '>', '+', '-', '*', '/', '\']
+CONST_NAME  [',', ';', '->', ')', ']', '&', '|', '<', '=', '>', '+', '-', '*', '/', '\']
+\end{verbatim}
 
 \end{document}
