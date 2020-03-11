@@ -63,7 +63,8 @@ class Parser {
   /**
    * Parses a block from the stream of tokens.
    */
-  void block(std::set<Symbol> stop);
+  void block(std::set<Symbol> stop,
+             std::vector<TableEntry> entries = std::vector<TableEntry>());
 
   /**
    * Parses a definition part from the stream of tokens.

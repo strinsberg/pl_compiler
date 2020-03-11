@@ -23,6 +23,7 @@ private:
   int blockLevel;
 };
 
+// This needs to be a class now
 struct TableEntry {
   TableEntry() : id(-1), tkind(Kind::UNDEFINED), ttype(Type::UNIVERSAL),
                   size(0), val(0) {}
@@ -34,6 +35,15 @@ struct TableEntry {
   int size;
   int val;
   BlockTable fields;
+
+  std::vector<TableEntry> entries;
+  int findEntry(TableEntry& entry) {
+    for (int i = 0; i < (int)entries.size(); i++) {
+      if (entry.id == entries[i].id)
+        return i;
+    }
+    return -1;
+  }
 };
 
 #endif

@@ -55,10 +55,14 @@ void Parser::program(std::set<Symbol> stop) {
 }
 
 
-void Parser::block(std::set<Symbol> stop) {
+void Parser::block(std::set<Symbol> stop, std::vector<TableEntry> entries) {
   admin.debugInfo("block");
 
   blocks.pushBlock();
+  for (auto & e : entries) {
+    if (!blocks.define(e))
+      admin.error("Multiple definitions of a variable");
+  }
 
   match(Symbol::BEGIN, munion({stop, First.at(NT::DEF_PART), First.at(NT::STMT_PART), {Symbol::END}}));
   defPart(munion({stop, First.at(NT::STMT_PART), {Symbol::END}}));
@@ -102,7 +106,6 @@ void Parser::def(std::set<Symbol> stop) {
     syntaxError(stop);
   else
     syntaxCheck(stop);
-
 }
 
 
@@ -115,8 +118,6 @@ void Parser::constDef(std::set<Symbol> stop) {
    match(Symbol::EQUAL, munion({stop, First.at(NT::CONST_NT)}));
    Type type = constant(stop);
 
-   // May need to deal with the idx if there is a syntax error and the
-   // look token is not an ID token at all
    blocks.define(idx, Kind::CONSTANT, type, 0, 0);  // Set val properly later
 }
 
@@ -731,9 +732,6 @@ void Parser::recordSection(std::set<Symbol> stop, std::vector<TableEntry>& field
 
 // Parameter Rules /////////////////////////////////////////////////////////////
 
-// Somewhere in these functions we will need to deal with the parameters and
-// adding them to a symtab or to a proc token as fields
-
 void Parser::procBlock(std::set<Symbol> stop, int id) {
   admin.debugInfo("procBlock");
 
@@ -741,7 +739,7 @@ void Parser::procBlock(std::set<Symbol> stop, int id) {
 
   if(look.getSymbol() == Symbol::LHRND){
     match(Symbol::LHRND, munion({stop, First.at(NT::FORM_PLIST),
-      {Symbol::RHRND}, First.at(NT::BLOCK)}));
+         {Symbol::RHRND}, First.at(NT::BLOCK)}));
     
     formParamList(munion({stop, {Symbol::RHRND}, First.at(NT::BLOCK)}), params);
 
@@ -758,7 +756,7 @@ void Parser::procBlock(std::set<Symbol> stop, int id) {
     match(Symbol::RHRND, munion({stop, First.at(NT::BLOCK)}));
   }
 
-  block(stop);
+  block(stop, params);
 }
 
 void Parser::formParamList(std::set<Symbol> stop, std::vector<TableEntry>& params) {
