@@ -22,18 +22,21 @@ class Token {
    */
   Token(Symbol sym, std::string lexeme = "", int val = -1);
 
+  /**
+   * Copy Constructor
+   */
   Token(const Token& tok);
 
   /**
    * Returns the symbol.
-   */ 
+   */
   Symbol getSymbol() const;
-  
+
   /**
    * Returns the lexeme.
    */
   std::string getLexeme() const;
-  
+
   /**
    * Returns the value.
    */
