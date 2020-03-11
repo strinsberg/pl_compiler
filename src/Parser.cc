@@ -156,8 +156,6 @@ void Parser::procDef(std::set<Symbol> stop){
   int id  = look.getVal();
   match(Symbol::ID, munion({stop, First.at(NT::PROC_BLOCK)}));
 
-  admin.debugInfo("+++++++++++++++++++++++++++ " + std::to_string(id));
-
   procBlock(stop, id);
 }
 
@@ -267,7 +265,6 @@ void Parser::procStmt(std::set<Symbol> stop) {
 
   bool err;
   TableEntry proc = blocks.find(id, err);
-  admin.debugInfo("============================== " + std::to_string(id));
   if (err) {
     admin.error("Procedure undeclared");
   } else if (proc.entries.size() != types.size()) {
@@ -482,7 +479,6 @@ Type Parser::simpleExpr(std::set<Symbol> stop) {
     }
   }
   return type;
-  // May need to return token info so the results of the expression can be used
 }
 
 
@@ -761,7 +757,6 @@ void Parser::procBlock(std::set<Symbol> stop, int id) {
         admin.error("Multiple definitions of a parameter");
     }
 
-
     match(Symbol::RHRND, munion({stop, First.at(NT::BLOCK)}));
   }
 
@@ -772,6 +767,7 @@ void Parser::procBlock(std::set<Symbol> stop, int id) {
   block(stop, params);
 }
 
+
 void Parser::formParamList(std::set<Symbol> stop, std::vector<TableEntry>& params) {
   admin.debugInfo("formParamList");
 
@@ -781,6 +777,7 @@ void Parser::formParamList(std::set<Symbol> stop, std::vector<TableEntry>& param
     paramDef(munion({stop, {Symbol::SEMI}}), params);
   }
 }
+
 
 void Parser::paramDef(std::set<Symbol> stop, std::vector<TableEntry>& params) {
   admin.debugInfo("paramDef");
@@ -817,6 +814,7 @@ std::vector<Type> Parser::actParamList(std::set<Symbol> stop) {
   return types;
 }
 
+
 Type Parser::actParam(std::set<Symbol> stop) {
   admin.debugInfo("actParam");
 
@@ -832,6 +830,7 @@ Type Parser::actParam(std::set<Symbol> stop) {
 
   return type;
 }
+
 
 // Selector Rules //////////////////////////////////////////////////////////////
 

@@ -52,7 +52,6 @@ bool BlockTable::pushBlock() {
     return true;
   }
   return false;
-
 }
 
 
