@@ -135,9 +135,8 @@ void Parser::varDef(std::set<Symbol> stop) {
 
     for (auto i : idxs) {
       TableEntry record = TableEntry(i, Kind::K_RECORD, Type::UNIVERSAL, fields.size(), 0);
-      record.fields.pushBlock();
       for (auto & f : fields) {
-        record.fields.define(f);
+        record.entries.push_back(f);
       }
       blocks.define(record);
     }
@@ -154,10 +153,12 @@ void Parser::procDef(std::set<Symbol> stop){
   admin.debugInfo("procDef");
 
   match(Symbol::PROC, munion({stop, {Symbol::ID}, First.at(NT::PROC_BLOCK)}));
-  int idx  = look.getVal();
+  int id  = look.getVal();
   match(Symbol::ID, munion({stop, First.at(NT::PROC_BLOCK)}));
 
-  procBlock(stop, idx);
+  admin.debugInfo("+++++++++++++++++++++++++++ " + std::to_string(id));
+
+  procBlock(stop, id);
 }
 
 
@@ -239,7 +240,6 @@ void Parser::assignStmt(std::set<Symbol> stop) {
     admin.error("Number of variables does not match number of expressions");
   } else {
     for (size_t i = 0; i < vars.size(); i++) {
-      admin.debugInfo(TypeToString.at(vars[i]) + " " + TypeToString.at(exprs[i]));
       if (vars[i] != exprs[i])
         admin.error("Type mismatch in assignment position " + std::to_string(i+1));
     }
@@ -265,10 +265,19 @@ void Parser::procStmt(std::set<Symbol> stop) {
     match(Symbol::RHRND, stop);
   }
 
-  // need to loop through types and compare them to the params in the procedure
-  // fields. The problem right now is that they do not match up for order???
-  // Maybe there should be a vector instead of a block table? If we returned
-  // pairs of ids and types we could probably match them up with find.
+  bool err;
+  TableEntry proc = blocks.find(id, err);
+  admin.debugInfo("============================== " + std::to_string(id));
+  if (err) {
+    admin.error("Procedure undeclared");
+  } else if (proc.entries.size() != types.size()) {
+    admin.error("Incorrect number of parameters");
+  } else {
+    for (size_t i = 0; i < types.size(); i++) {
+      if (proc.entries[i].ttype != types[i])
+        admin.error("Param types do not match. pos: " + std::to_string(i));
+    }
+  }
 }
 
 
@@ -736,6 +745,7 @@ void Parser::procBlock(std::set<Symbol> stop, int id) {
   admin.debugInfo("procBlock");
 
   std::vector<TableEntry> params;
+  TableEntry procedure = TableEntry(id, Kind::PROCEDURE, Type::UNIVERSAL, 0, 0);
 
   if(look.getSymbol() == Symbol::LHRND){
     match(Symbol::LHRND, munion({stop, First.at(NT::FORM_PLIST),
@@ -743,17 +753,20 @@ void Parser::procBlock(std::set<Symbol> stop, int id) {
     
     formParamList(munion({stop, {Symbol::RHRND}, First.at(NT::BLOCK)}), params);
 
-    TableEntry procedure = TableEntry(id, Kind::PROCEDURE, Type::UNIVERSAL, params.size(), 0);
-    procedure.fields.pushBlock();
+    procedure.size = params.size();
     for (auto & p : params) {
-      procedure.fields.define(p);
+      if (procedure.findEntry(p) == -1)
+        procedure.entries.push_back(p);
+      else
+        admin.error("Multiple definitions of a parameter");
     }
 
-    if (!blocks.define(procedure)) {
-      admin.error("Redeclaration of Procedure");
-    }
 
     match(Symbol::RHRND, munion({stop, First.at(NT::BLOCK)}));
+  }
+
+  if (!blocks.define(procedure)) {
+    admin.error("Redeclaration of Procedure");
   }
 
   block(stop, params);
@@ -850,12 +863,11 @@ Type Parser::fieldSelec(std::set<Symbol> stop, TableEntry entry) {
     return Type::UNIVERSAL;
   }
 
-  bool err;
-  TableEntry field = entry.fields.find(idx, err);
-  if (err) {
+  int pos = entry.findEntry(idx);
+  if (pos == -1) {
     admin.error("Not a valid field");
     return Type::UNIVERSAL;
   } else {
-    return field.ttype;
+    return entry.entries[pos].ttype;
   }
 }

@@ -20,6 +20,7 @@ begin
   b, c := -2, 3;
   a := (b * c) - 5 \ 2 / 4;
   do ~ (i>n) -> read A[i]; i := i + 1; od;
+
   $Test Search:
   read x;
   do ~(x = 0) ->

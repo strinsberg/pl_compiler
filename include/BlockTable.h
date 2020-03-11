@@ -15,7 +15,6 @@ public:
   bool define(int nid, Kind nkind, Type ntype, int nsize, int nval);
   bool define(TableEntry& entry);
   TableEntry find(int lookId, bool& error);
-  bool addFields(int idx, std::vector<TableEntry> fields);
   bool pushBlock();
   void popBlock();
 private:
@@ -34,12 +33,12 @@ struct TableEntry {
   Type ttype;
   int size;
   int val;
-  BlockTable fields;
 
   std::vector<TableEntry> entries;
-  int findEntry(TableEntry& entry) {
+  int findEntry(TableEntry& entry) {return findEntry(entry.id);}
+  int findEntry(int id) {
     for (int i = 0; i < (int)entries.size(); i++) {
-      if (entry.id == entries[i].id)
+      if (id == entries[i].id)
         return i;
     }
     return -1;

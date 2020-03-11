@@ -19,7 +19,7 @@ begin
   end;
 
   d := 0;
-  call makeCell(2.0, 1.0 + 6.8);
+  call makeCells(2.0, 1.0 + 6.8);
   call inc(d);
 
   cell1.v := true;
