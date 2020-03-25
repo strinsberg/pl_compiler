@@ -56,7 +56,13 @@ public:
      * Removes the highest level (most recent) block of the blocktable
      */
   void popBlock();
-private:
+
+  /**
+   * The current block level.
+   */
+  int level() {return blockLevel;}
+
+ private:
 
     /**
      * Vector of maps storing the table entries for a block (the block table)

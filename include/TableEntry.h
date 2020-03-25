@@ -21,7 +21,8 @@ public:
    * @param nval The value of the table entry
    */
   TableEntry(int nid, Kind nkind, Type ntype, int nsize, int nval) :
-              id(nid), tkind(nkind), ttype(ntype), size(nsize), val(nval) {}
+             id(nid), tkind(nkind), ttype(ntype), size(nsize), val(nval),
+             level(0), displace(0) {}
 
   /**
    * Check if the table entry input is a param or field of a procedure or record
@@ -71,6 +72,9 @@ public:
      * The field/params of a record/procedure respectively
      */
   std::vector<TableEntry> entries;
+
+  int level;
+  int displacement;
 };
 
 #endif

@@ -49,7 +49,7 @@ void Parser::syntaxCheck(std::set<Symbol> stop) {
 
 void Parser::program(std::set<Symbol> stop) {
   admin.debugInfo("program");
-  admin.emit("PROGRAM");
+  admin.emit("PROG");
 
   block(munion({stop, {Symbol::DOT}}));
   match(Symbol::DOT, stop);
@@ -374,7 +374,6 @@ std::vector<int> Parser::varList(std::set<Symbol> stop) {
 
 Type Parser::varAccess(std::set<Symbol> stop) {
   admin.debugInfo("varAccess");
-  admin.emit("VARIABLE");
 
   bool err;
   TableEntry entry = blocks.find(look.getVal(), err);
@@ -389,6 +388,8 @@ Type Parser::varAccess(std::set<Symbol> stop) {
   } else {
     return entry.ttype;
   }
+
+  admin.emit("VARIABLE", blocks.level() - entry.level, entry.displace);
 }
 
 
@@ -402,7 +403,7 @@ Type Parser::idxSelect(std::set<Symbol> stop, TableEntry entry) {
 
   // need to bounds check once expressions return proper values
   match(Symbol::RHSQR, stop);
-  admin.emit("INDEX");
+  admin.emit("INDEX", entry.size, admin.currentLine());
   return entry.ttype;
 }
 
@@ -590,10 +591,10 @@ void Parser::primeOp(std::set<Symbol> stop) {
 
   if(look.getSymbol() == Symbol::AMP) {
     match(Symbol::AMP, stop);
-    admin.debug("AND");
+    admin.emit("AND");
   } else if (look.getSymbol() == Symbol::BAR){
     match(Symbol::BAR, stop);
-    admin.debug("OR");
+    admin.emit("OR");
   } else {
     syntaxError(stop);
   }
@@ -606,13 +607,13 @@ void Parser::relOp(std::set<Symbol> stop) {
 
   if(look.getSymbol() == Symbol::LESS) {
     match(Symbol::LESS, stop);
-    admin.debug("LESS");
+    admin.emit("LESS");
   } else if (look.getSymbol() == Symbol::EQUAL) {
     match(Symbol::EQUAL, stop);
-    admin.debug("EQUAL");
+    admin.emit("EQUAL");
   } else if (look.getSymbol() == Symbol::GREAT) {
     match(Symbol::GREAT, stop);
-    admin.debug("GREAT");
+    admin.emit("GREAT");
   } else {
     syntaxError(stop);
   }
@@ -625,10 +626,10 @@ void Parser::addOp(std::set<Symbol> stop) {
 
   if (look.getSymbol() == Symbol::PLUS) {
     match(Symbol::PLUS, stop);
-    admin.debug("ADD");
+    admin.emit("ADD");
   } else if (look.getSymbol() == Symbol::MINUS) {
     match(Symbol::MINUS, stop);
-    admin.debug("SUBTRACT");
+    admin.emit("SUBTRACT");
   } else {
     syntaxError(stop);  // epsilon is not possible
   }
@@ -641,13 +642,13 @@ void Parser::multOp(std::set<Symbol> stop) {
 
   if (look.getSymbol() == Symbol::TIMES) {
     match(Symbol::TIMES, stop);
-    admin.debug("MULTIPLY");
+    admin.emit("MULTIPLY");
   } else if (look.getSymbol() == Symbol::FSLASH) {
     match(Symbol::FSLASH, stop);
-    admin.debug("DIVIDE");
+    admin.emit("DIVIDE");
   } else if (look.getSymbol() == Symbol::BSLASH) {
     match(Symbol::BSLASH, stop);
-    admin.debug("MODULO");
+    admin.emit("MODULO");
   } else {
     syntaxError(stop);  // epsilon is not possible
   }

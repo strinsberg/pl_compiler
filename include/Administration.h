@@ -41,7 +41,7 @@ class Administration {
   /**
    * Emit assembly code to the output file
    */
-  void emit(std::string text);
+  void emit(std::string text, int var, int start);
 
  private:
   /**

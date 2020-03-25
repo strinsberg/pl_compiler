@@ -16,6 +16,8 @@ bool BlockTable::search(int lookId) {
 bool BlockTable::define(int nid, Kind nkind, Type ntype, int nsize, int nval) {
   if(!search(nid)){
     TableEntry newTE = TableEntry(nid, nkind, ntype, nsize, nval);
+    newTE.level = level();
+    //newTE.displace = ???
     table.back()[nid] = newTE;
     return true;
   }

@@ -67,6 +67,6 @@ void Administration::checkError(Token ntoken){
 }
 
 
-void Administration::emit(std::string text) {
+void Administration::emit(std::string text, int var, int start) {
   fout << text << std::endl;
 }
