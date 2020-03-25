@@ -541,6 +541,7 @@ Type Parser::factor(std::set<Symbol> stop) {
   bool err = false;
   if(look.getSymbol() == Symbol::NUM) {
     type = constant(stop);
+    admin.emit("CONSTANT");
   } else if (look.getSymbol() == Symbol::TRUE
       or look.getSymbol() == Symbol::FALSE) {
     boolSym(stop);
@@ -552,8 +553,10 @@ Type Parser::factor(std::set<Symbol> stop) {
   } else if (look.getSymbol() == Symbol::TILD) {
     match(Symbol::TILD, munion({stop, First.at(NT::FACTOR)}));
     type = factor(stop);
+    admin.emit("NOT");
   } else if (First.at(NT::VACS).count(look.getSymbol())) {
     type = varAccess(stop);
+    admin.emit("VALUE");
   } else {
     err = true;
   }
