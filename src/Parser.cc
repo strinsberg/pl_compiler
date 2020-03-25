@@ -49,9 +49,11 @@ void Parser::syntaxCheck(std::set<Symbol> stop) {
 
 void Parser::program(std::set<Symbol> stop) {
   admin.debugInfo("program");
+  admin.emit("PROGRAM");
 
   block(munion({stop, {Symbol::DOT}}));
   match(Symbol::DOT, stop);
+  admin.emit("ENDPROG");
 }
 
 
@@ -151,12 +153,14 @@ void Parser::varDef(std::set<Symbol> stop) {
 
 void Parser::procDef(std::set<Symbol> stop){
   admin.debugInfo("procDef");
+  admin.emit("PROC");
 
   match(Symbol::PROC, munion({stop, {Symbol::ID}, First.at(NT::PROC_BLOCK)}));
   int id  = look.getVal();
   match(Symbol::ID, munion({stop, First.at(NT::PROC_BLOCK)}));
 
   procBlock(stop, id);
+  admin.emit("ENDPROC");
 }
 
 
@@ -365,6 +369,7 @@ std::vector<int> Parser::varList(std::set<Symbol> stop) {
 
 Type Parser::varAccess(std::set<Symbol> stop) {
   admin.debugInfo("varAccess");
+  admin.emit("VARIABLE");
 
   bool err;
   TableEntry entry = blocks.find(look.getVal(), err);
@@ -392,6 +397,7 @@ Type Parser::idxSelect(std::set<Symbol> stop, TableEntry entry) {
 
   // need to bounds check once expressions return proper values
   match(Symbol::RHSQR, stop);
+  admin.emit("INDEX");
   return entry.ttype;
 }
 
