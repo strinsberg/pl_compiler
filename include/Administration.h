@@ -19,6 +19,8 @@ class Administration {
     */
   Administration(std::ostream& fout, Scanner& sc, bool debug = false);
 
+  int curLine() {return linenum;}
+
   Token getToken();
 
   /**
