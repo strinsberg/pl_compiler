@@ -6,12 +6,19 @@
 #include "Grammar.h"
 
 
-Parser::Parser(Administration& a) : admin(a) {}
+Parser::Parser(Administration& a) : admin(a) {
+  label = 0;
+}
 
 
 void Parser::parse() {
   look = admin.getToken();
   program( std::set<Symbol>{Symbol::ENDFILE} );
+}
+
+int Parser::NewLabel() {
+  lablel++;
+  return label;
 }
 
 
@@ -57,7 +64,8 @@ void Parser::program(std::set<Symbol> stop) {
 }
 
 
-void Parser::block(std::set<Symbol> stop, std::vector<TableEntry> entries) {
+void Parser::block(std::set<Symbol> stop, std::vector<TableEntry> entries,
+                    int startlabel, int varlabel) {
   admin.debugInfo("block");
 
   blocks.pushBlock();
@@ -68,6 +76,8 @@ void Parser::block(std::set<Symbol> stop, std::vector<TableEntry> entries) {
 
   match(Symbol::BEGIN, munion({stop, First.at(NT::DEF_PART), First.at(NT::STMT_PART), {Symbol::END}}));
   defPart(munion({stop, First.at(NT::STMT_PART), {Symbol::END}}));
+  admin.emit("DEFARG", varlabel, varlength);
+  admin.emit("DEFADDR", startlabel);
   stmtPart(munion({stop, {Symbol::END}}));
 
   blocks.popBlock();
@@ -639,15 +649,17 @@ void Parser::multOp(std::set<Symbol> stop) {
 
 // Symbol Rules //////////////////////////////////////////////////////////////
 
-Type Parser::constant(std::set<Symbol> stop) {
+std::pair<Type, int> Parser::constant(std::set<Symbol> stop) {
   admin.debugInfo("constant");
   Type type = Type::UNIVERSAL;
+  int value = 0;
 
   if (look.getSymbol() == Symbol::NUM) {
     match(Symbol::NUM, munion({stop, First.at(NT::CPRIME)}));
     type = cPrime(stop);
+    value = look.getVal();
   } else if (First.at(NT::BOOL_SYM).count(look.getSymbol())) {
-    boolSym(stop);
+    value = boolSym(stop);
     type = Type::BOOLEAN;
   } else if (look.getSymbol() == Symbol::ID) {
     bool err = false;
@@ -655,14 +667,22 @@ Type Parser::constant(std::set<Symbol> stop) {
     if (err) {
       admin.error(look.getLexeme() + " not declared");
     } else {
-      type = ent.ttype;
+      if(ent.tkind == Kind::CONSTANT || ent.tkind == Kind::UNDEFINED){
+        value  = ent.val;
+        type = ent.ttype;
+      } else {
+        admin.error("Constant expected but not found");
+        value = 0;
+        type = Type::Universal;
+      }
     }
     match(Symbol::ID, stop);
   } else {
     syntaxError(stop);  // epsilon is guaranteed not in any of these
   }
   syntaxCheck(stop);
-  return type;
+  std::pair<Type,int> tmp({type, value});
+  return tmp;
 }
 
 
@@ -702,18 +722,22 @@ Type Parser::typeSym(std::set<Symbol> stop) {
 }
 
 
-void Parser::boolSym(std::set<Symbol> stop) {
+int Parser::boolSym(std::set<Symbol> stop) {
   admin.debugInfo("boolSym");
+  int value = -1;
 
   if (look.getSymbol() == Symbol::TRUE) {
     match(Symbol::TRUE, stop);
+    value == 1;
   } else if (look.getSymbol() == Symbol::FALSE) {
     match(Symbol::FALSE, stop);
+    value == 0;
   } else {
     // epsilon is clearly not in the first of true and false
     syntaxError(stop);
   }
   syntaxCheck(stop);
+  return value;
   // May need to return token with type and value
 }
 

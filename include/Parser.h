@@ -25,6 +25,7 @@ class Parser {
   void parse();
 
  private:
+   int label;
   /**
    * The administration object for errors and holding the scanner and symbol
    * table.
@@ -37,6 +38,8 @@ class Parser {
   Token look;
 
   BlockTable blocks;
+
+  int NewLabel();
 
   /**
    * Match a Token and move to the next one.
@@ -69,7 +72,8 @@ class Parser {
    * @param entries The entries being added to the block
    */
   void block(std::set<Symbol> stop,
-             std::vector<TableEntry> entries = std::vector<TableEntry>());
+             std::vector<TableEntry> entries = std::vector<TableEntry>(),
+              int startlabel, int varlabel);
 
   /**
    * Parses a definition part from the stream of tokens.
@@ -264,7 +268,7 @@ class Parser {
    * Parses a const non-terminal.
    * @param stop The stopsets used to recover from an error.
    */
-  Type constant(std::set<Symbol> stop);
+  std::pair<Type,int> constant(std::set<Symbol> stop);
 
   /**
    * Parses a const num non-terminal.
@@ -282,7 +286,7 @@ class Parser {
    * Parses a true or false from the stream of tokens.
    * @param stop The stopsets used to recover from an error.
    */
-  void boolSym(std::set<Symbol> stop);
+  int boolSym(std::set<Symbol> stop);
 
   /**
    * Parses the a list of all the fields and their corresponding types declared.
