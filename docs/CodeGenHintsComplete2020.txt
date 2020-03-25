@@ -1,0 +1,719 @@
+Code Generation Rules:
+
+Idea: 
+
+For each syntax rule of PL, corresponding code rule  
+determines the PL abstract machine code. The code rules are simple postfix form of the 
+syntax rules. 
+
+When parser enters a new block (program or a procedure) it will process the list of local variables. 
+For code generation purposes, with each variable, we must now store its (relative) block level i.e., 
+(relative) lexical level of the procedure, and its displacement from the base address of the procedure's activation 
+record so that any reference to these variable will be able to correctly locate them on the runtime stack.
+This information is available after the parser is through with processing of definition part in the 
+procedure. The idea is to count the length (number of ints) of the variables. Then with the knowledge 
+of the fixed part of the activation record (static+dynamic links and return address) we can enter
+displacement for each variable into their object record.
+
+Here are some specific cases. 
+
+When parsing a procedure or program
+
+For each procedure or the program we need to know 
+ 1. Length of variables. This information is known after we have parsed the 
+    variable definition 
+    -- we use a temporary label called “varLabel” whose value becomes available 
+       only after we have processed the definition part.
+ 2. The address of the first instruction of the procedure or the program
+    -- we use a temporary label called “startLabel” whose value becomes available 
+       only after we have processed the definition part
+
+The values associated with these two labels are examples of forward reference. 
+The assembler instruction  DEFARG and DEFADDR, respectively, fills out the 
+values of  “varLabel”  and “startLabel” as they become available during pass I of the assembler. 
+
+ 3. Expression and statement codes are generated according to the code rules.
+
+NB: PLEASE NOTE THAT C++ CODE UNRELATED TO CODE GENERATION PHASE ARE OMITTED 
+(indicated by …) IN THE FOLLOWING. 
+
+
+In the following 
+NewLabel() is a function in parser class to generate integer labels. Each time the function is called 
+           it returns the next integer label to the caller.
+emit       is a function in admin class. It takes three parameters: opcode, and two integers and emits the 
+           text code into the assembly code file.  
+
+Example:
+
+// Note about code generation in IF and DO commands:  There is a single wasted
+// label within each of these commands.  This is because a label is defined
+// each time we enter the GuardedCommand statement.  Therefore, the first such
+// command has a label defined for it, even though no jump will be made to that
+// label.  
+  
+// Program -> Block "."
+// Modified with code generation
+void Parser::Program(StopSet s)
+{
+   
+   // We must indicate a new block.  If it fails, then we have exceeded
+   // the block limit defined in blocktable.h.
+
+
+   if (!(blocktable.newBlock()))
+      admin->fatal("Exceeded block limit");
+
+  // NewLabel() returns the next integer representing a label for resolving forward reference
+ 
+   int startLabel, varLabel; //local variables to store forward reference labels
+   startLabel = NewLabel(); // This is to record the address of the 
+                             // first instruction of program
+
+   varLabel = NewLabel(); // This is to record the the length of the variables defined here
+
+// Output the instruction PROG which sets up the 
+// activation record for program and executes the 
+// first instruction at “startLabel” (to be computed by assembler)
+
+   admin->emit3("PROG", varLabel, startLabel);
+
+// We must pass these labels as parameters to BLOCK() where the labels are given their values.
+
+   Block(startLabel, varLabel, …);
+
+
+// We are done! output PL instruction ENDPROG
+
+   admin->emit1("ENDPROG");
+  
+}
+
+// Block -> "begin" DefinitionPart StatementPart "end"
+// modified with code generation.
+
+// sLabel for “startLabel”, vlabel for “varLabel”
+
+void Parser::Block(int sLabel, int vLabel, StopSet S)
+{
+   
+   int varLength = 0; // total variable storage requirement
+   varLength = DefinitionPart(…); // varLength is the value of “vLable” and is determined in DefinitionPart 
+
+   // Define the labels used in PROC and PROG.
+   // Output assembler instruction DEFARG to enter 
+   // labelTable[vLabel] = varLength in pass 1
+   // so that varLength replaces varLabel in the final
+   // code output in pass 2 of assembler
+
+   admin->emit3("DEFARG", vLabel, varLength);
+
+   // We are about to begin the first executable
+   // instruction. So we can output assembler instruction 
+   // DEFADDR to enter 
+   // labelTable[startLabel] = address for next instruction
+   // The assembler keeps track of the address of the instructions.
+
+   admin->emit2("DEFADDR", sLabel);
+   StatementPart(…);
+   expect(END, …);
+}
+
+3. Parsing of definition enters useful information about variables and procedures in 
+   their respective object record. Note the return type of int!!
+
+   // DefinitionPart -> { Definition ";" }
+   int Parser::DefinitionPart(…)
+   {
+      // total storage needed for variables declared in this block
+      int varlength = 0;
+
+// variable start is offset for dynamic link, static link and return address
+      int nextvarstart = 3;
+      while (…) {
+         varlength += Definition(nextvarstart, …);
+      expect(SEMICOLON, …);
+      }
+      return varlength; // the amount of storage for variable objects
+    }
+
+
+  // Definition -> ConstantDefinition | VariableDefinition | ProcedureDefinition
+  int Parser::Definition(int &varStart, …)
+  {
+    if (…) {
+      ConstantDefinition(…);
+      return 0;
+   }
+   else if (…)
+      return VariableDefinition(varStart,…);
+   else if (…) {
+      ProcedureDefinition(…);
+      return 0;
+   }
+   else
+      syntaxError(…);
+   return 0;
+}
+
+// VariableDefinition2 -> VariableList | "array" VariableList "[" Constant "]"
+  int Parser::VariableDefinition2(…, int &varStart,
+				…)
+ {
+   // Note: The parameter varStart is passed by reference; it allows us to record the displacement of 
+  // each variable in the definition part in their entry of the block table where it is defined.
+
+   // Here we check if we have an array or a scalar variable.
+   if (…) {
+      // get the list of ID's returned by VariableList.
+      vector<int> varlist = VariableList(…);
+      for (int i = 0; i < varlist.size(); i++) {
+	 // define each one of them in the block table with displacement.
+	 if (!blocktable.define(varlist[i], VAR, thistype, 1, 0, varStart, 0))
+	    admin->scopeError("Ambiguous definition of variable");
+	 varStart++;
+      }
+      return varlist.size();
+   }
+   else {
+      // Here we have an array.
+      expect(ARRAY, …);
+      vector<int> varlist = VariableList(…);
+      expect(OPENSQUARE, …);
+      int arraysize;
+      myType indextype;
+
+      // We must have a constant that indicates the size of the array.
+      Constant(arraysize, indextype, …);
+      expect(CLOSESQUARE, …);
+
+      // The size of the array must be an integer (do not allow bool index type)  
+      // Variable sizes of arrays are not allowed.
+
+      for (int i = 0; i < varlist.size(); i++) {
+	 // Again, define each ID as an array of the appropriate type and size.
+	 if (!blocktable.define(varlist[i], ARR, thistype, arraysize, 0,
+				varStart, 0))
+	    admin->scopeError("Ambiguous definition of array");
+	 varStart += arraysize;
+      }
+      return varlist.size() * arraysize;
+   }
+}
+
+// ProcedureDefinition -> "proc" ProcedureName Block
+void Parser::ProcedureDefinition(StopSet S)
+{
+   // Define a label for proc instruction: 
+   //   PROC 
+   //   varLabel 
+   //   startLavel
+   //
+   // Note that PROG instruction does not need this label as we never 
+   // call the main program!! However we call procedures directly or 
+   // recursively. Therefore we need to know the address of the PROC instruction.
+   
+   int procLabel = NewLabel();
+   int varLabel = NewLabel(); // length of the variables in this procedure
+   int startLabel = NewLabel(); // the first executable instruction of this procedure
+   admin->emit2("DEFADDR", procLabel);
+   admin->emit3("PROC", varLabel, startLabel);
+   Block(startLabel, varLabel, …);
+   admin->emit1("ENDPROC");
+   // end the block
+   blocktable.endBlock();
+}
+
+// ReadStatement -> "read" VariableAccessList
+
+void Parser::ReadStatement(StopSet S)
+{
+   expect(READ, …);
+   vector<myType> tempvect = VariableAccessList(S);
+   admin->emit2("READ", tempvect.size());
+}
+
+// WriteStatement -> "write" ExpressionList
+void Parser::WriteStatement(StopSet S)
+{
+   expect(WRITE, …);
+   vector<myType> tempvect = ExpressionList(S);
+   admin->emit2("WRITE", tempvect.size());
+}
+
+// AssignmentStatement -> VariableAccessList ":=" ExpressionList
+void Parser::AssignmentStatement(StopSet S)
+{
+      // Get the types of variable accesses.
+   vector<myType> typevect1 = VariableAccessList(…);
+   expect(ASSIGN, …);
+   // Get the types of expressions.
+   vector<myType> typevect2 = ExpressionList(S);
+   // Make sure we have the same number.
+   if (typevect1.size() != typevect2.size())
+      admin->typeError("Number of lhs does not equal number of rhs");
+   else
+      // Check them against each other to ensure that they are the same.
+      for (int i = 0; i < typevect1.size(); i++)
+	 checkTypes(typevect1[i], typevect2[i]);
+    //Emit the ASSIGN instruction if no error
+   admin->emit2("ASSIGN", typevect1.size());
+}
+
+
+// ProcedureStatement -> "call" ProcedureName
+void Parser::ProcedureStatement(StopSet S)
+{
+   expect(CALL, …);
+   if ( … ) {
+      bool isError = false;
+      // find the ID in the table.  If it is not there, find will put it there.
+      TableEntry tempentry = blocktable.find( …, isError);
+      if (isError)
+	 // A result of true means that it was undefined and find had to
+	 // define it.
+	 admin->scopeError("Undefined procedure name");
+      // Check if it is a procedure ID or not.
+      if (tempentry.kind != PROCEDURE && tempentry.kind != UNDEFINED)
+	 admin->typeError("Not a procedure name");
+
+      // NB!!
+      //
+      // Here we can emit procedure call instruction with relative lexical level 
+      //                                                  ^^^^^^^^^^^^^^^^^^^^^^
+      // of the called procedure relative to the current (caller) procedure
+  
+      admin->emit3("CALL", blocktable.currentLevel() - tempentry.level,
+		   tempentry.startLabel);
+   }
+   expect(ID, …);
+}
+
+// IfStatement -> "if" GuardedCommandList "fi"
+void Parser::IfStatement(…)
+{
+    expect(IF, …);
+   int startLabel = NewLabel(); // label of the instructions if the the boolean expression 
+                                // evaluates to false
+   int doneLabel = NewLabel();  // label of the instruction immediately after code for if instruction
+   GuardedCommandList(startLabel, doneLabel, …);
+   // Define the final jump address.
+   admin->emit2("DEFADDR", startLabel);  // If we have a runtime error; address of the FI instruction is known
+   // Add the FI command.
+   admin->emit2("FI", admin->currentLine());
+   // Define the address to jump to on successful completion of the command.
+   admin->emit2("DEFADDR", doneLabel); //The if-instruction is a success, doneLabel is the address of the next instruction.
+   expect(FI, stop);
+}
+
+// DoStatement -> "do" GuardedCommandList "od"
+void Parser::DoStatement(StopSet stop)
+{
+   expect(DO, …);
+   int startLabel = NewLabel();
+   int loopLabel = NewLabel();
+   // Emit the label to loop back to.
+   admin->emit2("DEFADDR", loopLabel);
+   GuardedCommandList(startLabel, loopLabel, …);
+   // Emit the label that exits from the loop.
+   admin->emit2("DEFADDR", startLabel);
+   expect(OD, stop);
+}
+
+// GuardedCommandList -> GuardedCommand { "[]" GuardedCommand }
+void Parser::GuardedCommandList(int &startLabel, int GoTo, …)
+{
+   GuardedCommand(startLabel, GoTo, …);
+   while (…) {
+      …
+      GuardedCommand(startLabel, GoTo,);
+   }
+}
+
+// GuardedCommand -> Expression "->" StatementPart
+void Parser::GuardedCommand(int &thisLabel, int GoTo, …)
+{
+   admin->emit2("DEFADDR", thisLabel);
+   myType type1 = Expression(…);
+   // make sure that the expression evaluated to a boolean type.
+   if (type1 != BOOL && type1 != UNIVERSAL)
+      admin->typeError("Expression does not evaluate to boolean");
+   thisLabel = NewLabel();
+   admin->emit2("ARROW", thisLabel);
+   expect(ARROW, …);
+   StatementPart(…);
+   admin->emit2("BAR", GoTo);
+}
+
+// Expression -> PrimaryExpression { PrimaryOperator PrimaryExpression }
+myType Parser::Expression(StoSet S)
+{
+    // Get the first primary expression type.  No type is invalid at this point.
+   myType type1 = PrimaryExpression(…);
+   while (…) {
+      // If we have more than one primary expression, they must be boolean
+      // because PrimaryOperator is defined only for operands of type boolean.
+      if (type1 != BOOL && type1 != UNIVERSAL) {
+	 admin->typeError("Operand not of type boolean");
+	 type1 = UNIVERSAL;
+      }
+      Symbol tempsym = PrimaryOperator(myunion(…);
+      myType type2 = PrimaryExpression(myunion(…);
+      if (type2 != BOOL && type2 != UNIVERSAL) {
+	 admin->typeError("Operand not of type boolean");
+	 type1 = UNIVERSAL;
+      }
+      if (tempsym == AMPERSAND)
+	 admin->emit1("AND");
+      else
+	 admin->emit1("OR");
+   }
+   return type1;
+}
+
+// PrimaryOperator -> "&" | "|"
+Symbol Parser::PrimaryOperator(StopSet S)
+{
+   if (tokenBuffer.getSymbol() == AMPERSAND) {
+      expect(AMPERSAND, S);
+      return AMPERSAND;
+   }
+   else if (tokenBuffer.getSymbol() == PIPE) {
+      expect(PIPE, S);
+      return PIPE;
+   }
+   else
+      syntaxError(S);
+   return BADSYMBOL;
+}
+
+// PrimaryExpression -> SimpleExpression { RelationalOperator SimpleExpression}
+myType Parser::PrimaryExpression(StopSet S)
+{
+   // No type is invalid yet.
+   myType type1 = SimpleExpression(…);
+   // Initialize result type with type1.
+   myType resulttype = type1;
+   while (…) {
+      // If we have more than one SimpleExpression, they must be of type INT
+      // because relational operators are only defined for integer operands.
+      if (type1 != INT && type1 != UNIVERSAL) {
+	 admin->typeError("Operand not of type integer");
+	 type1 = UNIVERSAL;
+      }
+      Symbol tempsym = RelationalOperator();
+      myType type2 = SimpleExpression(myunion(…);
+      if (type2 != INT && type2 != UNIVERSAL) {
+	 admin->typeError("Operand not of type integer");
+	 type1 = UNIVERSAL;
+      }
+      if (tempsym == LESSTHAN)
+	 admin->emit1("LESS");
+      else if (tempsym == EQUAL)
+	 admin->emit1("EQUAL");
+      else
+	 admin->emit1("GREATER");
+      // The type returned by a relOp is boolean, not integer like its operands
+      resulttype = BOOL;
+   }
+   return resulttype;
+}
+
+// RelationalOperator -> "<" | "=" | ">"
+Symbol Parser::RelationalOperator(StopSet S)
+{
+   if (LAToken.getSymbol() == LESSTHAN) {
+      expect(LESSTHAN, stop);
+      return LESSTHAN;
+   }
+   else if (Lookahead.getSymbol() == EQUAL) {
+      expect(EQUAL, stop);
+      return EQUAL;
+   }
+   else if (LAToken.getSymbol() == GREATERTHAN) {
+      expect(GREATERTHAN, stop);
+      return GREATERTHAN;
+   }
+   else
+      syntaxError(stop);
+   return BADSYMBOL;
+}
+
+// SimpleExpression -> [ "-" ] Term { AddingOperator Term }
+myType Parser::SimpleExpression(StopSet S)
+{
+   // Pretty much looks like a simplified version of PrimaryExpression.
+      if (LAToken.getSymbol() == MINUS)
+      expect(MINUS, …);
+   myType type1 = Term(…);
+   while (…) {
+      if (type1 != INT && type1 != UNIVERSAL) {
+	 admin->typeError("Operand not of type integer");
+	 type1 = UNIVERSAL;
+      }
+      Symbol tempsym = AddingOperator(…);
+      myType type2 = Term(…);
+      if (type2 != INT && type2 != UNIVERSAL) {
+	 admin->typeError("Operand not of type integer");
+	 type1 = UNIVERSAL;
+      }
+      if (tempsym == PLUS)
+	 admin->emit1("ADD");
+      else
+	 admin->emit1("SUBTRACT");
+   }
+   return type1;
+}
+
+// AddingOperator -> "+" | "-"
+Symbol Parser::AddingOperator(StopSet S)
+{
+   if (LAToken.getSymbol() == PLUS) {
+      expect(PLUS, stop);
+      return PLUS;
+   }
+   else if (LAToken.getSymbol() == MINUS) {
+      expect(MINUS, stop);
+      return MINUS;
+   }
+   else
+      syntaxError(stop);
+   return BADSYMBOL;
+}
+
+// Term -> Factor { MultiplyingOperator Factor }
+myType Parser::Term(StopSet S)
+{
+    myType type1 = Factor(…);
+   while (…) {
+      if (type1 != INT && type1 != UNIVERSAL) {
+	 admin->typeError("Operand not of type integer");
+	 type1 = UNIVERSAL;
+      }
+      Symbol op = MultiplyingOperator(…);
+      myType type2 = Factor(…);
+      if (type2 != INT && type2 != UNIVERSAL) {
+	 admin->typeError("Operand not of type integer");
+	 type1 = UNIVERSAL;
+      }
+      if (op == TIMES)
+	 admin->emit1("MULTIPLY");
+      else if (op == DIV)
+	 admin->emit1("DIVIDE");
+      else
+	 admin->emit1("MODULO");
+   }
+   return type1;
+}
+
+// MultiplyingOperator -> "*" | "/" | "\"
+Symbol Parser::MultiplyingOperator(StoSet S)
+{
+   if (LAToken.getSymbol() == TIMES) {
+      expect(TIMES, S);
+      return TIMES;
+   }
+   else if (LAToken.getSymbol() == DIV) {
+      expect(DIV, S);
+      return DIV;
+   }
+   else if (LAToken.getSymbol() == MOD) {
+      expect(MOD, S);
+      return MOD;
+   }
+   else
+      syntaxError(stop);
+   return BADSYMBOL;
+}
+
+// Factor -> Constant | VariableAccess | "(" Expression ")" | "~" Factor
+myType Parser::Factor(StopSet S)
+{
+   myType temptype;
+   if (LAToken.getSymbol() == ID) {
+      bool anerror = false;
+      TableEntry tempentry = blocktable.find(LAToken.getValue(), anerror);
+      if (anerror)
+	 admin->typeError("Undefined identifier");
+      // We are now able to determine if we should call Constant() or
+      // VariableAccess() based on the type of the ID.
+      if (tempentry.kind == CONSTANT) {
+	 int constValue;
+	 Constant(constValue, temptype, S);
+	 admin->emit2("CONSTANT", constValue);
+      }
+      else if (tempentry.kind == VAR || tempentry.kind == ARR ||
+	       tempentry.kind == UNDEFINED) {
+	 temptype = VariableAccess(S);
+	 admin->emit1("VALUE");
+      }
+      else {
+	 // Only kind PROCEDURE causes this to be executed.
+	 temptype == UNIVERSAL;
+	 admin->typeError("Invalid type used in expression");
+      }
+   }
+   // Other constants than names are handled here (e.g. true, false, 5, etc.)
+   else if (…) {
+      int constValue;
+      Constant(constValue, temptype, S);
+      admin->emit2("CONSTANT", constValue);
+   }
+   else if (LAToken.getSymbol() == OPENBRACKET) {
+      expect(OPENBRACKET, …);
+      // return the type used in the expression in parentheses.
+      temptype = Expression(myunion(…);
+      expect(CLOSEBRACKET, stop);
+   }
+   else if (LAToken.getSymbol() == TILDE) {
+      expect(TILDE, …);
+      // Simply call Factor() again.
+      temptype = Factor(S);
+      if (temptype != BOOL && temptype != UNIVERSAL) {
+	 admin->typeError("\"~\" must be used with a boolean expression");
+	 temptype = UNIVERSAL;
+      }
+      admin->emit1("NOT");
+   }
+   else
+      syntaxError(stop);
+   return temptype;
+}
+
+// VariableAccess -> VariableName [ IndexedSelector ]
+myType Parser::VariableAccess(StopSet S)
+{
+   myType temptype;
+   TableEntry tempentry;
+   if (LAToken.getSymbol() == ID) {
+      bool isError = false;
+      // Find the ID.
+      tempentry = blocktable.find(LAToken.getValue(), isError);
+      if (isError)
+	 admin->scopeError("Undefined variable");
+   }
+   expect(ID, myunion(stop, …);
+   // Only variables and arrays can be accessed in a variable access.
+   if (tempentry.kind == VAR || tempentry.kind == ARR ||
+       tempentry.kind == UNDEFINED)
+      temptype = tempentry.type;
+   else {
+      temptype = UNIVERSAL;
+      admin->typeError("Attempting to assign to a non-variable");
+   }
+
+   // calculate relative level and displacement and emit the VARIABLE instruction
+   admin->emit3("VARIABLE", blocktable.currentLevel() - tempentry.level,
+	       tempentry.displacement);
+   
+   // Arrays must be followed by an IndexedSelector in order to evaluate them
+   // as variables.  Many problems result if we do not restrict this.
+   if (tempentry.kind == ARR)
+      if (…) {
+	 myType temptype2 = IndexedSelector(S);
+	 // The index value must be an integer.
+	 if (temptype2 != INT && temptype2 != UNIVERSAL)
+	    admin->typeError("Array index not an integer");
+
+	 // INDEX instruction emits the line number should the index be out-of-range
+	 admin->emit3("INDEX", tempentry.size, admin->currentLine());
+      }
+      else {
+	 temptype = UNIVERSAL;
+	 admin->typeError("No index selector when accessing array");
+      }
+   else
+      // Here we have an IndexedSelector being used, but not on an array!
+      …      }
+   return temptype;
+}
+
+// IndexedSelector -> "[" Expression "]"
+myType Parser::IndexedSelector(StopSet S)
+{
+      expect(OPENSQUARE, …);
+   // Return the type of the expression used to select the index.
+   myType temptype = Expression(…);
+   if (temptype != INT && temptype != UNIVERSAL) {
+      admin->typeError("Index selector not of type integer");
+      temptype = UNIVERSAL;
+   }
+   expect(CLOSESQUARE, S);
+   return temptype;
+}
+
+// Constant -> Numeral | BooleanSymbol | ConstantName
+void Parser::Constant(int &value, myType &type, StopSet S)
+{
+   if (LAToken.getSymbol() == NUMERAL) {
+      // Value comes right from the token.
+      value = LAToken.getValue();
+      // A numeral can only be an int.
+      type = INT;
+      expect(NUMERAL, stop);
+   }
+   else if (…) {
+      // Here we assign TRUE = 1 and FALSE = 0, hopefully for use in code
+      // generation.
+      if (LAToken.getSymbol() == TRUE)
+	 value = 1;
+      else
+	 value = 0;
+      type = BOOL;
+      BooleanSymbol(S);
+   }
+   else if (LAToken.getSymbol() == ID) {
+      TableEntry temp;
+      bool isError = false;
+      temp = blocktable.find(LAToken.getValue(), isError);
+      if (isError)
+	 admin->scopeError("Undefined constant");
+      // Have to make sure we have a constant ID.
+      if (temp.kind == CONSTANT || temp.kind == UNDEFINED) {
+	 value = temp.value;
+	 type = temp.type;
+      }
+      else {
+	 admin->typeError("Constant expected, non-constant found");
+	 value = 0;
+	 type = UNIVERSAL;
+      }
+      expect(ID, stop);
+   }
+   else
+      syntaxError(stop);
+}
+
+// BooleanSymbol -> "false" | "true"
+void Parser::BooleanSymbol(StopSet S)
+{
+   if (LAToken.getSymbol() == FALSE)
+      expect(FALSE, stop);
+   else if (LAToken.getSymbol() == TRUE)
+      expect(TRUE, stop);
+   else
+      syntaxError(stop);
+}
+
+// A very simple error-checking function.
+void Parser::checkTypes(myType &type1, myType type2)
+{
+   if (type1 != type2) {
+      if (type1 != UNIVERSAL && type2 != UNIVERSAL)
+	 // A simple and fairly uninformative error message.  This is more or
+	 // less a general type error.
+	 admin->typeError("Incompatible type");
+      type1 = UNIVERSAL;
+   }
+}
+
+// New function to return a new label to use in various assembly commands.
+int Parser::NewLabel()
+{
+   // This actually causes labels to start at 1.
+   labelNumber++;
+   if (labelNumber > MAXLABEL)
+      admin->fatal("Exceeded maximum labels in code generation...Bailing out");
+   return labelNumber;
+}
+

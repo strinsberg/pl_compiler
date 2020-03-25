@@ -38,6 +38,11 @@ class Administration {
    */
   void error(std::string text);
 
+  /**
+   * Emit assembly code to the output file
+   */
+  void emit(std::string text);
+
  private:
   /**
    * File to print all tokens to.

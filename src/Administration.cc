@@ -9,9 +9,7 @@
 
 Administration::Administration(std::ostream& ofs, Scanner& sc, bool deb)
     : fout(ofs), scanner(sc), lineNum(1), correctLine(true), errorCount(0),
-      debug(deb) {
-  fout << "1:  ";
-}
+      debug(deb) {}
 
 
 Token Administration::getToken() {
@@ -20,7 +18,7 @@ Token Administration::getToken() {
   // Get the next token, but process newlines here
   while (1) {
     t = scanner.getToken();
-    fout << t.toString() << " ";
+    //fout << t.toString() << " ";
 
     if (t.getSymbol() != Symbol::NEWLINE)
       break;
@@ -36,7 +34,7 @@ Token Administration::getToken() {
 void Administration::newLine() {
   lineNum++;
   correctLine = true;
-  fout << std::endl << std::endl << lineNum << ":  ";
+  //fout << std::endl << std::endl << lineNum << ":  ";
 }
 
 
@@ -66,4 +64,9 @@ void Administration::checkError(Token ntoken){
     error("Invalid Char: '" + ntoken.getLexeme() + "'");
   else if(ntoken.getSymbol() == Symbol::NUM_ERR)
     error("Number not a valid integer: '" + ntoken.getLexeme() + "'");
+}
+
+
+void Administration::emit(std::string text) {
+  fout << text;
 }
