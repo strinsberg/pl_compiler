@@ -220,6 +220,7 @@ void Parser::readStmt(std::set<Symbol> stop) {
 
   match(Symbol::READ, munion({stop, First.at(NT::VACS_LIST)}));
   vacsList(stop);
+  admin.emit("READ");
 }
 
 
@@ -228,6 +229,7 @@ void Parser::writeStmt(std::set<Symbol> stop) {
 
   match(Symbol::WRITE, munion({stop, First.at(NT::EXP_LIST)}));
   exprList(stop);
+  admin.emit("WRITE");
 }
 
 
@@ -237,6 +239,7 @@ void Parser::assignStmt(std::set<Symbol> stop) {
   std::vector<Type> vars = vacsList(munion({stop, First.at(NT::EXP_LIST), {Symbol::INIT}}));
   match(Symbol::INIT, munion({stop, First.at(NT::EXP_LIST)}));
   std::vector<Type> exprs = exprList(stop);
+  admin.emit("ASSIGN");
 
   if (vars.size() != exprs.size()) {
     admin.error("Number of variables does not match number of expressions");
@@ -266,6 +269,7 @@ void Parser::procStmt(std::set<Symbol> stop) {
     types = actParamList(munion({stop, {Symbol::RHRND}}));
     match(Symbol::RHRND, stop);
   }
+  admin.emit("CALL");
 
   bool err;
   TableEntry proc = blocks.find(id, err);
@@ -465,8 +469,10 @@ Type Parser::simpleExpr(std::set<Symbol> stop) {
   admin.debugInfo("simpleExpr");
 
   syntaxCheck(munion({stop, {Symbol::MINUS}}));
-  if (look.getSymbol() == Symbol::MINUS)
+  if (look.getSymbol() == Symbol::MINUS) {
     match(Symbol::MINUS, munion({stop, First.at(NT::TERM)}));
+    admin.emit("MINUS");
+  }
 
   Type type = term(munion({stop, First.at(NT::ADD_OP)}));
 
@@ -581,8 +587,10 @@ void Parser::primeOp(std::set<Symbol> stop) {
 
   if(look.getSymbol() == Symbol::AMP) {
     match(Symbol::AMP, stop);
+    admin.debug("AND");
   } else if (look.getSymbol() == Symbol::BAR){
     match(Symbol::BAR, stop);
+    admin.debug("OR");
   } else {
     syntaxError(stop);
   }
@@ -595,10 +603,13 @@ void Parser::relOp(std::set<Symbol> stop) {
 
   if(look.getSymbol() == Symbol::LESS) {
     match(Symbol::LESS, stop);
+    admin.debug("LESS");
   } else if (look.getSymbol() == Symbol::EQUAL) {
     match(Symbol::EQUAL, stop);
+    admin.debug("EQUAL");
   } else if (look.getSymbol() == Symbol::GREAT) {
     match(Symbol::GREAT, stop);
+    admin.debug("GREAT");
   } else {
     syntaxError(stop);
   }
@@ -609,12 +620,15 @@ void Parser::relOp(std::set<Symbol> stop) {
 void Parser::addOp(std::set<Symbol> stop) {
   admin.debugInfo("addOp");
 
-  if (look.getSymbol() == Symbol::PLUS)
+  if (look.getSymbol() == Symbol::PLUS) {
     match(Symbol::PLUS, stop);
-  else if (look.getSymbol() == Symbol::MINUS)
+    admin.debug("ADD");
+  } else if (look.getSymbol() == Symbol::MINUS) {
     match(Symbol::MINUS, stop);
-  else
+    admin.debug("SUBTRACT");
+  } else {
     syntaxError(stop);  // epsilon is not possible
+  }
   syntaxCheck(stop);
 }
 
@@ -622,14 +636,18 @@ void Parser::addOp(std::set<Symbol> stop) {
 void Parser::multOp(std::set<Symbol> stop) {
   admin.debugInfo("multOp");
 
-  if (look.getSymbol() == Symbol::TIMES)
+  if (look.getSymbol() == Symbol::TIMES) {
     match(Symbol::TIMES, stop);
-  else if (look.getSymbol() == Symbol::FSLASH)
+    admin.debug("MULTIPLY");
+  } else if (look.getSymbol() == Symbol::FSLASH) {
     match(Symbol::FSLASH, stop);
-  else if (look.getSymbol() == Symbol::BSLASH)
+    admin.debug("DIVIDE");
+  } else if (look.getSymbol() == Symbol::BSLASH) {
     match(Symbol::BSLASH, stop);
-  else
+    admin.debug("MODULO");
+  } else {
     syntaxError(stop);  // epsilon is not possible
+  }
   syntaxCheck(stop);
 }
 
