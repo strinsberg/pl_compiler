@@ -287,6 +287,7 @@ void Parser::ifStmt(std::set<Symbol> stop) {
 
   match(Symbol::IF, munion({stop, First.at(NT::GRCOM_LIST), {Symbol::FI}}));
   guardedList(munion({stop, {Symbol::FI}}));
+  admin.emit("FI");
   match(Symbol::FI, stop);
 }
 
@@ -504,8 +505,10 @@ void Parser::guardedComm(std::set<Symbol> stop) {
   admin.debugInfo("guardedComm");
 
   Type type = expr(munion({stop, {Symbol::ARROW}, First.at(NT::STMT_PART)}));
+  admin.emit("ARROW");
   match(Symbol::ARROW, munion({stop, First.at(NT::STMT_PART)}));
   stmtPart(stop);
+  admin.emit("BAR");
 
   if(type != Type::BOOLEAN) {
     type = Type::UNIVERSAL;
@@ -755,7 +758,7 @@ void Parser::procBlock(std::set<Symbol> stop, int id) {
   if(look.getSymbol() == Symbol::LHRND){
     match(Symbol::LHRND, munion({stop, First.at(NT::FORM_PLIST),
          {Symbol::RHRND}, First.at(NT::BLOCK)}));
-    
+
     formParamList(munion({stop, {Symbol::RHRND}, First.at(NT::BLOCK)}), params);
 
     procedure.size = params.size();
