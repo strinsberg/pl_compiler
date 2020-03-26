@@ -163,13 +163,18 @@ void Parser::varDef(std::set<Symbol> stop) {
 
 void Parser::procDef(std::set<Symbol> stop){
   admin.debugInfo("procDef");
-  admin.emit("PROC");
+
+  int prolabel = NewLabel();
+  int varlabel = NewLabel();
+  int startlabel = NewLabel();
+  admin.emit("DEFADDR", proclabel);
+  admin.emit("PROC", varlabel, startlabel);
 
   match(Symbol::PROC, munion({stop, {Symbol::ID}, First.at(NT::PROC_BLOCK)}));
   int id  = look.getVal();
   match(Symbol::ID, munion({stop, First.at(NT::PROC_BLOCK)}));
 
-  procBlock(stop, id);
+  procBlock(stop, id, startlabel, varlabel);
   admin.emit("ENDPROC");
 }
 
@@ -229,8 +234,8 @@ void Parser::readStmt(std::set<Symbol> stop) {
   admin.debugInfo("readStmt");
 
   match(Symbol::READ, munion({stop, First.at(NT::VACS_LIST)}));
-  vacsList(stop);
-  admin.emit("READ");
+  std::vector<Type> types = vacsList(stop);
+  admin.emit("READ", types.size());
 }
 
 
@@ -238,8 +243,8 @@ void Parser::writeStmt(std::set<Symbol> stop) {
   admin.debugInfo("writeStmt");
 
   match(Symbol::WRITE, munion({stop, First.at(NT::EXP_LIST)}));
-  exprList(stop);
-  admin.emit("WRITE");
+  std::vector<Type> types = exprList(stop);
+  admin.emit("WRITE", types.size());
 }
 
 
@@ -259,6 +264,7 @@ void Parser::assignStmt(std::set<Symbol> stop) {
         admin.error("Type mismatch in assignment position " + std::to_string(i+1));
     }
   }
+  admin.emit("ASSIGN", vars.size());
 }
 
 
@@ -300,8 +306,12 @@ void Parser::ifStmt(std::set<Symbol> stop) {
   admin.debugInfo("ifStmt");
 
   match(Symbol::IF, munion({stop, First.at(NT::GRCOM_LIST), {Symbol::FI}}));
+  int startlabel = NewLabel();
+  int donelabel = NewLabel();
   guardedList(munion({stop, {Symbol::FI}}));
-  admin.emit("FI");
+  admin.emit("DEFADDR", startlabel);
+  admin.emit("FI", admin.curLine());
+  admin.emit("DEFADDR", donelabel);
   match(Symbol::FI, stop);
 }
 
@@ -518,14 +528,16 @@ void Parser::guardedList(std::set<Symbol> stop) {
   }
 }
 
-void Parser::guardedComm(std::set<Symbol> stop) {
+void Parser::guardedComm(std::set<Symbol> stop, int& thilabel, int goTo) {
   admin.debugInfo("guardedComm");
+  admin.emit("DEFADDR", thislabel);
 
   Type type = expr(munion({stop, {Symbol::ARROW}, First.at(NT::STMT_PART)}));
+  thislabel = NewLabel();
   admin.emit("ARROW");
   match(Symbol::ARROW, munion({stop, First.at(NT::STMT_PART)}));
   stmtPart(stop);
-  admin.emit("BAR");
+  admin.emit("BAR", goTo);
 
   if(type != Type::BOOLEAN) {
     type = Type::UNIVERSAL;
@@ -557,15 +569,20 @@ Type Parser::term(std::set<Symbol> stop) {
 Type Parser::factor(std::set<Symbol> stop) {
   admin.debugInfo("Factor");
   Type type = Type::UNIVERSAL;
+  int value = -1;
+  std::pair<Type,int> tmp;
 
   bool err = false;
   if(look.getSymbol() == Symbol::NUM) {
-    type = constant(stop);
-    admin.emit("CONSTANT");
+    tmp = constant(stop);
+    value = tmp.second;
+    type = tmp.first;
+    admin.emit("CONSTANT", value);
   } else if (look.getSymbol() == Symbol::TRUE
       or look.getSymbol() == Symbol::FALSE) {
-    boolSym(stop);
+    value = boolSym(stop);
     type  = Type::BOOLEAN;
+    admin.emit("CONSTANT", value);
   } else if (look.getSymbol() == Symbol::LHRND) {
     match(Symbol::LHRND, munion({stop, First.at(NT::EXP), {Symbol::RHRND}}));
     type = expr(munion({stop, {Symbol::RHRND}}));
@@ -792,7 +809,8 @@ void Parser::recordSection(std::set<Symbol> stop, std::vector<TableEntry>& field
 
 // Parameter Rules /////////////////////////////////////////////////////////////
 
-void Parser::procBlock(std::set<Symbol> stop, int id) {
+void Parser::procBlock(std::set<Symbol> stop, int id, int startlabel,
+                        int varlabel) {
   admin.debugInfo("procBlock");
 
   std::vector<TableEntry> params;
@@ -819,7 +837,7 @@ void Parser::procBlock(std::set<Symbol> stop, int id) {
     admin.error("Redeclaration of Procedure");
   }
 
-  block(stop, params);
+  block(stop, params, startlabel, varlabel);
 }
 
 
