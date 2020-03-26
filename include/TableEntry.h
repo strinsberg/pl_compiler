@@ -20,9 +20,9 @@ public:
    * @param nsize The memory size required by the table entry
    * @param nval The value of the table entry
    */
-  TableEntry(int nid, Kind nkind, Type ntype, int nsize, int nval) :
+  TableEntry(int nid, Kind nkind, Type ntype, int nsize, int nval, int disp) :
              id(nid), tkind(nkind), ttype(ntype), size(nsize), val(nval),
-             level(0), displace(0) {}
+             level(0), displace(disp) {}
 
   /**
    * Check if the table entry input is a param or field of a procedure or record

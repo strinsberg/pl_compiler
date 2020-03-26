@@ -279,7 +279,6 @@ void Parser::procStmt(std::set<Symbol> stop) {
     types = actParamList(munion({stop, {Symbol::RHRND}}));
     match(Symbol::RHRND, stop);
   }
-  admin.emit("CALL");
 
   bool err;
   TableEntry proc = blocks.find(id, err);
@@ -293,6 +292,8 @@ void Parser::procStmt(std::set<Symbol> stop) {
         admin.error("Param types do not match. pos: " + std::to_string(i));
     }
   }
+  
+  admin.emit("CALL", block.level() - entry.level, entry.startLabel);
 }
 
 
@@ -309,8 +310,14 @@ void Parser::ifStmt(std::set<Symbol> stop) {
 void Parser::doStmt(std::set<Symbol> stop) {
   admin.debugInfo("doStmt");
 
+  int start = NextLabel();
+  int loop = NextLabel(); 
+  admin.emit("DEFADDR", loop);
+
   match(Symbol::DO, munion({stop, First.at(NT::GRCOM_LIST), {Symbol::OD}}));
-  guardedList(munion({stop, {Symbol::OD}}));
+  guardedList(munion({stop, {Symbol::OD}}), start, loop);
+
+  admin.emit("DEFADDR", start);
   match(Symbol::OD, stop);
 }
 
@@ -330,15 +337,16 @@ std::vector<Type> Parser::vacsList(std::set<Symbol> stop) {
 }
 
 
-void Parser::vPrime(std::set<Symbol> stop, Type type) {
+void Parser::vPrime(std::set<Symbol> stop, Type type, int& start) {
   admin.debugInfo("vPrime");
   std::vector<int> idxs;
 
   if (look.getSymbol() == Symbol::ID) {
     idxs = varList(stop);
     for (auto i : idxs) {
-      if (!blocks.define(i, Kind::VARIABLE, type, 0, 0))
+      if (!blocks.define(i, Kind::VARIABLE, type, 0, 0, start))
         admin.error("Multiple definitions of the same variable.");
+      start++;
     }
 
   } else {
@@ -346,18 +354,19 @@ void Parser::vPrime(std::set<Symbol> stop, Type type) {
       idxs = varList(munion({stop, {Symbol::LHSQR}, First.at(NT::CONST_NT), {Symbol::RHSQR}}));
       match(Symbol::LHSQR, munion({stop, First.at(NT::CONST_NT), {Symbol::RHSQR}}));
 
-      int size;
-      Type type = constant(munion({stop, {Symbol::RHSQR}}));
+      auto temp = constant(munion({stop, {Symbol::RHSQR}}));
+      Type type = temp.first;
+      int size = temp.second;
+      
       if (type != Type::INTEGER) {
         admin.error("Array size must be an integer");
         size = 0;
-      } else {
-        size = 10;  // get size from constant???
       }
 
       for (auto i : idxs) {
-        if(!blocks.define(i, Kind::K_ARRAY, type, size, 0))
+        if(!blocks.define(i, Kind::K_ARRAY, type, size, 0, start))
           admin.error("Multiple definitions of the same variable.");
+        start += size;
       }
 
       match(Symbol::RHSQR, stop);
@@ -508,13 +517,13 @@ Type Parser::simpleExpr(std::set<Symbol> stop) {
 
 // Guarded Command Rules /////////////////////////////////////////////////////
 
-void Parser::guardedList(std::set<Symbol> stop) {
+void Parser::guardedList(std::set<Symbol> stop, int& label, int goto) {
   admin.debugInfo("guardedList");
 
-  guardedComm(munion({stop, {Symbol::GUARD}, First.at(NT::GRCOM)}));
+  guardedComm(munion({stop, {Symbol::GUARD}, First.at(NT::GRCOM)}), label, goto);
   while (look.getSymbol() == Symbol::GUARD) {
     match(Symbol::GUARD, munion({stop, First.at(NT::GRCOM)}));
-    guardedComm(munion({stop, {Symbol::GUARD}}));
+    guardedComm(munion({stop, {Symbol::GUARD}}), label, goto);
   }
 }
 
