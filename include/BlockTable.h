@@ -32,7 +32,7 @@ public:
      * @param nsize The memory size required by the table entry
      * @param nval The value of the table entry
      */
-  bool define(int nid, Kind nkind, Type ntype, int nsize, int nval);
+  bool define(int nid, Kind nkind, Type ntype, int nsize, int nval, int displace);
 
     /**
      * Overloaded define function that takes in a table entry to define

@@ -17,7 +17,7 @@ void Parser::parse() {
 }
 
 int Parser::NewLabel() {
-  lablel++;
+  label++;
   return label;
 }
 
@@ -60,7 +60,7 @@ void Parser::program(std::set<Symbol> stop) {
   int var = NewLabel(), start = NewLabel();
   admin.emit("PROG", var, start);
 
-  block(munion({stop, {Symbol::DOT}}), start, var);
+  block(munion({stop, {Symbol::DOT}}), std::vector<TableEntry>(), start, var);
   match(Symbol::DOT, stop);
   admin.emit("ENDPROG");
 }
@@ -133,11 +133,12 @@ void Parser::constDef(std::set<Symbol> stop) {
 
    match(Symbol::CONST, munion({stop, {Symbol::ID}, {Symbol::EQUAL}, First.at(NT::CONST_NT)}));
    int idx = look.getVal();
+
    match(Symbol::ID, munion({stop, {Symbol::EQUAL}, First.at(NT::CONST_NT)}));
    match(Symbol::EQUAL, munion({stop, First.at(NT::CONST_NT)}));
-   Type type = constant(stop);
 
-   blocks.define(idx, Kind::CONSTANT, type, 0, 0, 0);  // Set val properly later
+   auto temp = constant(stop);
+   blocks.define(idx, Kind::CONSTANT, temp.first, 0, 0, 0);  // Set val properly later
 }
 
 
@@ -153,7 +154,7 @@ int Parser::varDef(std::set<Symbol> stop, int& start) {
     fieldList(munion({stop, {Symbol::END}}), fields);
 
     for (auto i : idxs) {
-      TableEntry record = TableEntry(i, Kind::K_RECORD, Type::UNIVERSAL, fields.size(), 0);
+      TableEntry record = TableEntry(i, Kind::K_RECORD, Type::UNIVERSAL, fields.size(), 0, 0);
       for (auto & f : fields) {
         record.entries.push_back(f);
       }
@@ -172,7 +173,7 @@ int Parser::varDef(std::set<Symbol> stop, int& start) {
 void Parser::procDef(std::set<Symbol> stop){
   admin.debugInfo("procDef");
 
-  int prolabel = NewLabel();
+  int proclabel = NewLabel();
   int varlabel = NewLabel();
   int startlabel = NewLabel();
   admin.emit("DEFADDR", proclabel);
@@ -307,7 +308,7 @@ void Parser::procStmt(std::set<Symbol> stop) {
     }
   }
   
-  admin.emit("CALL", block.level() - entry.level, entry.startLabel);
+  admin.emit("CALL", blocks.level() - proc.level, proc.startLabel);
 }
 
 
@@ -317,9 +318,9 @@ void Parser::ifStmt(std::set<Symbol> stop) {
   match(Symbol::IF, munion({stop, First.at(NT::GRCOM_LIST), {Symbol::FI}}));
   int startlabel = NewLabel();
   int donelabel = NewLabel();
-  guardedList(munion({stop, {Symbol::FI}}));
+  guardedList(munion({stop, {Symbol::FI}}), startlabel, donelabel);
   admin.emit("DEFADDR", startlabel);
-  admin.emit("FI", admin.curLine());
+  admin.emit("FI", admin.currentLine());
   admin.emit("DEFADDR", donelabel);
   match(Symbol::FI, stop);
 }
@@ -328,8 +329,8 @@ void Parser::ifStmt(std::set<Symbol> stop) {
 void Parser::doStmt(std::set<Symbol> stop) {
   admin.debugInfo("doStmt");
 
-  int start = NextLabel();
-  int loop = NextLabel(); 
+  int start = NewLabel();
+  int loop = NewLabel(); 
   admin.emit("DEFADDR", loop);
 
   match(Symbol::DO, munion({stop, First.at(NT::GRCOM_LIST), {Symbol::OD}}));
@@ -421,13 +422,15 @@ Type Parser::varAccess(std::set<Symbol> stop) {
   if (err)
     admin.error(name + " is undeclared");
 
+  Type type; 
   if (First.at(NT::SELECT).count(look.getSymbol())) {
-    return selec(stop, entry);
+    type = selec(stop, entry);
   } else {
-    return entry.ttype;
+    type = entry.ttype;
   }
 
   admin.emit("VARIABLE", blocks.level() - entry.level, entry.displace);
+  return type;
 }
 
 
@@ -536,17 +539,17 @@ Type Parser::simpleExpr(std::set<Symbol> stop) {
 
 // Guarded Command Rules /////////////////////////////////////////////////////
 
-void Parser::guardedList(std::set<Symbol> stop, int& label, int goto) {
+void Parser::guardedList(std::set<Symbol> stop, int& label, int next) {
   admin.debugInfo("guardedList");
 
-  guardedComm(munion({stop, {Symbol::GUARD}, First.at(NT::GRCOM)}), label, goto);
+  guardedComm(munion({stop, {Symbol::GUARD}, First.at(NT::GRCOM)}), label, next);
   while (look.getSymbol() == Symbol::GUARD) {
     match(Symbol::GUARD, munion({stop, First.at(NT::GRCOM)}));
-    guardedComm(munion({stop, {Symbol::GUARD}}), label, goto);
+    guardedComm(munion({stop, {Symbol::GUARD}}), label, next);
   }
 }
 
-void Parser::guardedComm(std::set<Symbol> stop, int& thilabel, int goTo) {
+void Parser::guardedComm(std::set<Symbol> stop, int& thislabel, int next) {
   admin.debugInfo("guardedComm");
   admin.emit("DEFADDR", thislabel);
 
@@ -555,7 +558,7 @@ void Parser::guardedComm(std::set<Symbol> stop, int& thilabel, int goTo) {
   admin.emit("ARROW");
   match(Symbol::ARROW, munion({stop, First.at(NT::STMT_PART)}));
   stmtPart(stop);
-  admin.emit("BAR", goTo);
+  admin.emit("BAR", next);
 
   if(type != Type::BOOLEAN) {
     type = Type::UNIVERSAL;
@@ -727,7 +730,7 @@ std::pair<Type, int> Parser::constant(std::set<Symbol> stop) {
       } else {
         admin.error("Constant expected but not found");
         value = 0;
-        type = Type::Universal;
+        type = Type::UNIVERSAL;
       }
     }
     match(Symbol::ID, stop);
@@ -782,10 +785,10 @@ int Parser::boolSym(std::set<Symbol> stop) {
 
   if (look.getSymbol() == Symbol::TRUE) {
     match(Symbol::TRUE, stop);
-    value == 1;
+    value = 1;
   } else if (look.getSymbol() == Symbol::FALSE) {
     match(Symbol::FALSE, stop);
-    value == 0;
+    value = 0;
   } else {
     // epsilon is clearly not in the first of true and false
     syntaxError(stop);
@@ -814,13 +817,13 @@ void Parser::recordSection(std::set<Symbol> stop, std::vector<TableEntry>& field
 
   Type type = typeSym(munion({stop, {Symbol::ID, Symbol::COMMA}}));
   int id = look.getVal();
-  fields.emplace_back(id, Kind::VARIABLE, type, 0, 0);
+  fields.emplace_back(id, Kind::VARIABLE, type, 0, 0, 0);
   match(Symbol::ID, munion({stop, {Symbol::ID, Symbol::COMMA}}));
 
   while(look.getSymbol() == Symbol::COMMA) {
     match(Symbol::COMMA, munion({stop, {Symbol::ID}}));
     id = look.getVal();
-    fields.emplace_back(id, Kind::VARIABLE, type, 0, 0);
+    fields.emplace_back(id, Kind::VARIABLE, type, 0, 0, 0);
     match(Symbol::ID, munion({stop, {Symbol::COMMA}}));
   }
 }
@@ -832,7 +835,7 @@ void Parser::procBlock(std::set<Symbol> stop, int id, int startlabel,
   admin.debugInfo("procBlock");
 
   std::vector<TableEntry> params;
-  TableEntry procedure = TableEntry(id, Kind::PROCEDURE, Type::UNIVERSAL, 0, 0);
+  TableEntry procedure = TableEntry(id, Kind::PROCEDURE, Type::UNIVERSAL, 0, 0, 0);
 
   if(look.getSymbol() == Symbol::LHRND){
     match(Symbol::LHRND, munion({stop, First.at(NT::FORM_PLIST),
@@ -883,7 +886,7 @@ void Parser::paramDef(std::set<Symbol> stop, std::vector<TableEntry>& params) {
   Type type = typeSym(munion({stop, First.at(NT::VAR_LIST)}));
   std::vector<int> idxs = varList(stop);
   for (auto i : idxs) {
-    params.emplace_back(i, kind, type, 0, 0);
+    params.emplace_back(i, kind, type, 0, 0, 0);
   }
 }
 

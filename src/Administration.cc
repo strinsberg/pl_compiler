@@ -69,4 +69,8 @@ void Administration::checkError(Token ntoken){
 
 void Administration::emit(std::string text, int var, int start) {
   fout << text << std::endl;
+  if (var != -1)
+    fout << var << std::endl;
+  if (start != -1)
+    fout << start << std::endl;
 }

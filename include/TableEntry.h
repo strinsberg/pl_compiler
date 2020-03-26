@@ -22,7 +22,7 @@ public:
    */
   TableEntry(int nid, Kind nkind, Type ntype, int nsize, int nval, int disp) :
              id(nid), tkind(nkind), ttype(ntype), size(nsize), val(nval),
-             level(0), displace(disp) {}
+             level(0), displace(disp), startLabel(0) {}
 
   /**
    * Check if the table entry input is a param or field of a procedure or record
@@ -74,7 +74,8 @@ public:
   std::vector<TableEntry> entries;
 
   int level;
-  int displacement;
+  int displace;
+  int startLabel;
 };
 
 #endif

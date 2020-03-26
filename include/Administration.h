@@ -19,7 +19,7 @@ class Administration {
     */
   Administration(std::ostream& fout, Scanner& sc, bool debug = false);
 
-  int curLine() {return linenum;}
+  int currentLine() {return lineNum;}
 
   Token getToken();
 
@@ -43,7 +43,7 @@ class Administration {
   /**
    * Emit assembly code to the output file
    */
-  void emit(std::string text, int var, int start);
+  void emit(std::string text, int var = -1, int start = -1);
 
  private:
   /**

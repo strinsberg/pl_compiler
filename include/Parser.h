@@ -72,20 +72,20 @@ class Parser {
    * @param entries The entries being added to the block
    */
   void block(std::set<Symbol> stop,
-             std::vector<TableEntry> entries = std::vector<TableEntry>(),
-              int startlabel, int varlabel);
+             std::vector<TableEntry> entries,
+             int startlabel, int varlabel);
 
   /**
    * Parses a definition part from the stream of tokens.
    * @param stop The stopsets used to recover from an error.
    */
-  void defPart(std::set<Symbol> stop);
+  int defPart(std::set<Symbol> stop);
 
   /**
    * Parses a definition from the stream of tokens.
    * @param stop The stopsets used to recover from an error.
    */
-  void def(std::set<Symbol> stop);
+  int def(std::set<Symbol> stop, int& start);
 
   /**
    * Parses a constant definitions from the stream of tokens.
@@ -169,14 +169,14 @@ class Parser {
    * Parses a varaible definition from the stream of tokens.
    * @param stop The stopsets used to recover from an error.
    */
-  void varDef(std::set<Symbol> stop);
+  int varDef(std::set<Symbol> stop, int& start);
 
   /**
    * Parses a varaible vs array from the stream of tokens.
    * @param stop The stopsets used to recover from an error.
    * @param type The type of the table entry that is being created
    */
-  void vPrime(std::set<Symbol> stop, Type type);
+  int vPrime(std::set<Symbol> stop, Type type, int& start);
 
   /**
    * Parses a varaible list from the stream of tokens.
@@ -219,13 +219,13 @@ class Parser {
    * Parses a list of guarded commands.
    * @param stop The stopsets used to recover from an error.
    */
-  void guardedList(std::set<Symbol> stop);
+  void guardedList(std::set<Symbol> stop, int& start, int next);
 
   /**
    * Parses a guarded command.
    * @param stop The stopsets used to recover from an error.
    */
-  void guardedComm(std::set<Symbol> stop);
+  void guardedComm(std::set<Symbol> stop, int& start, int next);
 
   /**
    * Parses a term from the stream of tokens.
@@ -308,7 +308,7 @@ class Parser {
      * @param stop The stopsets used to recover from an error.
      * @param id The id of the procedure.
      */
-  void procBlock(std::set<Symbol> stop, int id);
+  void procBlock(std::set<Symbol> stop, int id, int start, int var);
 
     /**
      * Parses the parameter list when a procdure is being declared.

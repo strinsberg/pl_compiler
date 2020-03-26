@@ -13,11 +13,10 @@ bool BlockTable::search(int lookId) {
 }
 
 
-bool BlockTable::define(int nid, Kind nkind, Type ntype, int nsize, int nval) {
+bool BlockTable::define(int nid, Kind nkind, Type ntype, int nsize, int nval, int disp) {
   if(!search(nid)){
-    TableEntry newTE = TableEntry(nid, nkind, ntype, nsize, nval);
+    TableEntry newTE = TableEntry(nid, nkind, ntype, nsize, nval, disp);
     newTE.level = level();
-    //newTE.displace = ???
     table.back()[nid] = newTE;
     return true;
   }
@@ -26,7 +25,7 @@ bool BlockTable::define(int nid, Kind nkind, Type ntype, int nsize, int nval) {
 
 bool BlockTable::define(TableEntry& entry) {
   if (!search(entry.id)) {
-    table.back()[entry.id] = {entry.id, entry.tkind, entry.ttype, entry.size, entry.val};
+    table.back()[entry.id] = {entry.id, entry.tkind, entry.ttype, entry.size, entry.val, 0};
     table.back()[entry.id].entries = entry.entries;
     return true;
   } else {
