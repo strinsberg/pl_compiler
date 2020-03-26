@@ -26,6 +26,8 @@ bool BlockTable::define(int nid, Kind nkind, Type ntype, int nsize, int nval, in
 bool BlockTable::define(TableEntry& entry) {
   if (!search(entry.id)) {
     table.back()[entry.id] = {entry.id, entry.tkind, entry.ttype, entry.size, entry.val, 0};
+    table.back()[entry.id].level = entry.level;
+    table.back()[entry.id].startLabel = entry.startLabel;
     table.back()[entry.id].entries = entry.entries;
     return true;
   } else {
@@ -58,5 +60,6 @@ bool BlockTable::pushBlock() {
 
 void BlockTable::popBlock() {
   table.pop_back();
+  blockLevel--;
 }
 

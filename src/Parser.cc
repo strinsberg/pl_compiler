@@ -57,7 +57,7 @@ void Parser::syntaxCheck(std::set<Symbol> stop) {
 void Parser::program(std::set<Symbol> stop) {
   admin.debugInfo("program");
 
-  int var = NewLabel(), start = NewLabel();
+  int start = NewLabel(), var = NewLabel();
   admin.emit("PROG", var, start);
 
   block(munion({stop, {Symbol::DOT}}), std::vector<TableEntry>(), start, var);
@@ -155,6 +155,7 @@ int Parser::varDef(std::set<Symbol> stop, int& start) {
 
     for (auto i : idxs) {
       TableEntry record = TableEntry(i, Kind::K_RECORD, Type::UNIVERSAL, fields.size(), 0, 0);
+      record.level = blocks.level();
       for (auto & f : fields) {
         record.entries.push_back(f);
       }
@@ -183,7 +184,7 @@ void Parser::procDef(std::set<Symbol> stop){
   int id  = look.getVal();
   match(Symbol::ID, munion({stop, First.at(NT::PROC_BLOCK)}));
 
-  procBlock(stop, id, startlabel, varlabel);
+  procBlock(stop, id, startlabel, varlabel, proclabel);
   admin.emit("ENDPROC");
 }
 
@@ -308,6 +309,7 @@ void Parser::procStmt(std::set<Symbol> stop) {
     }
   }
   
+  admin.debugInfo(std::to_string(blocks.level()) + " " + std::to_string(proc.level));
   admin.emit("CALL", blocks.level() - proc.level, proc.startLabel);
 }
 
@@ -831,11 +833,13 @@ void Parser::recordSection(std::set<Symbol> stop, std::vector<TableEntry>& field
 // Parameter Rules /////////////////////////////////////////////////////////////
 
 void Parser::procBlock(std::set<Symbol> stop, int id, int startlabel,
-                        int varlabel) {
+                        int varlabel, int procLabel) {
   admin.debugInfo("procBlock");
 
   std::vector<TableEntry> params;
   TableEntry procedure = TableEntry(id, Kind::PROCEDURE, Type::UNIVERSAL, 0, 0, 0);
+  procedure.level = blocks.level();  // should be in the params list
+  procedure.startLabel = procLabel;
 
   if(look.getSymbol() == Symbol::LHRND){
     match(Symbol::LHRND, munion({stop, First.at(NT::FORM_PLIST),

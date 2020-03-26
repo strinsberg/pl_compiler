@@ -308,7 +308,7 @@ class Parser {
      * @param stop The stopsets used to recover from an error.
      * @param id The id of the procedure.
      */
-  void procBlock(std::set<Symbol> stop, int id, int start, int var);
+  void procBlock(std::set<Symbol> stop, int id, int start, int var, int proc);
 
     /**
      * Parses the parameter list when a procdure is being declared.
