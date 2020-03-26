@@ -163,7 +163,7 @@ class Parser {
    * Parses variable access.
    * @param stop The stopsets used to recover from an error.
    */
-  Type varAccess(std::set<Symbol> stop);
+  Type varAccess(std::set<Symbol> stop, bool& isConst);
 
   /**
    * Parses a varaible definition from the stream of tokens.
@@ -243,26 +243,26 @@ class Parser {
    * Parses a primary operator from the stream of tokens.
    * @param stop The stopsets used to recover from an error.
    */
-  void primeOp(std::set<Symbol> stop);
+  std::string primeOp(std::set<Symbol> stop);
 
    /**
     * Parses a realtional operator from the stream of tokens.
     * @param stop The stopsets used to recover from an error.
     */
-  void relOp(std::set<Symbol> stop);
+  std::string relOp(std::set<Symbol> stop);
 
   /**
    * Parses a plus or minus operator from the stream of tokens.
    * @param stop The stopsets used to recover from an error.
    */
-  void addOp(std::set<Symbol> stop);
+  std::string addOp(std::set<Symbol> stop);
 
   /**
    * Parses a multiplication or division or modulus operator from the
    * stream of tokens.
    * @param stop The stopsets used to recover from an error.
    */
-  void multOp(std::set<Symbol> stop);
+  std::string multOp(std::set<Symbol> stop);
 
   /**
    * Parses a const non-terminal.

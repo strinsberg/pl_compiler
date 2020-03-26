@@ -138,7 +138,7 @@ void Parser::constDef(std::set<Symbol> stop) {
    match(Symbol::EQUAL, munion({stop, First.at(NT::CONST_NT)}));
 
    auto temp = constant(stop);
-   blocks.define(idx, Kind::CONSTANT, temp.first, 0, 0, 0);  // Set val properly later
+   blocks.define(idx, Kind::CONSTANT, temp.first, 0, temp.second, 0);
 }
 
 
@@ -264,7 +264,6 @@ void Parser::assignStmt(std::set<Symbol> stop) {
   std::vector<Type> vars = vacsList(munion({stop, First.at(NT::EXP_LIST), {Symbol::INIT}}));
   match(Symbol::INIT, munion({stop, First.at(NT::EXP_LIST)}));
   std::vector<Type> exprs = exprList(stop);
-  admin.emit("ASSIGN");
 
   if (vars.size() != exprs.size()) {
     admin.error("Number of variables does not match number of expressions");
@@ -349,10 +348,11 @@ std::vector<Type> Parser::vacsList(std::set<Symbol> stop) {
   admin.debugInfo("vacsList");
   std::vector<Type> types;
 
-  types.push_back(varAccess(munion({stop, {Symbol::COMMA}})));
+  bool temp;
+  types.push_back(varAccess(munion({stop, {Symbol::COMMA}}), temp));
   while (look.getSymbol() == Symbol::COMMA) {
     match(Symbol::COMMA, munion({stop, First.at(NT::VACS_LIST)}));
-    types.push_back(varAccess(munion({stop, {Symbol::COMMA}})));
+    types.push_back(varAccess(munion({stop, {Symbol::COMMA}}), temp));
   }
   return types;
 }
@@ -413,7 +413,7 @@ std::vector<int> Parser::varList(std::set<Symbol> stop) {
 }
 
 
-Type Parser::varAccess(std::set<Symbol> stop) {
+Type Parser::varAccess(std::set<Symbol> stop, bool& isConst) {
   admin.debugInfo("varAccess");
 
   bool err;
@@ -431,7 +431,13 @@ Type Parser::varAccess(std::set<Symbol> stop) {
     type = entry.ttype;
   }
 
-  admin.emit("VARIABLE", blocks.level() - entry.level, entry.displace);
+  if (entry.tkind == Kind::CONSTANT) {
+    admin.emit("CONSTANT", entry.val);
+    isConst = true;
+  } else {
+    admin.emit("VARIABLE", blocks.level() - entry.level, entry.displace);
+    isConst = false;
+  }
   return type;
 }
 
@@ -475,8 +481,9 @@ Type Parser::expr(std::set<Symbol> stop) {
 
   while (look.getSymbol() == Symbol::AMP or
       look.getSymbol() == Symbol::BAR) {
-    primeOp(munion({stop, First.at(NT::PRIM_EXP)}));
+    std::string instr = primeOp(munion({stop, First.at(NT::PRIM_EXP)}));
     Type type2 = primeExpr(munion({stop, First.at(NT::PRIM_OP)}));
+    admin.emit(instr);
     if(type2 != Type::BOOLEAN) {
       type = Type::UNIVERSAL;
       admin.error("Cannot use & or | with non Boolean types");
@@ -484,8 +491,6 @@ Type Parser::expr(std::set<Symbol> stop) {
   }
 
   return type;
-
-  // May need to return token info so the results of the expression can be used
 }
 
 
@@ -495,8 +500,9 @@ Type Parser::primeExpr(std::set<Symbol> stop) {
   Type type = simpleExpr(munion({stop, First.at(NT::REL_OP), First.at(NT::SIMP_EXP)}));
 
   if (First.at(NT::REL_OP).count(look.getSymbol())) {
-    relOp(munion({stop, First.at(NT::SIMP_EXP)}));
+    std::string instr = relOp(munion({stop, First.at(NT::SIMP_EXP)}));
     Type type2 = simpleExpr(munion({stop, First.at(NT::REL_OP)}));
+    admin.emit(instr);
     if(type != type2) {
       type = Type::UNIVERSAL;
       admin.error("Type Mismatch");
@@ -506,7 +512,6 @@ Type Parser::primeExpr(std::set<Symbol> stop) {
   }
 
   return type;
-  // May need to return token info so the results of the expression can be used
 }
 
 
@@ -523,13 +528,16 @@ Type Parser::simpleExpr(std::set<Symbol> stop) {
 
   while (look.getSymbol() == Symbol::PLUS
       or look.getSymbol() == Symbol::MINUS) {
-    addOp(munion({stop, First.at(NT::TERM)}));
+    std::string instr = addOp(munion({stop, First.at(NT::TERM)}));
     syntaxCheck(munion({stop, {Symbol::MINUS}}));
 
-    if (look.getSymbol() == Symbol::MINUS)
+    if (look.getSymbol() == Symbol::MINUS) {
       match(Symbol::MINUS, munion({stop, First.at(NT::TERM)}));
+      admin.emit("MINUS");
+    }
 
     Type type2 = term(munion({stop, First.at(NT::ADD_OP)}));
+    admin.emit(instr);
     if(type != type2) {
       type = Type::UNIVERSAL;
       admin.error("Type Mismatch");
@@ -557,7 +565,7 @@ void Parser::guardedComm(std::set<Symbol> stop, int& thislabel, int next) {
 
   Type type = expr(munion({stop, {Symbol::ARROW}, First.at(NT::STMT_PART)}));
   thislabel = NewLabel();
-  admin.emit("ARROW");
+  admin.emit("ARROW", thislabel);
   match(Symbol::ARROW, munion({stop, First.at(NT::STMT_PART)}));
   stmtPart(stop);
   admin.emit("BAR", next);
@@ -584,7 +592,6 @@ Type Parser::term(std::set<Symbol> stop) {
       admin.error("Type Mismatch");
     }
   }
-  // May need to return token info so the results of the expression can be used
   return type;
 }
 
@@ -615,8 +622,10 @@ Type Parser::factor(std::set<Symbol> stop) {
     type = factor(stop);
     admin.emit("NOT");
   } else if (First.at(NT::VACS).count(look.getSymbol())) {
-    type = varAccess(stop);
-    admin.emit("VALUE");
+    bool isConst;
+    type = varAccess(stop, isConst);
+    if (!isConst)
+      admin.emit("VALUE");
   } else {
     err = true;
   }
@@ -636,73 +645,81 @@ Type Parser::factor(std::set<Symbol> stop) {
 
 // Operator Rules ////////////////////////////////////////////////////////////
 
-void Parser::primeOp(std::set<Symbol> stop) {
+std::string Parser::primeOp(std::set<Symbol> stop) {
   admin.debugInfo("prime-op");
+  std::string instr = "ERROR";
 
   if(look.getSymbol() == Symbol::AMP) {
     match(Symbol::AMP, stop);
-    admin.emit("AND");
+    instr = "AND";
   } else if (look.getSymbol() == Symbol::BAR){
     match(Symbol::BAR, stop);
-    admin.emit("OR");
+    instr = "OR";
   } else {
     syntaxError(stop);
   }
   syntaxCheck(stop);
+  return instr;
 }
 
 
-void Parser::relOp(std::set<Symbol> stop) {
+std::string Parser::relOp(std::set<Symbol> stop) {
   admin.debugInfo("rel-Op");
+  std::string instr = "ERROR";
 
   if(look.getSymbol() == Symbol::LESS) {
     match(Symbol::LESS, stop);
-    admin.emit("LESS");
+    instr = "LESS";
   } else if (look.getSymbol() == Symbol::EQUAL) {
     match(Symbol::EQUAL, stop);
-    admin.emit("EQUAL");
+    instr = "EQUAL";
   } else if (look.getSymbol() == Symbol::GREAT) {
     match(Symbol::GREAT, stop);
-    admin.emit("GREAT");
+    instr = "GREATER";
   } else {
     syntaxError(stop);
   }
   syntaxCheck(stop);
+  return instr;
 }
 
 
-void Parser::addOp(std::set<Symbol> stop) {
+std::string Parser::addOp(std::set<Symbol> stop) {
   admin.debugInfo("addOp");
+  std::string instr = "ERROR";
 
   if (look.getSymbol() == Symbol::PLUS) {
     match(Symbol::PLUS, stop);
-    admin.emit("ADD");
+    instr = "ADD";
   } else if (look.getSymbol() == Symbol::MINUS) {
     match(Symbol::MINUS, stop);
-    admin.emit("SUBTRACT");
+    instr = "SUBTRACT";
   } else {
     syntaxError(stop);  // epsilon is not possible
   }
   syntaxCheck(stop);
+  return instr;
 }
 
 
-void Parser::multOp(std::set<Symbol> stop) {
+std::string Parser::multOp(std::set<Symbol> stop) {
   admin.debugInfo("multOp");
+  std::string instr = "ERROR";
 
   if (look.getSymbol() == Symbol::TIMES) {
     match(Symbol::TIMES, stop);
-    admin.emit("MULTIPLY");
+    instr = "MULTIPLY";
   } else if (look.getSymbol() == Symbol::FSLASH) {
     match(Symbol::FSLASH, stop);
-    admin.emit("DIVIDE");
+    instr = "DIVIDE";
   } else if (look.getSymbol() == Symbol::BSLASH) {
     match(Symbol::BSLASH, stop);
-    admin.emit("MODULO");
+    instr = "MODULO";
   } else {
     syntaxError(stop);  // epsilon is not possible
   }
   syntaxCheck(stop);
+  return instr;
 }
 
 
@@ -714,9 +731,9 @@ std::pair<Type, int> Parser::constant(std::set<Symbol> stop) {
   int value = 0;
 
   if (look.getSymbol() == Symbol::NUM) {
+    value = look.getVal();
     match(Symbol::NUM, munion({stop, First.at(NT::CPRIME)}));
     type = cPrime(stop);
-    value = look.getVal();
   } else if (First.at(NT::BOOL_SYM).count(look.getSymbol())) {
     value = boolSym(stop);
     type = Type::BOOLEAN;
@@ -918,12 +935,14 @@ Type Parser::actParam(std::set<Symbol> stop) {
 
   Type type;
 
-  if(First.at(NT::EXP_LIST).count(look.getSymbol()))
+  if(First.at(NT::EXP_LIST).count(look.getSymbol())) {
     type = expr(stop);
-  else if (First.at(NT::VACS_LIST).count(look.getSymbol()))
-    type = varAccess(stop);
-  else
+  } else if (First.at(NT::VACS_LIST).count(look.getSymbol())) {
+    bool temp;
+    type = varAccess(stop, temp);
+  } else {
     syntaxError(stop);
+  }
   syntaxCheck(stop);
 
   return type;
