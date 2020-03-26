@@ -424,13 +424,6 @@ Type Parser::varAccess(std::set<Symbol> stop, bool& isConst) {
   if (err)
     admin.error(name + " is undeclared");
 
-  Type type; 
-  if (First.at(NT::SELECT).count(look.getSymbol())) {
-    type = selec(stop, entry);
-  } else {
-    type = entry.ttype;
-  }
-
   if (entry.tkind == Kind::CONSTANT) {
     admin.emit("CONSTANT", entry.val);
     isConst = true;
@@ -438,6 +431,14 @@ Type Parser::varAccess(std::set<Symbol> stop, bool& isConst) {
     admin.emit("VARIABLE", blocks.level() - entry.level, entry.displace);
     isConst = false;
   }
+
+  Type type; 
+  if (First.at(NT::SELECT).count(look.getSymbol())) {
+    type = selec(stop, entry);
+  } else {
+    type = entry.ttype;
+  }
+
   return type;
 }
 
