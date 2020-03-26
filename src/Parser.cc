@@ -56,9 +56,11 @@ void Parser::syntaxCheck(std::set<Symbol> stop) {
 
 void Parser::program(std::set<Symbol> stop) {
   admin.debugInfo("program");
-  admin.emit("PROG");
 
-  block(munion({stop, {Symbol::DOT}}));
+  int var = NewLabel(), start = NewLabel();
+  admin.emit("PROG", var, start);
+
+  block(munion({stop, {Symbol::DOT}}), start, var);
   match(Symbol::DOT, stop);
   admin.emit("ENDPROG");
 }
@@ -75,11 +77,12 @@ void Parser::block(std::set<Symbol> stop, std::vector<TableEntry> entries,
   }
 
   match(Symbol::BEGIN, munion({stop, First.at(NT::DEF_PART), First.at(NT::STMT_PART), {Symbol::END}}));
-  defPart(munion({stop, First.at(NT::STMT_PART), {Symbol::END}}));
-  admin.emit("DEFARG", varlabel, varlength);
-  admin.emit("DEFADDR", startlabel);
-  stmtPart(munion({stop, {Symbol::END}}));
 
+  int length = defPart(munion({stop, First.at(NT::STMT_PART), {Symbol::END}}));
+  admin.emit("DEFARG", varlabel, length);
+  admin.emit("DEFADDR", startlabel);
+
+  stmtPart(munion({stop, {Symbol::END}}));
   blocks.popBlock();
   match(Symbol::END, stop);
 }
@@ -87,30 +90,33 @@ void Parser::block(std::set<Symbol> stop, std::vector<TableEntry> entries,
 
 // Definition Rules //////////////////////////////////////////////////////////
 
-void Parser::defPart(std::set<Symbol> stop) {
+int Parser::defPart(std::set<Symbol> stop) {
   admin.debugInfo("defPart");
 
+  int length = 0, nextStart = 3;
   while (First.at(NT::DEF).count(look.getSymbol())) {
-    def(munion({stop, {Symbol::SEMI}}));
+    length += def(munion({stop, {Symbol::SEMI}}), nextStart);
     match(Symbol::SEMI, munion({stop, First.at(NT::DEF)}));
   }
+  return length;
 }
 
 
-void Parser::def(std::set<Symbol> stop) {
+int Parser::def(std::set<Symbol> stop, int& start) {
   admin.debugInfo("def");
 
+  int size = 0;
   bool err = false;
   Symbol next = look.getSymbol();
   if (next == Symbol::CONST) {
     constDef(stop);
   } else if (First.at(NT::VAR_DEF).count(next)) {
-    varDef(stop);
+    size = varDef(stop, start);
   } else if (First.at(NT::PROC_DEF).count(next)) {
     procDef(stop);
-  }
-  else
+  } else {
     err = true;
+  }
 
   std::set<Symbol> allFirst = munion({First.at(NT::CONST_DEF), First.at(NT::VAR_DEF), First.at(NT::PROC_DEF)});
 
@@ -118,6 +124,7 @@ void Parser::def(std::set<Symbol> stop) {
     syntaxError(stop);
   else
     syntaxCheck(stop);
+  return size;
 }
 
 
@@ -130,14 +137,14 @@ void Parser::constDef(std::set<Symbol> stop) {
    match(Symbol::EQUAL, munion({stop, First.at(NT::CONST_NT)}));
    Type type = constant(stop);
 
-   blocks.define(idx, Kind::CONSTANT, type, 0, 0);  // Set val properly later
+   blocks.define(idx, Kind::CONSTANT, type, 0, 0, 0);  // Set val properly later
 }
 
 
-void Parser::varDef(std::set<Symbol> stop) {
+int Parser::varDef(std::set<Symbol> stop, int& start) {
   admin.debugInfo("varDef");
 
-  if (look.getSymbol() == Symbol::RECORD) {
+  if (look.getSymbol() == Symbol::RECORD) {  // Ignore for code gen for now
     match(Symbol::RECORD,munion({stop, {Symbol::END},
           First.at(NT::FIELD_LIST), First.at(NT::VAR_LIST)}));
 
@@ -154,9 +161,10 @@ void Parser::varDef(std::set<Symbol> stop) {
     }
 
     match(Symbol::END, stop);
+    return 0;  // Would need to change for code gen
   } else {
     Type type = typeSym(munion({stop, First.at(NT::VPRIME)}));
-    vPrime(stop, type);
+    return vPrime(stop, type, start);
   }
 }
 
@@ -347,7 +355,7 @@ std::vector<Type> Parser::vacsList(std::set<Symbol> stop) {
 }
 
 
-void Parser::vPrime(std::set<Symbol> stop, Type type, int& start) {
+int Parser::vPrime(std::set<Symbol> stop, Type type, int& start) {
   admin.debugInfo("vPrime");
   std::vector<int> idxs;
 
@@ -358,17 +366,17 @@ void Parser::vPrime(std::set<Symbol> stop, Type type, int& start) {
         admin.error("Multiple definitions of the same variable.");
       start++;
     }
-
+    return idxs.size();
   } else {
       match(Symbol::ARRAY, munion({stop, First.at(NT::VAR_LIST), {Symbol::LHSQR}, First.at(NT::CONST_NT), {Symbol::RHSQR}}));
       idxs = varList(munion({stop, {Symbol::LHSQR}, First.at(NT::CONST_NT), {Symbol::RHSQR}}));
       match(Symbol::LHSQR, munion({stop, First.at(NT::CONST_NT), {Symbol::RHSQR}}));
 
       auto temp = constant(munion({stop, {Symbol::RHSQR}}));
-      Type type = temp.first;
+      Type idx_type = temp.first;
       int size = temp.second;
       
-      if (type != Type::INTEGER) {
+      if (idx_type != Type::INTEGER) {
         admin.error("Array size must be an integer");
         size = 0;
       }
@@ -380,6 +388,7 @@ void Parser::vPrime(std::set<Symbol> stop, Type type, int& start) {
       }
 
       match(Symbol::RHSQR, stop);
+      return idxs.size() * size;
   }
 }
 
