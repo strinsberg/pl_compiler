@@ -41,7 +41,7 @@ void Administration::newLine() {
 void Administration::error(std::string text) {
   if (errorCount > MAX_ERRORS) {
     std::cerr << "*** Reached Maximum Allowed Errors ***" << std::endl;
-    exit(-1);
+    exit(EXIT_FAILURE);
   }
 
   // If we have not yet had an error on this line print out error text

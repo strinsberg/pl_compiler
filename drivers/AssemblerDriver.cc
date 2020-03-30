@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "parser.h"
+#include "Parser.h"
 #include "assembler.h"
 
 using namespace std;

@@ -2,6 +2,7 @@
 #include "Scanner.h"
 #include "Administration.h"
 #include "Parser.h"
+#include "Assembler.h"
 #include <sstream>
 #include <iostream>
 #include <fstream>
@@ -26,14 +27,14 @@ int main(int argc, char** argv) {
         break;
       default:
         cerr << "Invalid Argument: " << (char)opt << endl;
-        return 1;
+        return EXIT_FAILURE;
     }
   }
 
   // Check if there was an argument given for the file to compile
   if (optind >= argc) {
     cerr << "No filename given" << endl;
-    return 2;
+    return EXIT_FAILURE;
   }
 
   // Open up the file to read from
@@ -42,7 +43,27 @@ int main(int argc, char** argv) {
 
   if (!fs.is_open()) {
     cerr << "Invalid input file: " << filename << endl;
-    return 3;
+    return EXIT_FAILURE;
+  }
+
+  // Create an intermediate representation file
+  std::ofstream asmfile("pl.asm");
+
+  // Create necessary components
+  SymbolTable symTab;
+  Scanner scanner(fs, symTab);
+  Administration admin(asmfile, scanner, verbose);
+  Parser parser(admin);
+
+  // Run the compiler
+  parser.parse();
+  asmfile.close();
+
+  // If there are errors then quit. If MAX_ERRORS are reached the admin will
+  // exit(EXIT_FAILURE) during parsing.
+  if (admin.error_count() > 0) {
+    std::cout << "***Compilation failure***" << std::endl;
+    return EXIT_FAILURE;
   }
 
   // Open up the file to write to
@@ -50,14 +71,17 @@ int main(int argc, char** argv) {
     outfile = "pl.out";
   std::ofstream ofs(outfile);
 
-  // Create necessary components
-  SymbolTable symTab;
-  Scanner scanner(fs, symTab);
-  Administration admin(ofs, scanner, verbose);
-  Parser parser(admin);
+  // Open the input file to read from
+  std::ifstream ifs("pl.asm");
 
-  // Run the compiler
-  parser.parse();
+  // Run the assembler 
+  Assembler assembler(ifs, ofs);
+  assembler.firstPass();
+  ifs.seekg(0);
+  assembler.secondPass();
 
-  return 0;
+  ifs.close();
+  ofs.close();
+
+  return EXIT_SUCCESS;
 }

@@ -45,6 +45,11 @@ class Administration {
    */
   void emit(std::string text, int var = -1, int start = -1);
 
+  /**
+   * Return the number of errors.
+   */
+  int error_count() {return errorCount;}
+
  private:
   /**
    * File to print all tokens to.

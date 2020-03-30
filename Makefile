@@ -6,10 +6,11 @@ INCLUDE = include
 
 STATIC_ANALYSIS = cppcheck
 
-PROGRAM = compiler
+COMPILER = compiler
+
 
 .PHONY: all
-all: $(PROGRAM) memcheck static
+all: $(COMPILER) memcheck static
 
 # default rule for compiling .cc to .o
 %.o: %.cpp
@@ -17,15 +18,15 @@ all: $(PROGRAM) memcheck static
 
 .PHONY: clean
 clean:
-	rm -rf *~ *.o $(PROGRAM) pl.out \
+	rm -rf *~ *.o $(COMPILER) pl.out pl.asm \
 	docs/html docs/latex docs/*.aux docs/*.log
 
-$(PROGRAM): $(SRC)
-	$(CXX) $(CXXFLAGS) -o $(PROGRAM) -I $(INCLUDE) \
+$(COMPILER): $(SRC)
+	$(CXX) $(CXXFLAGS) -o $(COMPILER) -I $(INCLUDE) \
 	$(SRC)/*.cc
 
-memcheck: $(PROGRAM)
-	valgrind --tool=memcheck --leak-check=yes $(PROGRAM) test/simpleExps.pl
+memcheck: $(COMPILER)
+	valgrind --tool=memcheck --leak-check=yes $(COMPILER) test/simpleExps.pl
 
 static: $(SRC)
 	$(STATIC_ANALYSIS) --verbose --enable=all $(SRC) $(TEST) $(INCLUDE) --suppress=missingInclude
