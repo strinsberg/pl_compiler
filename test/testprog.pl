@@ -9,12 +9,13 @@ begin
       fi;
     end;
 
-  read a, b;
+  read a;
+  read b;
   c := 0;
   do c < 10 ->
     call check;
-    if d = true -> e := e + b, d := false; []
-      d = false -> e := e*a, d := true;
+    if d = true -> e := e + b; d := false; []
+      d = false -> e := e*a; d := true;
     fi;
 c := c+1;
   od;
