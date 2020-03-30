@@ -1,3 +1,4 @@
+$ This program causes stack overflow when interpreted
 begin                   $program begin lexical level 0
  integer i,j; 	        $program variables
  proc P                 $Procedure  
