@@ -386,7 +386,7 @@ void Interpreter::load_program( string name)
   while (!program.eof())
   {
     program >> word;
-//    cout << " Read word " << word << endl;
+//    cout << " Read word " << word << "  Temp name: " << tempname << endl;
     store[x] = word;
     if ( word == -1) break;
     ++x;
