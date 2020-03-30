@@ -4,6 +4,7 @@ $ During the search phase input 0 to quit
 $ The number searched for and its index will be output for each query
 begin
   const n = 10;
+  const p = -1;
   integer array A[n];
   integer x, i;
   Boolean found;
@@ -33,7 +34,7 @@ begin
     call Search;
 
     if found -> write x, i; []
-      ~ found -> write x;
+      ~ found -> write p;
     fi;
 
     read x;
