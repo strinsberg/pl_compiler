@@ -1,6 +1,6 @@
 $ test program
 begin
-  integer a, b, c;
+  integer a, b, c, e;
   Boolean d;
   proc check
     begin
@@ -11,11 +11,12 @@ begin
 
   read a, b;
   c := 0;
-  do c < 50 ->
+  do c < 10 ->
     call check;
-    if d = true -> c := a + b; []
-      d = false -> c := a*d;
+    if d = true -> e := e + b, d := false; []
+      d = false -> e := e*a, d := true;
     fi;
+c := c+1;
   od;
-  write c;
+  write e;
 end.
