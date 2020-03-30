@@ -384,6 +384,11 @@ int Parser::vPrime(std::set<Symbol> stop, Type type, int& start) {
         size = 0;
       }
 
+      if (size < 0) {
+        admin.error("Array size cannot be negative");
+        size = 0;
+      }
+
       for (auto i : idxs) {
         if(!blocks.define(i, Kind::K_ARRAY, type, size, 0, start))
           admin.error("Multiple definitions of the same variable.");
@@ -519,31 +524,39 @@ Type Parser::primeExpr(std::set<Symbol> stop) {
 Type Parser::simpleExpr(std::set<Symbol> stop) {
   admin.debugInfo("simpleExpr");
 
+  bool minus = false;
   syntaxCheck(munion({stop, {Symbol::MINUS}}));
   if (look.getSymbol() == Symbol::MINUS) {
     match(Symbol::MINUS, munion({stop, First.at(NT::TERM)}));
-    admin.emit("MINUS");
+    minus = true;
   }
 
   Type type = term(munion({stop, First.at(NT::ADD_OP)}));
+  if (minus)
+    admin.emit("MINUS");
 
   while (look.getSymbol() == Symbol::PLUS
       or look.getSymbol() == Symbol::MINUS) {
     std::string instr = addOp(munion({stop, First.at(NT::TERM)}));
     syntaxCheck(munion({stop, {Symbol::MINUS}}));
 
+    minus = false;
     if (look.getSymbol() == Symbol::MINUS) {
       match(Symbol::MINUS, munion({stop, First.at(NT::TERM)}));
-      admin.emit("MINUS");
+      minus = true;
     }
 
     Type type2 = term(munion({stop, First.at(NT::ADD_OP)}));
+    if (minus)
+      admin.emit("MINUS");
+
     admin.emit(instr);
     if(type != type2) {
       type = Type::UNIVERSAL;
       admin.error("Type Mismatch");
     }
   }
+  
   return type;
 }
 
@@ -586,13 +599,17 @@ Type Parser::term(std::set<Symbol> stop) {
   Type type = factor(munion({stop, First.at(NT::MULT_OP)}));
 
   while (First.at(NT::MULT_OP).count(look.getSymbol())) {
-    multOp(munion({stop, First.at(NT::FACTOR)}));
+    std::string instr = multOp(munion({stop, First.at(NT::FACTOR)}));
     Type type2 = factor(munion({stop, First.at(NT::MULT_OP)}));
+    admin.emit(instr);
     if(type != type2) {
       type = Type::UNIVERSAL;
       admin.error("Type Mismatch");
     }
   }
+
+  
+
   return type;
 }
 
