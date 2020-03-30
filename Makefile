@@ -3,14 +3,13 @@ CXXFLAGS = -std=c++11 -g -Wall
 
 SRC = src
 INCLUDE = include
-
-STATIC_ANALYSIS = cppcheck
+DRIVER = drivers
 
 COMPILER = compiler
-
+INTERPRET = interpret
 
 .PHONY: all
-all: $(COMPILER) memcheck static
+all: $(COMPILER) $(INTERPRET)
 
 # default rule for compiling .cc to .o
 %.o: %.cpp
@@ -18,18 +17,16 @@ all: $(COMPILER) memcheck static
 
 .PHONY: clean
 clean:
-	rm -rf *~ *.o $(COMPILER) pl.out pl.asm \
+	rm -rf *~ *.o $(COMPILER) $(INTERPRET) pl.out pl.asm \
 	docs/html docs/latex docs/*.aux docs/*.log
 
 $(COMPILER): $(SRC)
 	$(CXX) $(CXXFLAGS) -o $(COMPILER) -I $(INCLUDE) \
 	$(SRC)/*.cc
 
-memcheck: $(COMPILER)
-	valgrind --tool=memcheck --leak-check=yes $(COMPILER) test/simpleExps.pl
-
-static: $(SRC)
-	$(STATIC_ANALYSIS) --verbose --enable=all $(SRC) $(TEST) $(INCLUDE) --suppress=missingInclude
+$(INTERPRET):
+	$(CXX) $(CXXFLAGS) -o $(INTERPRET) $(DRIVER)/driver.cc \
+	$(DRIVER)/interp.cc -I $(DRIVER)
 
 .PHONY: docs
 docs: $(INCLUDE)

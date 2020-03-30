@@ -32,6 +32,7 @@
 *.out
 *.app
 compiler
+interpret
 testcomp
 
 # Vim/Emacs
