@@ -4,7 +4,7 @@
 
 \begin{document}
 
-\title{CPSC 4660 PL Scanner}
+\title{CPSC 4660 PL Compiler}
 \author{Steven Deutekom\\
 	Ricky Bueckert\\
 	University of Lethbridge}
@@ -13,65 +13,89 @@
 \maketitle
 
 \section{Contributions}
-The entire class contributed equally on this project. We discussed the design and then split up the classes. Once we started the implementation there was a lot of communication to decide on how each peice of the Scanner should work. There was also a lot of collaboration deciding on what to put in our test files and debugging when the tests exposed flaws.
+The entire class contributed equally on this project. At each phase we split
+the work up evenly. Until the current work from home pandemic response we
+collaborated in the lab whenever we worked. This involved deciding what to
+work on next when a portion of the project was finished. It also involved
+debugging and design decisions. It is always helpful to have another person
+to bounce ideas off of and a fresh pair of eyes when code is not working. We
+feel the team aspect was valuable both for finishing the project and for learning
+about team work for our future jobs and research.
 
 \section{Files Included}
 
 \subsection{Header Files}
 \begin{itemize}
-	\item Symbol.h
-	\item SymbolTable.h
-	\item Token.h
-	\item Scanner.h
-	\item Administration.h
+  \item Symbol.h
+  \item SymbolTable.h
+  \item Token.h
+  \item Scanner.h
+  \item Administration.h
   \item Parser.h
   \item Grammar.h
   \item Types.h
   \item BlockTable.h
+  \item Assembler.h - Provided by professor
 \end{itemize}
 
 \subsection{Source Files}
 \begin{itemize}
-	\item plc.cc
-	\item SymbolTable.cc
-	\item Token.cc
-	\item Scanner.cc
-	\item Administration.cc
+  \item plc.cc
+  \item SymbolTable.cc
+  \item Token.cc
+  \item Scanner.cc
+  \item Administration.cc
   \item Parser.cc
   \item BlockTable.cc
+  \item Assembler-2.cc - Provided by professor
 \end{itemize}
 
 \subsection{Test Files}
 \begin{itemize}
-	\item search.pl - A full test program from the Brinch Hansen textbook.
-  \item defs.pl - Test all of the defenition rules.
-  \item simpleExps.pl - Tests all of the expression rules.
+  \item search.pl - Search a list of integers for a given integer
+  \item fact.pl - Recursivley calculate factorials
+  \item recursion.pl - Simple recursion to make a given number 0
+  \item arith.pl - Tests the basic arithmetic operators given 2 numbers
+  \item bool.pl - Tests the boolean operators
+  \item table.pl - Input a table and it is printed out again
+  \item maxmin.pl - Finds the min and max number in a given list of 5 integers
+
   \item errorTest.pl - Tests a number of different errors. Tries to ensure that the parser catches all errors and recovers to a stable state.
-  \item fibDP.pl - A program to calculate fibonacci numbers from 0-10. Tests recursion and procedure parameters.
   \item typeErrors.pl - Check a few of the possible type errors.
-  \item testNew.pl - Sets up some records and procedures with parameters.
+
+  \item p2.pl, simple\_proc.pl - Provided by professor to ensure proper output of parser
+  \item driver.cc, interp.h, interp.cc - Provided by professor for the interpreter
 \end{itemize}
 
 \section{Compiling and Running}
 \begin{enumerate}
 	\item Navigate into the project folder and type the following:
 
-\verb|        \$ make compiler|
+\verb|        $ make|
 
-	\item This will create a binary called compiler that cna be run with the following command:
+	\item This will create a binary called compiler that can be run with the following command:
 
-\verb|        \$ compiler <testfile-path> -o <output-file>|
+\verb|        $ compiler <testfile-path> -o <output-file>|
 
 	\item If you omit the \verb|-o <output-file>| flag the tokens will be output to a file called \verb|pl.out|
 	\item If you add the \verb|-v| flag some debugging info will be printed. This will include each function that is called and matched tokens. This will not affect the output of tokens.
+    \item In addition to the compiler an interpreter will be created as well. It can be run as follows:
+
+\verb|        $ interpret <compiled-file-path>|
+    \item When running programs \verb|Input:| allows you to enter a single integer.
+    \item Output from programs will be displayed with \verb|Output:|
 \end{enumerate}
 
 \section{Bugs}
-None. That we know about.
-
+No bugs. However, while testing in the final phase we discovered our grammar does
+not allow for negative constants. The unary minus is part of the simpleExpression
+rule in the grammar. Constant definitions do not use this rule, but use the
+constant rule. The constant rule only deals with numbers, bools, and identifiers.
+So without some changes to the grammar for now there are no negative constants.
+Though it is possible to use negative numbers everywhere else.
 
 \section{Time Spent}
 Hours spent on this project combine all group member contributions. Scanner 30 hrs. Parser 40 hours.
-Rule additions and Scope and Type checking 30 hours.
+Rule additions and Scope and Type checking 30 hours. Code generation 20 hours.
 
 \end{document}
