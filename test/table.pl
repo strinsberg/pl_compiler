@@ -11,16 +11,16 @@ begin
       integer i;
       i := 1;
       do ~(i > n) ->
-          write A[i];
-          i := i + 1;
+        write A[i];
+        i := i + 1;
       od;
     end;
 
    $ Input Table
    i := 1;
-   do ~(i>n) ->
+   do ~(i > n) ->
        read A[i];
-       i:=i+1;
+       i := i + 1;
    od;
 
    call print; 

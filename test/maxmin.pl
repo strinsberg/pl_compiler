@@ -8,9 +8,9 @@ begin
   proc get_table
   begin
     i := 1;
-    do ~(i>n) ->
+    do ~(i > n) ->
       read A[i];
-      i:=i+1;
+      i := i + 1;
     od;
   end;
 
