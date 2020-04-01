@@ -14,21 +14,16 @@
 \maketitle
 
 \section{Purpose of Software}
-The software we are building is a PL compiler that will compile files in the PL
-language so that they can be run on a stack machine. The current phase is the
-implementation of the Parser with scope and type checking. We also added some new rules
-to allow the use of record types and passing parameters to procedures.
-This program will take text files and parse them to see if they are syntactically correct
-and properly typed and scoped
-pl programs. Currently it outputs the tokens that were parsed to a file and identifies
-syntax errors. The scanner built in the previous portion of the project is used to
-collect tokens and pass them to the scanner. Current test files are available to
-test each function in the recursive decent implementation of the parser. They also test
-several different errors to ensure proper error recovery. Debugging output can also be
-enabled to see what recursive descent function has been called and when tokens are matched.
-
-This phase concludes the front end phase for the parser. In the next phase we will be moving on
-to the code generation so that our programs are actually compiled and can be run.
+The software we are building is a PL compiler that will compile files written
+in the PL language so that they can be interpreted by a virtual stack machine.
+In this final phase code generation was added to the parser. The running of
+the parser now produces an intermediate code file with some pseudo instructions
+and other information. The compiler has also had an assembler added that will
+take this intermediate code file and convert it to code that can be run on
+the virtual stack machine. The vertual stack machine is included as an interpreter
+to run the compiled programs. Most of the work in this phase involved using
+examples and hints given by the professor to properly add instructions for
+generating code.
 
 
 \section{Design}
@@ -76,7 +71,7 @@ readable way.
 The Administration class is responsible for connecting all the other classes. It
 holds information for input and output files. It also is responsible for calling
 the scanner to get tokens and keeping track of line numbers. The class
-outputs each scanned token to a file while it runs. It also keeps track
+outputs each intermediate code instruction to a file while it runs. It also keeps track
 of the number of errors per line and makes sure that only one error is printed
 per line. It also keeps track of the total number of lines with errors. After 10
 lines have encountered errors the parsing is suspended.
@@ -101,7 +96,7 @@ If the parser is free of errors there is currently no output. Debugging informat
 the parser functions that are called and what tokens are matched. When errors are encountered
 it is possible to see what rule was being parsed.
 
-\textbf{NEW} The parser now has rules for record types and parameters with procedures. Each of these
+The parser now has rules for record types and parameters with procedures. Each of these
 required a few new rules to be added to the parser. Records need their own parsing to
 allow variables to be declared as a record type, as well as having the records fields
 specified. For record fields to be accessed we had to also make some changes to the
@@ -147,8 +142,52 @@ there is only one error per line if there are multiple mistakes on a line only o
 will be identified. Also, often if a syntax error is present at the same point in the
 code it is usually the error printed.
 
-At this point the front end portion of the parser is finished and the next phase will be to
-add code generation.
+\textbf{NEW} In order to generate the intermediate code for the assembler the
+parser now does code generation. This involved adding a few peices to the program.
+Many of the rules in the parser now have emit statements in them. These statements
+output instructions and addressing information to a file. The addressing information
+is used by the assembler to properly set up addresses for the interpreter. The
+psuedo instructions are later replaced by the assembler with opCodes used by
+the interpreter. However, it is useful to have the intermediate code use the
+pseudo instructions for debugging purposes. They make the intermediate code more
+readable. Because the interpreter is a stack machine all of the instructions
+are output in postfix notation. This works nicely, but it gave us a little trouble
+when adding the emit instructions. We put some things in the wrong places and
+our instructions were not output in the correct order. However, having some
+example programs and their correct assembly output made it possible to find these
+errors and debug them without too much trouble.
+
+It is important to note that because of the suspension of school we did not get
+to learn as much about how the code generation works. There are addressing
+instructions used by the assembler that we do not fully understand. We know
+that they output information about the order of defined variables and offsets
+in arrays, but exactly how they do this is not completely clear. We needed to
+add some extra information to our block table entries to keep some of this
+addressing information and variable sizes. Without the examples and hints
+provided this would have been very difficult to finish properly.
+
+The other thing that was not able to be added to the finished compiler was the
+new features we added in the previous phase. The assemlber and interpreter do
+not deal with function parameters or record types or float numbers. The parser
+will still parse them, but no code is generated for them. This does not affect
+the running of the compiler as long as these types are not included. Our sample
+programs all stick to the code as it was before these additions.
+
+
+\subsection{Compiler, Assembler, and Interpreter}
+\textbf{NEW} We were provided with code for an assembler and an interpreter to finalize the
+compiler. The assembler code was integrated into our compiler. We were given
+a driver for the assembler that was designed to include our parser, but we
+elected to add the assembler to our program instead. Now running our compiler
+will first produce the intermediate code in a file called \verb|pl.asm| and then
+the assembler will be run on this file. When the assembler is done it's two
+passes to replace addresses and opCodes it will produce a file called \verb|pl.out|
+or it will use a name for this file given by the user. This final file is then ready
+to be run with the interpreter. Building our project will compile the interpreter and
+produce a binary that can run the programs produced by our compiler. The process
+is not that different from other interpreted languages that compile to byte code
+before being run on a virtual machine, such as Java.
+
 
 \subsection{Grammar}
 In order to properly perform error recovery the parser must know what terminal symbols are expected
