@@ -19,8 +19,15 @@ class Administration {
     */
   Administration(std::ostream& fout, Scanner& sc, bool debug = false);
 
+  /**
+   * Returns the current line number.
+   */
   int currentLine() {return lineNum;}
 
+  /**
+   * Get a new token from the scanner.
+   * @return The next scanned token.
+   */
   Token getToken();
 
   /**

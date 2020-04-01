@@ -19,6 +19,7 @@ public:
    * @param ntype The Type of the table entry
    * @param nsize The memory size required by the table entry
    * @param nval The value of the table entry
+   * @param disp The amount of displacement from the variables startLabel
    */
   TableEntry(int nid, Kind nkind, Type ntype, int nsize, int nval, int disp) :
              id(nid), tkind(nkind), ttype(ntype), size(nsize), val(nval),
@@ -73,8 +74,19 @@ public:
      */
   std::vector<TableEntry> entries;
 
+  /**
+   * The level in the block table.
+   */
   int level;
+
+  /**
+   * The displacement from the start label.
+   */
   int displace;
+
+  /**
+   * The start label for the varaible.
+   */
   int startLabel;
 };
 

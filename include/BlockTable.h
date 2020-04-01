@@ -31,6 +31,7 @@ public:
      * @param ntype The type of the table entry
      * @param nsize The memory size required by the table entry
      * @param nval The value of the table entry
+     * @param displace The displacement from the start label
      */
   bool define(int nid, Kind nkind, Type ntype, int nsize, int nval, int displace);
 
