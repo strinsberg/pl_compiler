@@ -32,41 +32,41 @@ void Assembler::firstPass()
    for (;;) {
       // Record the current address in the label table.
       if (nextop == "DEFADDR") {
-	 int index;
-	 (*insource) >> index;
-	 labelTable[index] = currentAddress;
-	 (*insource) >> nextop;
+	      int index;
+	      (*insource) >> index;
+	      labelTable[index] = currentAddress;
+	      (*insource) >> nextop;
       }
       // Record the associated value in the label table.
       else if (nextop == "DEFARG") {
-	 int index, value;
-	 (*insource) >> index >> value;
-	 labelTable[index] = value;
-	 (*insource) >> nextop;
+	      int index, value;
+        (*insource) >> index >> value;
+	      labelTable[index] = value;
+	      (*insource) >> nextop;
       }
       // Stop when we find ENDPROG.
       else if (nextop == "ENDPROG")
-	 return;
+	      return;
       else if (nextop == "ARROW" || nextop == "ASSIGN" || nextop == "BAR" ||
-	       nextop == "CONSTANT" || nextop == "FI" || nextop == "READ" ||
-	       nextop == "WRITE") {
-	 // Skip one machine words.
-	 (*insource) >> nextop;
-	 (*insource) >> nextop;
-	 currentAddress += 2;
+	        nextop == "CONSTANT" || nextop == "FI" || nextop == "READ" ||
+	        nextop == "WRITE") {
+	      // Skip one machine words.
+	      (*insource) >> nextop;
+	      (*insource) >> nextop;
+	      currentAddress += 2;
       }
       else if (nextop == "CALL" || nextop == "INDEX" || nextop == "PROC" ||
-	       nextop == "PROG" || nextop == "VARIABLE") {
-	 // Skip two machine words.
-	 (*insource) >> nextop;
-	 (*insource) >> nextop;
-	 (*insource) >> nextop;
-	 currentAddress += 3;
+	        nextop == "PROG" || nextop == "VARIABLE") {
+	      // Skip two machine words.
+	      (*insource) >> nextop;
+	      (*insource) >> nextop;
+	      (*insource) >> nextop;
+	      currentAddress += 3;
       }
       else {
-	 // just get the next machine word.
-	 (*insource) >> nextop;
-	 currentAddress++;
+	      // just get the next machine word.
+	      (*insource) >> nextop;
+	      currentAddress++;
       }
    }
 }

@@ -3,6 +3,23 @@
 //
 // Description: PL interpreter
 //
+// NOTES:
+// - To add data types there will probably need to be a data type
+//   associated with each variable or value. Floats can be stored
+//   with 2 words, and char is still 1 but need to know it when
+//   so we write it as a char and not an int. This can allow
+//   all the data to still be stored as integers.
+// - Adding parameters probably just means allocating extra
+//   variables in the block. These need to be before the defined
+//   variables so the displacement of those vars would need to increase
+//   by the number of parameters.
+// - Calling the proc would need to take
+//   the n param values on top of the stack and store them in the
+//   parameter variable spots. Variable values will have to be
+//   retreived for this initialization. References might be a little
+//   trickier as we need to store the address of a varialbe and know
+//   when doing things to it that they are modifying the base variable
+//   and not the parameter copy.
 //-------------------------------------------------------------
 
 // INCLUDES
@@ -47,14 +64,20 @@ void Interpreter::variable( int level, int displacement)
 {
   int x;
 
+  // Make space for the variable address
+  // and find the bottom of this block level
   allocate(1);
   x = base_register;
   
+  // Move down to the address that starts the block level we need
   while ( level > 0)
   {
     x = store[x];
     --level;
   }
+
+  // Store the address of the variable on top of the stack
+  // displacement is the distance from the base of the block level
   store[stack_register] = x + displacement;
   program_register += 3;
 }
@@ -78,6 +101,7 @@ void Interpreter::index( int bound, int line_number)
 
 void Interpreter::constant( int value )
 {
+  // Make space for the value and save it to the top of the stack
   allocate(1);
   store[stack_register] = value;
   program_register += 2;
@@ -87,6 +111,8 @@ void Interpreter::constant( int value )
 
 void Interpreter::value()
 {
+  // Replace address at top of stack with a value
+  // ie. load a variable value?
   int x = store[stack_register];
   store[stack_register] = store[x];
   ++program_register;
@@ -94,6 +120,7 @@ void Interpreter::value()
 
 void Interpreter::plnot()
 {
+  // Flip the bool bit. 1-0=1 and 1-1=0.
   store[stack_register] = 1 - store[stack_register];
   ++program_register;
 }
@@ -106,8 +133,12 @@ void Interpreter::plnot()
 
 void Interpreter::multiply()
 {
-  ++program_register;
-  --stack_register;
+  // All binary operations work this way
+
+  ++program_register;  // Move to the next instruction
+  --stack_register;  // move stack down because we are combining top 2 values
+
+  // Take the top 2 elements on the stack and multiply them
   store[stack_register] = store[stack_register] * store[stack_register +1];
 }
 
@@ -131,7 +162,7 @@ void Interpreter::modulo()
 
 void Interpreter::minus()
 {
-   store[stack_register] *= -1;
+   store[stack_register] *= -1;  // Negate the value at stack register
    ++program_register;
 }
 
@@ -215,10 +246,18 @@ void Interpreter::read(int count)
 //  cout << "program_register = " << program_register << endl;
 //  cout << "stack_register = " << stack_register << endl;
 //  cout << "base_register = " << base_register << endl;
+
   program_register += 2;
+
+  // Move stack to start of variables to read into
   stack_register -= count;
   x = stack_register;
 //  cout << "Count = " << count;
+
+  // Read into each variable
+  // store[x] is the address of the variable
+  // so store[ store[x] ] gives us the actual variables memory location
+  // to write the value into
   while ( x < stack_register + count)
   {
     ++x;
@@ -234,6 +273,8 @@ void Interpreter::read(int count)
 
 void Interpreter::write (int count)
 {
+  // Similar to read but we display the value at store[x] instead of
+  // using it as an address to find a memory location to read into
   int x;
   program_register += 2;
   stack_register -= count;
@@ -255,10 +296,12 @@ void Interpreter::assign (int count)
 {
   int x;
   
+  // Stack has count values on top of count addresses
   program_register += 2;
   stack_register = stack_register - 2*count;
   x = stack_register;
 
+  // Take the value in the expression and put it in the variable location
   while ( x < stack_register + count)
   {
     ++x;
@@ -276,18 +319,20 @@ void Interpreter::call( int level, int address)
 
   allocate(3);
   x = base_register;
-  
+
+  // set x to the address of the block level the proc address is in  
   while ( level > 0)
   {
     x = store[x];
     --level;
   }
-  store[stack_register - 2] = x;
-  store[stack_register - 1] = base_register; 
-  store[stack_register] = program_register + 3;
+
+  store[stack_register - 2] = x;  // save the address of the proc block level
+  store[stack_register - 1] = base_register;  // Save current block level address
+  store[stack_register] = program_register + 3;  // Save the next instr address
   
-  base_register = stack_register - 2;
-  program_register = address;
+  base_register = stack_register - 2;  // Set the base the proc block level
+  program_register = address;  // Go to the address of proc
 }
 
 //-----------------------------------------
@@ -299,10 +344,10 @@ void Interpreter::call( int level, int address)
 
 void Interpreter::arrow( int address)
 {
-  if ( store[stack_register] == 1 )
+  if ( store[stack_register] == 1 )  // If true execute stmts
      program_register += 2;
   else
-     program_register = address;
+     program_register = address;  // Otherwise jump to next section
   --stack_register;
 }
 
@@ -310,7 +355,7 @@ void Interpreter::arrow( int address)
 
 void Interpreter::bar( int address)
 {
-  program_register = address;
+  program_register = address;  // Jump past end of guarded command list
 }
 
 //-----------------------------------------
@@ -331,12 +376,14 @@ void Interpreter::fi( int line_number)
 
 void Interpreter::proc( int variable_length, int address)
 {
-  allocate( variable_length);
-  program_register = address;
+  allocate( variable_length );  // Allocate the number of variables
+  program_register = address;  // go to proc address ??
 }
 
 void Interpreter::endproc()
 {
+  // Reset registers after proc execution
+  // See Interpreter::call
   stack_register = base_register - 1;
   program_register = store[base_register + 2];
   base_register = store[base_register + 1];
@@ -348,12 +395,15 @@ void Interpreter::endproc()
 
 void Interpreter::prog( int variable_length, int address)
 {
-  base_register = stack_bottom;
+  base_register = stack_bottom;  // address at (or after?) end of program
 //  cout << "base_register = " << stack_bottom << endl;
+
   stack_register = base_register;
 //  cout << "stack_register = " << stack_register << endl;
-  allocate( variable_length + 2);
-  program_register = address;
+
+  allocate( variable_length + 2);  // allocate space for variables
+
+  program_register = address;  // Set program register to start of prog instructions
 //  cout << "program_register = " << program_register << endl;
 }
 
@@ -428,6 +478,8 @@ void Interpreter::run_program()
                    << opcode_name[opcode] << " operation" << endl;
       cin.get();
     }
+
+    // Execute program instruction
     switch (opcode)
     {
       case OP_ADD:
