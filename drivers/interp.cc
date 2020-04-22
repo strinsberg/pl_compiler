@@ -362,7 +362,12 @@ void Interpreter::bar( int address)
 
 void Interpreter::fi( int line_number)
 {
-  runtime_error(" if statement fails", line_number);
+  // this was supposed to force if statments to cover
+  // all conditions, but I do no like that as a language
+  // feature. To re-enable it comment out the address increment
+  // and uncomment the runtime error
+  //runtime_error(" if statement fails", line_number);
+  program_register += 2;
 }
 
 //------------------------------------------------
