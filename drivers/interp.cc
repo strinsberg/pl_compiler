@@ -84,13 +84,13 @@ void Interpreter::variable( int level, int displacement)
 
 void Interpreter::index( int bound, int line_number)
 {
-  int i = store[stack_register];
+  int i = store[stack_register];  // take top value on stack as index
   --stack_register;
 
-  if (i < 1 || i > bound)
+  if (i < 1 || i > bound)  // bounds check -- appears this uses 1 based array indexing
      runtime_error(" range error", line_number);
   else
-     store[stack_register] = store[stack_register] + i -1;
+     store[stack_register] = store[stack_register] + i -1;  // -1 for one based
   program_register += 3;
 }
 
